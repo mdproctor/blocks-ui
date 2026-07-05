@@ -51,7 +51,9 @@ A horizontal row of compact pills above the tabs. Each pill represents a `QueueV
 - Pills sorted by urgency: queues with breaches first, then by total count descending
 - Horizontal scroll when pills overflow the container width
 
-**Data source:** `GET /queues` for queue definitions. `GET /queues/summary` for per-queue counts and breach indicators in a single call (returns `{queueId, count, breachCount}[]`). Summary data is refreshed when the inbox receives a queue SSE event or on a 30-second polling interval matching the existing queue-board cadence.
+**Data source:** `GET /queues` for queue definitions. `GET /queues/summary` for per-queue counts and breach indicators in a single call (returns `{queueId, count, breachCount}[]`).
+
+**Summary refresh:** When the selected queue's SSE stream fires `ADDED` or `REMOVED`, the pill bar locally adjusts that queue's count (increment/decrement) without a server round-trip. All other queue counts (unselected queues) refresh via `GET /queues/summary` on a 30-second polling interval matching the existing queue-board cadence. The selected queue also benefits from the 30-second poll as a consistency backstop.
 
 ### Scope Context Bar
 
@@ -86,7 +88,6 @@ When a queue is active, filter pills reflect the queue's actual population:
 - Counts update when the queue selection or tab changes
 
 **Priority pills:**
-- Always interactive regardless of queue selection
 - Show counts from the current scope × tab
 - Zero-count pills are disabled (same treatment as status)
 
@@ -203,6 +204,12 @@ When no queue is selected, My Work and Claimable filter from inbox data (existin
 
 **Batch operations:** Batch claim and batch cancel work identically regardless of whether a queue is active. Because queue items are wrapped in `WorkItemRootResponse`, the batch operation payload construction (`BulkRequest`) is unchanged. Batch claim is available on the Claimable tab in queue context — this is a core triage operation (claim multiple items from a queue's claimable pool).
 
+**Error states:**
+
+- **`GET /queues/summary` failure:** Pill bar renders pills with queue names but no count or breach indicator. Silent retry on the next 30-second poll. No error toast — counts are informational, not actionable.
+- **`GET /queues/{id}/items` failure:** The queue pill remains visually selected but shows an error indicator (red border). The inbox items area shows an inline error message (same pattern as the existing `this.error` state at `work-item-inbox.ts:536`). Clicking the errored pill again retries the fetch. Stale data from a previous queue is cleared — the inbox does not fall back to showing the wrong queue's items.
+- **Queue SSE connection failure:** `SSEManager` handles reconnection with exponential backoff (1s base, 30s max). During reconnection, queue data is stale but functional. No additional error UI beyond what `SSEManager` already provides.
+
 ### SSE Lifecycle
 
 The existing inbox SSE subscription (`/workitems/events`) remains active at all times — it handles lifecycle events for the inbox data source.
@@ -214,6 +221,12 @@ The existing inbox SSE subscription (`/workitems/events`) remains active at all 
 - **Event handling:** Queue events (`WorkItemQueueEvent` with `eventType: 'ADDED' | 'REMOVED' | 'CHANGED'`) update the internal `QueueScope`. `ADDED` triggers a single-item fetch (`GET /workitems/{id}`) and inserts into the queue item set. `REMOVED` removes the item. `CHANGED` triggers a single-item re-fetch and updates in place.
 - **Reconnection:** Uses the same `SSEManager` as the inbox stream, which provides exponential backoff reconnection (1s base, 30s max).
 - **Overlap:** An item may appear on both streams (it's in the user's inbox AND in the selected queue). When a queue is active, queue data is the rendering source; inbox SSE events that affect queue items are ignored for rendering purposes (the queue SSE stream is the authority). When the queue is deselected, the inbox SSE state resumes authority.
+
+**Inbox SSE handler fix (`handleItemAppears`):** The existing `shouldBeVisible` check (`work-item-inbox.ts:436-445`) is tab-aware — it checks `this.activeTab` to decide whether to add or remove items from `this.items`. This is architecturally wrong: `this.items` is the full inbox dataset, and tab filtering is handled downstream by `getFilteredItems()`. When the "All" tab is active, `shouldBeVisible` is always `false` (no branch for `'all'`), causing every SSE lifecycle event to remove items from the array until it's empty.
+
+The fix is to make `shouldBeVisible` tab-independent. An item belongs in `this.items` if it is in the inbox population at all — matching EITHER the my-work predicate (`assigneeId == me && isActive(status)`) OR the claimable predicate (`status == PENDING && candidateGroups ∩ myGroups`). The active tab determines which items are _rendered_ (via `getFilteredItems()`), not which items are in the data array. This also fixes a pre-existing bug where items visible only on the other tab are silently removed on SSE events.
+
+When a queue is active, the inbox SSE handler continues to manage `this.items` (the inbox data) — changes to `this.items` don't affect the current view because the rendering source is `queueScope.items`. Queue items are managed by the queue SSE handler (ADDED/REMOVED/CHANGED events on `/queues/{id}/events`).
 
 **Note (issue #19):** The existing queue-board's SSE handler checks `event.type === 'work-item.lifecycle'` which never matches — `SSEManager` sets `event.type` from the parsed JSON data's `.type` field (a `WorkEventType` value like `'CREATED'`). The new implementation must parse `event.data` to determine event type, matching the pattern in `work-item-inbox.ts:354-357`. See casehubio/blocks-ui#19.
 
