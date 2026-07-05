@@ -51,13 +51,15 @@ A horizontal row of compact pills above the tabs. Each pill represents a `QueueV
 - Pills sorted by urgency: queues with breaches first, then by total count descending
 - Horizontal scroll when pills overflow the container width
 
-**Data source:** `GET /queues` for queue definitions. Per-queue item counts and breach indicators are computed by fetching each queue's items via `GET /queues/{id}` (lazy — on first render, then cached and updated via SSE).
+**Data source:** `GET /queues` for queue definitions. `GET /queues/summary` for per-queue counts and breach indicators in a single call (returns `{queueId, count, breachCount}[]`). Summary data is refreshed when the inbox receives a queue SSE event or on a 30-second polling interval matching the existing queue-board cadence.
 
 ### Scope Context Bar
 
 Visible only when a queue is selected. Shows the queue's label pattern constraints as read-only tags (e.g., `domain=clinical`, `severity=*`). Includes a "✕ clear" action that deselects the queue.
 
 This bar explains WHY the population is narrowed — it surfaces the queue's structural filter. It is not interactive (users cannot modify the queue's label pattern from here).
+
+**Label pattern rendering:** `QueueView.labelPattern` is currently a simple `key=value` string (e.g., `domain=aml`). The scope context bar splits on `=` and renders as `key: value` tag. For patterns that don't parse as simple `key=value` (future complex patterns), the raw pattern string is rendered as a single tag with monospace font. This ensures forward compatibility without coupling the UI to a specific query language.
 
 ### Tabs — Three Permanent Perspectives
 
@@ -67,7 +69,7 @@ The inbox tabs change from two to three:
 |-----|-----------------|---------------|-------------------|
 | My Work | `assigneeId == me` AND `isActive(status)` | All my assigned items | My assigned items in this queue |
 | Claimable | `status == PENDING` AND `candidateGroups ∩ myGroups` | All claimable items | Claimable items in this queue |
-| All | No assignee filter | All items (team view) | All items in this queue |
+| All | No perspective predicate | Union of assigned + claimable (full inbox) | All items in this queue |
 
 Tabs are permanent — they don't appear or disappear based on queue selection. Each tab shows an inline count reflecting the current scope: `My Work (2)`, `Claimable (3)`, `All (8)`.
 
@@ -113,31 +115,40 @@ The workbench's `LeftPanelView` type drops the `'queues'` variant. The left pane
 
 | Component | Responsibility |
 |-----------|---------------|
-| `queue-pill-bar` | Horizontal row of single-select queue pills. Fetches queue definitions, computes per-queue counts and breach indicators. Emits `queue-scope-changed` event with `QueueView \| null`. |
+| `queue-pill-bar` | Horizontal row of single-select queue pills. Fetches queue definitions (`GET /queues`) and summary counts (`GET /queues/summary`). Pure navigation — emits `queue-scope-changed` event with `QueueView \| null` payload. Does NOT fetch queue items — that is the inbox's responsibility. |
 
 ### Extend
 
 | Component | Changes |
 |-----------|---------|
-| `inbox-filter-bar` | Accept a `disabledStatuses: Set<string>` property. Disabled pills get greyed styling (`opacity: 0.4`, `cursor: default`, no click handler). Add per-pill counts via `statusCounts: Map<string, number>` and `priorityCounts: Map<string, number>` properties. |
+| `inbox-filter-bar` | Add per-pill counts via `statusCounts: Map<string, number>` and `priorityCounts: Map<string, number>` properties. Pills with count = 0 are visually disabled (`opacity: 0.4`, `cursor: default`, no click handler). Disabled state is derived from count — no separate `disabledStatuses` property needed. |
 | `inbox-summary-bar` | Already supports scoped counts via `visibleTotal`, `visibleOverdue`, `visibleBreach` props. No structural change needed. |
-| `work-item-inbox` | Add queue pill bar to the render tree (above tabs). Add "All" as a third tab. Listen for `queue-scope-changed` to set the active queue scope. Compute disabled statuses and per-pill counts from the scoped population. Render scope context bar when queue is active. |
+| `work-item-inbox` | Add queue pill bar to the render tree (above tabs). Add "All" as a third tab. Listen for `queue-scope-changed` to receive the selected `QueueView`. On queue selection, fetch queue items via `GET /queues/{id}/items`, wrap each `WorkItemResponse` in `WorkItemRootResponse` (with `childCount: 0`, null child fields), and store as the queue data source. Compute per-pill counts from the scoped population. Render scope context bar when queue is active. Manage queue SSE lifecycle and use AbortController for in-flight queue fetches. |
 | `work-item-workbench` | Remove `LeftPanelView` type and the Queues tab. Left panel is always the inbox. Remove `_unsubscribeQueueSelection` and `_unsubscribeQueueDeselection` event handlers. Remove the `queue-board` import. |
 
 ### Types
 
 ```typescript
+// Event payload — pill bar → inbox (pure navigation signal)
+interface QueueScopeChangedPayload {
+  readonly queue: QueueView | null;
+}
+
+// Internal to work-item-inbox — NOT a cross-component event payload
 interface QueueScope {
   readonly queue: QueueView;
-  readonly items: WorkItemResponse[];
+  readonly items: WorkItemRootResponse[];
   readonly statusCounts: ReadonlyMap<string, number>;
   readonly priorityCounts: ReadonlyMap<string, number>;
   readonly overdueCount: number;
   readonly breachCount: number;
 }
 
-interface QueueScopeChangedPayload {
-  readonly scope: QueueScope | null;
+// Summary endpoint response (GET /queues/summary)
+interface QueueSummaryEntry {
+  readonly queueId: string;
+  readonly count: number;
+  readonly breachCount: number;
 }
 ```
 
@@ -150,13 +161,14 @@ Change `InboxMode` from `'my-work' | 'claimable'` to `'my-work' | 'claimable' | 
 ### Event Flow
 
 1. User clicks a queue pill in `queue-pill-bar`
-2. `queue-pill-bar` fetches the queue's items via `GET /queues/{id}`
-3. `queue-pill-bar` computes `QueueScope` (counts, breach, overdue)
-4. `queue-pill-bar` emits `pages-event` with topic `queue.scope-changed` and `QueueScope` payload
-5. `work-item-inbox` receives the event, stores the scope, triggers re-render:
+2. `queue-pill-bar` emits `pages-event` with topic `queue.scope-changed` and `{ queue: QueueView }` payload
+3. `work-item-inbox` receives the event, cancels any in-flight queue fetch (via AbortController), and fetches the queue's items via `GET /queues/{id}/items`
+4. Inbox wraps each `WorkItemResponse` in `WorkItemRootResponse` (with `childCount: 0`, null child/group fields) to maintain type consistency with the existing pipeline
+5. Inbox builds internal `QueueScope` (items, counts, breach, overdue) and opens a queue SSE subscription (`/queues/{id}/events`)
+6. Re-render triggers:
    - Scope context bar appears showing queue label pattern
    - Tab counts update (My Work / Claimable / All filtered within queue scope)
-   - Filter pills recompute disabled states and counts
+   - Filter pills recompute counts (pills with count = 0 disabled)
    - Summary badges recompute from scope × tab × filters
    - Item list re-filters through the full pipeline
 
@@ -165,7 +177,7 @@ Change `InboxMode` from `'my-work' | 'claimable'` to `'my-work' | 'claimable' | 
 The inbox's `getFilteredItems()` method extends to select the data source first, then apply the pipeline:
 
 ```
-source = queue active ? queueScope.items : inboxItems
+source = queue active ? queueScope.items : inboxItems   // both are WorkItemRootResponse[]
 source
   → perspective filter (my work / claimable / all)
   → status filter (if any status pills active)
@@ -174,20 +186,36 @@ source
   = visible items
 ```
 
-When a queue is active, the source is the queue's item set (received via `QueueScope`). When no queue is active, the source is the inbox data (existing behaviour). The perspective filter then applies identically regardless of source.
+When a queue is active, the source is the queue's item set (fetched by the inbox on queue selection, stored in internal `QueueScope`). When no queue is active, the source is the inbox data (existing behaviour). Because both sources are `WorkItemRootResponse[]`, the entire downstream pipeline (perspective filter, status/priority filters, rendering, batch operations) works identically regardless of source. Queue items have `childCount: 0` and null child/group fields since the queue endpoint returns flat `WorkItemResponse[]`.
 
 ### Data Loading Strategy
 
-Two data populations:
+Two data populations, both owned by the inbox:
 
 - **Inbox data** — fetched from `/workitems/inbox`. Contains items personally relevant to the user (assigned to them, or claimable by their groups). Used by My Work and Claimable tabs when no queue is active.
-- **Queue data** — fetched from `GET /queues/{id}`. Contains ALL items matching the queue's label pattern regardless of assignee. Used by all three tabs when a queue is active.
+- **Queue data** — fetched from `GET /queues/{id}/items` by the inbox when a queue is selected. Contains ALL items matching the queue's label pattern regardless of assignee. Each `WorkItemResponse` is wrapped in `WorkItemRootResponse` at fetch time. Used by all three tabs when a queue is active.
 
-When a queue is selected, the `queue-pill-bar` fetches the queue's full item set via `GET /queues/{id}` and emits it in the `QueueScope` payload. The inbox then filters ALL three tabs from this queue data set — not from the inbox data. This is necessary because the "All" tab needs items that may not appear in the inbox endpoint (items assigned to other users outside the current user's groups).
+When a queue is selected, the inbox fetches the queue's full item set via `GET /queues/{id}/items`, wraps items in `WorkItemRootResponse`, builds its internal `QueueScope`, and switches the filter pipeline's data source. This is necessary because the "All" tab needs items that may not appear in the inbox endpoint (items assigned to other users outside the current user's groups).
 
-When no queue is selected, My Work and Claimable filter from inbox data (existing behaviour). The "All" tab with no queue filters from inbox data with no perspective predicate applied — showing all items the user has visibility into.
+When no queue is selected, My Work and Claimable filter from inbox data (existing behaviour). The "All" tab with no queue filters from inbox data with no perspective predicate applied — showing the union of the user's assigned and claimable items without tab-level filtering.
 
-SSE handling: the existing inbox SSE subscription (`/workitems/events`) continues to handle lifecycle events. When a queue is active, the queue-specific SSE stream (`/queues/{id}/events`) is also subscribed to detect items entering or leaving the queue.
+**Race condition handling:** The inbox maintains an `AbortController` for queue item fetches. When a new queue is selected while a fetch is in-flight, the previous fetch is aborted. The newly selected pill shows a loading indicator until its data arrives. Deselecting all queues also aborts any in-flight queue fetch.
+
+**Batch operations:** Batch claim and batch cancel work identically regardless of whether a queue is active. Because queue items are wrapped in `WorkItemRootResponse`, the batch operation payload construction (`BulkRequest`) is unchanged. Batch claim is available on the Claimable tab in queue context — this is a core triage operation (claim multiple items from a queue's claimable pool).
+
+### SSE Lifecycle
+
+The existing inbox SSE subscription (`/workitems/events`) remains active at all times — it handles lifecycle events for the inbox data source.
+
+**Queue SSE stream (`/queues/{id}/events`):**
+
+- **Opened:** when a queue is selected (after the initial item fetch completes)
+- **Closed:** when the queue is deselected, or when a different queue is selected (close old stream before opening new)
+- **Event handling:** Queue events (`WorkItemQueueEvent` with `eventType: 'ADDED' | 'REMOVED' | 'CHANGED'`) update the internal `QueueScope`. `ADDED` triggers a single-item fetch (`GET /workitems/{id}`) and inserts into the queue item set. `REMOVED` removes the item. `CHANGED` triggers a single-item re-fetch and updates in place.
+- **Reconnection:** Uses the same `SSEManager` as the inbox stream, which provides exponential backoff reconnection (1s base, 30s max).
+- **Overlap:** An item may appear on both streams (it's in the user's inbox AND in the selected queue). When a queue is active, queue data is the rendering source; inbox SSE events that affect queue items are ignored for rendering purposes (the queue SSE stream is the authority). When the queue is deselected, the inbox SSE state resumes authority.
+
+**Note (issue #19):** The existing queue-board's SSE handler checks `event.type === 'work-item.lifecycle'` which never matches — `SSEManager` sets `event.type` from the parsed JSON data's `.type` field (a `WorkEventType` value like `'CREATED'`). The new implementation must parse `event.data` to determine event type, matching the pattern in `work-item-inbox.ts:354-357`. See casehubio/blocks-ui#19.
 
 ## Accessibility
 
@@ -215,3 +243,15 @@ SSE handling: the existing inbox SSE subscription (`/workitems/events`) continue
 - Per-pill counts on filter pills showing population breakdown
 - Queue-scoped summary badges
 - Scope context bar showing queue label constraints
+
+## Examples Directory
+
+`examples/src/pages/queue-page.ts` renders `<queue-board>` which is removed by this spec. Replace with a new `queue-inbox-page.ts` that renders `<work-item-inbox>` with queue pill bar context — demonstrating the integrated queue-in-inbox experience. Remove the old `queue-page.ts`.
+
+## Deferred Items
+
+The following pre-existing issues (casehubio/blocks-ui#16) overlap with files modified by this spec but are not addressed here:
+
+- **Workbench container queries missing `container-type`** — the workbench is modified (removing Queues tab) but the CSS fix is orthogonal. Deferred to #16.
+- **Hardcoded spacing in filter-bar and summary-bar** — filter-bar is extended with count properties but spacing fixes are a separate concern. Deferred to #16.
+- **LiveRegionMixin unused** — this spec adds `aria-live="polite"` on the scope context bar (see Accessibility section). Broader LiveRegionMixin adoption (claims, completions, batch results) is tracked by #16.
