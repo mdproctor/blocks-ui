@@ -1,0 +1,146 @@
+<h2>Queue × Perspective: A Dimension Analysis</h2>
+<p class="subtitle">Why "Queue: X" is not a peer of "My Work" — and what the right model is</p>
+
+<div class="section">
+  <h3>The Three Orthogonal Dimensions of Work Item Filtering</h3>
+  <p>Every work item query decomposes into three independent axes. The current design conflates axes 1 and 2 by putting them in the same tab bar.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+  <div style="padding: 16px; background: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px;">
+    <div style="font-weight: 700; color: #1d4ed8; font-size: 14px; margin-bottom: 8px;">1. POPULATION SCOPE</div>
+    <div style="font-size: 12px; color: #1e40af; margin-bottom: 8px;">"Which items are in the universe?"</div>
+    <div style="font-size: 12px; line-height: 1.6;">
+      <div style="padding: 3px 0;">• <b>No queue</b> — all items</div>
+      <div style="padding: 3px 0;">• <b>Queue X</b> — items matching label pattern</div>
+    </div>
+    <div style="margin-top: 8px; padding: 6px 8px; background: #dbeafe; border-radius: 4px; font-size: 11px; color: #1e40af;">
+      <b>Control:</b> Queue pill bar (scope selector)
+    </div>
+  </div>
+
+  <div style="padding: 16px; background: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px;">
+    <div style="font-weight: 700; color: #166534; font-size: 14px; margin-bottom: 8px;">2. PERSPECTIVE</div>
+    <div style="font-size: 12px; color: #15803d; margin-bottom: 8px;">"What's my relationship to these items?"</div>
+    <div style="font-size: 12px; line-height: 1.6;">
+      <div style="padding: 3px 0;">• <b>My Work</b> — assigned to me + active</div>
+      <div style="padding: 3px 0;">• <b>Claimable</b> — PENDING + my groups</div>
+      <div style="padding: 3px 0;">• <b>All Items</b> — no assignee filter</div>
+    </div>
+    <div style="margin-top: 8px; padding: 6px 8px; background: #dcfce7; border-radius: 4px; font-size: 11px; color: #166534;">
+      <b>Control:</b> Tabs (within the scoped population)
+    </div>
+  </div>
+
+  <div style="padding: 16px; background: #fefce8; border: 2px solid #ca8a04; border-radius: 8px;">
+    <div style="font-weight: 700; color: #854d0e; font-size: 14px; margin-bottom: 8px;">3. AD-HOC FILTERS</div>
+    <div style="font-size: 12px; color: #92400e; margin-bottom: 8px;">"Further refinement within this view?"</div>
+    <div style="font-size: 12px; line-height: 1.6;">
+      <div style="padding: 3px 0;">• Status pills (constrained by scope)</div>
+      <div style="padding: 3px 0;">• Priority pills (always interactive)</div>
+      <div style="padding: 3px 0;">• Overdue / Breach toggles</div>
+    </div>
+    <div style="margin-top: 8px; padding: 6px 8px; background: #fef9c3; border-radius: 4px; font-size: 11px; color: #854d0e;">
+      <b>Control:</b> Filter bar + Summary badges
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>How Competitors Map These Dimensions</h3>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 24px;">
+  <thead>
+    <tr style="background: #f5f5f5;">
+      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e5e5;">Tool</th>
+      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e5e5;">Population Scope</th>
+      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e5e5;">Perspective</th>
+      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e5e5;">How They Compose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;"><b>Jira SM</b></td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">Queues are JQL filters in a sidebar list</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">"Assigned to Me" is just another queue</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5; color: #dc2626;"><b>They don't compose.</b> You pick one queue. "My items in the Compliance queue" requires a custom JQL queue.</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;"><b>Zendesk</b></td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">Views are saved condition sets in sidebar</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">"Your unsolved tickets" is a default view</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5; color: #dc2626;"><b>They don't compose.</b> You pick a view. In-view filtering adds conditions but can't intersect two views.</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;"><b>Freshdesk</b></td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">Views with conditions</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">"My Tickets" view via agent=me filter</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5; color: #dc2626;"><b>They don't compose.</b> Each view is independent. You add ad-hoc filters within one view.</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;"><b>ServiceNow</b></td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">Service Channels → Queues</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">"My Work" / "Team Work" list configs</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5; color: #d97706;"><b>Partial.</b> "My Work" and "Team Work" are separate workspace lists. Queue filtering within inbox is a known gap.</td>
+    </tr>
+    <tr style="background: #f0fdf4;">
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;"><b>CaseHub (proposed)</b></td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">Queue pill bar (scope selector)</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5;">Tabs: My Work / Claimable / All</td>
+      <td style="padding: 10px; border-bottom: 1px solid #e5e5e5; color: #16a34a;"><b>Full composition.</b> Queue narrows population. Tabs filter perspective within it. Ad-hoc filters compose on top of both.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section">
+  <h3>The Composition Model</h3>
+  <p class="subtitle">Queue = outermost scope. Tabs = perspective within. Filters = refinement within both.</p>
+</div>
+
+<div style="font-family: monospace; font-size: 12px; padding: 16px; background: #1e1e2e; color: #cdd6f4; border-radius: 8px; line-height: 1.8; margin-bottom: 24px;">
+  <div style="color: #89b4fa;">// The query pipeline:</div>
+  <div>items = <span style="color:#f9e2af">allWorkItems</span></div>
+  <div>&nbsp;&nbsp;.<span style="color:#a6e3a1">scope</span>(<span style="color:#fab387">queue?.labelPattern</span>) &nbsp;&nbsp;<span style="color:#6c7086">// Axis 1: population (queue pill or "all")</span></div>
+  <div>&nbsp;&nbsp;.<span style="color:#a6e3a1">perspective</span>(<span style="color:#fab387">tab</span>) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6c7086">// Axis 2: my work / claimable / all</span></div>
+  <div>&nbsp;&nbsp;.<span style="color:#a6e3a1">filter</span>(<span style="color:#fab387">status, priority, overdue</span>) <span style="color:#6c7086">// Axis 3: ad-hoc refinement</span></div>
+</div>
+
+<div class="section">
+  <h3>What Changes</h3>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+  <div style="padding: 14px; border: 1px solid #fca5a5; background: #fef2f2; border-radius: 8px;">
+    <div style="font-weight: 600; color: #991b1b; margin-bottom: 6px;">Before (current)</div>
+    <div style="font-size: 12px; color: #7f1d1d; line-height: 1.6;">
+      • Inbox tab: My Work | Claimable (no queue scope)<br>
+      • Queues tab: giant cards → list → back button<br>
+      • Two separate worlds, incompatible UX<br>
+      • "My items in Compliance queue" = impossible
+    </div>
+  </div>
+  <div style="padding: 14px; border: 1px solid #86efac; background: #f0fdf4; border-radius: 8px;">
+    <div style="font-weight: 600; color: #166534; margin-bottom: 6px;">After (proposed)</div>
+    <div style="font-size: 12px; color: #14532d; line-height: 1.6;">
+      • Queue pill bar (scope): <span style="background:#e5e7eb; padding:1px 6px; border-radius:8px;">Compliance</span> <span style="background:#3b82f6; color:white; padding:1px 6px; border-radius:8px;">Clinical ⚠</span> <span style="background:#e5e7eb; padding:1px 6px; border-radius:8px;">DevOps</span><br>
+      • Tabs (perspective): My Work | Claimable | All<br>
+      • Full composition: queue × perspective × filters<br>
+      • "My items in Compliance queue" = select pill + My Work tab
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>The "All Items" Tab Question</h3>
+  <p style="font-size: 13px; line-height: 1.6; max-width: 800px;">
+    The "All Items" tab is the triage perspective — it shows every item in the current population regardless of assignee.
+    Without it, there's no way for a team lead to see the full picture of a queue. With a queue selected,
+    "All Items" replaces the role that the old giant-card drill-down served.
+  </p>
+  <p style="font-size: 13px; line-height: 1.6; max-width: 800px;">
+    <b>When no queue is selected:</b> "All Items" could either be hidden (agents don't need a firehose of every item in the system)
+    or shown with a sensible default filter. The safest design: show it always, but it defaults to
+    the user's groups — a "team overview" rather than a raw firehose.
+  </p>
+</div>

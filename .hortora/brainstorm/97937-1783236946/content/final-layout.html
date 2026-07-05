@@ -1,0 +1,189 @@
+<h2>Final Layout — Two States</h2>
+<p class="subtitle">Queue scopes the population. Tabs choose the perspective. Filters refine within both.</p>
+
+<div class="split">
+  <!-- NO QUEUE SELECTED -->
+  <div class="mockup">
+    <div class="mockup-header">No queue selected — global view</div>
+    <div class="mockup-body" style="font-family: system-ui; font-size: 13px; background: #fafafa;">
+      <!-- Queue pill bar -->
+      <div style="padding: 8px 12px; border-bottom: 1px solid #e5e5e5; background: #f8fafc; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:10px; color:#64748b; font-weight:600; text-transform:uppercase; margin-right:2px;">Queues:</span>
+        <span style="background:#f1f5f9; padding:4px 10px; border-radius:14px; font-size:11px; border:1px solid #e2e8f0; color:#475569; cursor:pointer;">Compliance <b style="color:#2563eb">12</b></span>
+        <span style="background:#f1f5f9; padding:4px 10px; border-radius:14px; font-size:11px; border:1px solid #e2e8f0; color:#475569; cursor:pointer;">Clinical Safety <b style="color:#2563eb">8</b> <span style="background:#dc2626; color:white; padding:0 5px; border-radius:8px; font-size:9px; font-weight:700;">2</span></span>
+        <span style="background:#f1f5f9; padding:4px 10px; border-radius:14px; font-size:11px; border:1px solid #e2e8f0; color:#475569; cursor:pointer;">Device Ops <b style="color:#2563eb">5</b></span>
+        <span style="background:#f1f5f9; padding:4px 10px; border-radius:14px; font-size:11px; border:1px solid #e2e8f0; color:#475569; cursor:pointer;">Code Review <b style="color:#2563eb">3</b></span>
+      </div>
+      <!-- Tabs -->
+      <div style="display:flex; border-bottom: 1px solid #e2e8f0; padding: 0 12px; background: #fafafa;">
+        <div style="padding: 9px 16px; border-bottom: 2px solid #2563eb; color: #2563eb; font-size: 12px; font-weight:600;">My Work</div>
+        <div style="padding: 9px 16px; color: #94a3b8; font-size: 12px;">Claimable</div>
+        <div style="padding: 9px 16px; color: #94a3b8; font-size: 12px;">All</div>
+      </div>
+      <!-- Summary -->
+      <div style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display:flex; gap:8px; background:#fafafa;">
+        <span style="background:#eff6ff; color:#1d4ed8; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #bfdbfe;">Total: <b>24</b></span>
+        <span style="background:#fef2f2; color:#b91c1c; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #fecaca;">Overdue: <b>3</b></span>
+      </div>
+      <!-- Filters -->
+      <div style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display:flex; gap:6px; flex-wrap:wrap; align-items:center; background:#fafafa;">
+        <span style="font-size:10px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Status:</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Pending</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Assigned</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">In Progress</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Suspended</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Delegated</span>
+        <span style="width:1px; height:16px; background:#e2e8f0;"></span>
+        <span style="font-size:10px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Priority:</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Urgent</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">High</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Medium</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Low</span>
+      </div>
+      <!-- Items -->
+      <div style="padding: 8px;">
+        <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:4px; background:white; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:12px; font-weight:500;">Review compliance report</div>
+            <div style="font-size:10px; color:#94a3b8; margin-top:2px;">compliance · 2h ago</div>
+          </div>
+          <span style="font-size:10px; color:#d97706; font-weight:600; background:#fef3c7; padding:2px 8px; border-radius:4px;">HIGH</span>
+        </div>
+        <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:4px; background:white; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:12px; font-weight:500;">Approve vendor contract</div>
+            <div style="font-size:10px; color:#94a3b8; margin-top:2px;">compliance · 4h ago</div>
+          </div>
+          <span style="font-size:10px; color:#dc2626; font-weight:600; background:#fef2f2; padding:2px 8px; border-radius:4px;">URGENT</span>
+        </div>
+        <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:4px; background:white; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:12px; font-weight:500;">Update risk assessment</div>
+            <div style="font-size:10px; color:#94a3b8; margin-top:2px;">device-ops · 1d ago</div>
+          </div>
+          <span style="font-size:10px; color:#2563eb; font-weight:600; background:#eff6ff; padding:2px 8px; border-radius:4px;">MEDIUM</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUEUE SELECTED -->
+  <div class="mockup">
+    <div class="mockup-header">Clinical Safety queue selected — scoped view</div>
+    <div class="mockup-body" style="font-family: system-ui; font-size: 13px; background: #fafafa;">
+      <!-- Queue pill bar (one active) -->
+      <div style="padding: 8px 12px; border-bottom: 1px solid #e5e5e5; background: #f8fafc; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:10px; color:#64748b; font-weight:600; text-transform:uppercase; margin-right:2px;">Queues:</span>
+        <span style="background:#f1f5f9; padding:4px 10px; border-radius:14px; font-size:11px; border:1px solid #e2e8f0; color:#475569; cursor:pointer;">Compliance <b style="color:#2563eb">12</b></span>
+        <span style="background:#2563eb; padding:4px 10px; border-radius:14px; font-size:11px; border:1px solid #1d4ed8; color:white; cursor:pointer; font-weight:500;">Clinical Safety <b>8</b> <span style="background:#dc2626; color:white; padding:0 5px; border-radius:8px; font-size:9px; font-weight:700;">2</span></span>
+        <span style="background:#f1f5f9; padding:4px 10px; border-radius:14px; font-size:11px; border:1px solid #e2e8f0; color:#475569; cursor:pointer;">Device Ops <b style="color:#2563eb">5</b></span>
+        <span style="background:#f1f5f9; padding:4px 10px; border-radius:14px; font-size:11px; border:1px solid #e2e8f0; color:#475569; cursor:pointer;">Code Review <b style="color:#2563eb">3</b></span>
+      </div>
+      <!-- Queue context bar -->
+      <div style="padding: 4px 12px; background:#eff6ff; border-bottom:1px solid #bfdbfe; display:flex; gap:6px; align-items:center;">
+        <span style="font-size:10px; color:#1e40af; font-weight:600;">SCOPE:</span>
+        <span style="background:#dbeafe; padding:2px 8px; border-radius:4px; font-size:10px; color:#1e40af; border:1px solid #bfdbfe;">domain=clinical</span>
+        <span style="background:#dbeafe; padding:2px 8px; border-radius:4px; font-size:10px; color:#1e40af; border:1px solid #bfdbfe;">severity=*</span>
+        <span style="margin-left:auto; font-size:10px; color:#3b82f6; cursor:pointer; text-decoration:underline;">✕ clear</span>
+      </div>
+      <!-- Tabs — same 3, "All" active for triage -->
+      <div style="display:flex; border-bottom: 1px solid #e2e8f0; padding: 0 12px; background: #fafafa;">
+        <div style="padding: 9px 16px; color: #94a3b8; font-size: 12px;">My Work <span style="color:#2563eb; font-size:10px;">(2)</span></div>
+        <div style="padding: 9px 16px; color: #94a3b8; font-size: 12px;">Claimable <span style="color:#2563eb; font-size:10px;">(3)</span></div>
+        <div style="padding: 9px 16px; border-bottom: 2px solid #2563eb; color: #2563eb; font-size: 12px; font-weight:600;">All <span style="font-size:10px;">(8)</span></div>
+      </div>
+      <!-- Summary (scoped to queue) -->
+      <div style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display:flex; gap:8px; background:#fafafa;">
+        <span style="background:#eff6ff; color:#1d4ed8; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #bfdbfe;">Total: <b>8</b></span>
+        <span style="background:#fef2f2; color:#b91c1c; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #fecaca;">Overdue: <b>2</b></span>
+        <span style="background:#fef2f2; color:#b91c1c; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #fecaca;">Breach: <b>1</b></span>
+      </div>
+      <!-- Filters (constrained — no IN_PROGRESS in this queue) -->
+      <div style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display:flex; gap:6px; flex-wrap:wrap; align-items:center; background:#fafafa;">
+        <span style="font-size:10px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Status:</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Pending <span style="color:#94a3b8">(5)</span></span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Assigned <span style="color:#94a3b8">(3)</span></span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #cbd5e1; color:#cbd5e1; cursor:default;">In Progress <span>(0)</span></span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #cbd5e1; color:#cbd5e1; cursor:default;">Suspended <span>(0)</span></span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #cbd5e1; color:#cbd5e1; cursor:default;">Delegated <span>(0)</span></span>
+        <span style="width:1px; height:16px; background:#e2e8f0;"></span>
+        <span style="font-size:10px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Priority:</span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Urgent <span style="color:#94a3b8">(1)</span></span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">High <span style="color:#94a3b8">(3)</span></span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #e2e8f0; color:#475569;">Medium <span style="color:#94a3b8">(4)</span></span>
+        <span style="background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; border:1px solid #cbd5e1; color:#cbd5e1; cursor:default;">Low <span>(0)</span></span>
+      </div>
+      <!-- Items -->
+      <div style="padding: 8px;">
+        <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:4px; background:white; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:12px; font-weight:500;">Adverse event investigation #AE-041</div>
+            <div style="font-size:10px; color:#94a3b8; margin-top:2px;">Dr. Chen · PENDING · 1h ago</div>
+          </div>
+          <span style="font-size:10px; color:#dc2626; font-weight:600; background:#fef2f2; padding:2px 8px; border-radius:4px;">URGENT</span>
+        </div>
+        <div style="padding:10px 12px; border:1px solid #fca5a5; border-left:3px solid #dc2626; border-radius:6px; margin-bottom:4px; background:#fef2f2; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:12px; font-weight:500;">⏰ Protocol deviation review</div>
+            <div style="font-size:10px; color:#b91c1c; margin-top:2px;">unassigned · PENDING · overdue 2h</div>
+          </div>
+          <span style="font-size:10px; color:#d97706; font-weight:600; background:#fef3c7; padding:2px 8px; border-radius:4px;">HIGH</span>
+        </div>
+        <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:4px; background:white; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:12px; font-weight:500;">Safety signal triage — cardiac</div>
+            <div style="font-size:10px; color:#94a3b8; margin-top:2px;">Demo User · ASSIGNED · 3h ago</div>
+          </div>
+          <span style="font-size:10px; color:#2563eb; font-weight:600; background:#eff6ff; padding:2px 8px; border-radius:4px;">MEDIUM</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Interaction Details</h3>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+  <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <div style="font-weight: 600; color: #0f172a; margin-bottom: 8px;">Queue pill bar</div>
+    <ul style="font-size: 12px; color: #334155; line-height: 1.8; margin: 0; padding-left: 16px;">
+      <li>Click a pill → scope narrows to that queue</li>
+      <li>Click active pill again → deselect (back to global)</li>
+      <li>Breach indicator (red badge) when queue has overdue items</li>
+      <li>Count shows total items matching queue's label pattern</li>
+      <li>Sorted by urgency: breached queues first</li>
+    </ul>
+  </div>
+
+  <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <div style="font-weight: 600; color: #0f172a; margin-bottom: 8px;">Tabs (3 permanent)</div>
+    <ul style="font-size: 12px; color: #334155; line-height: 1.8; margin: 0; padding-left: 16px;">
+      <li><b>My Work</b> — assigned to me + active status</li>
+      <li><b>Claimable</b> — PENDING + my groups</li>
+      <li><b>All</b> — full population (no assignee filter)</li>
+      <li>Inline counts show items per tab in current scope</li>
+      <li>All three compose with the selected queue scope</li>
+    </ul>
+  </div>
+
+  <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <div style="font-weight: 600; color: #0f172a; margin-bottom: 8px;">Filter pills (constrained)</div>
+    <ul style="font-size: 12px; color: #334155; line-height: 1.8; margin: 0; padding-left: 16px;">
+      <li>Status pills show (count) from current scope × tab</li>
+      <li>Zero-count pills are greyed/disabled — not clickable</li>
+      <li>Priority pills always interactive (queues don't constrain priority)</li>
+      <li>Queue label context shown in a scope bar when active</li>
+    </ul>
+  </div>
+
+  <div style="padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <div style="font-weight: 600; color: #0f172a; margin-bottom: 8px;">Summary badges (scoped)</div>
+    <ul style="font-size: 12px; color: #334155; line-height: 1.8; margin: 0; padding-left: 16px;">
+      <li>Total / Overdue / Breach reflect scope × tab</li>
+      <li>Clicking Overdue/Breach still toggles that filter</li>
+      <li>Claim breach only shown on Claimable tab</li>
+    </ul>
+  </div>
+</div>
