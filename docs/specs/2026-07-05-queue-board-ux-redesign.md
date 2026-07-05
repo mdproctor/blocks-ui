@@ -53,7 +53,7 @@ A horizontal row of compact pills above the tabs. Each pill represents a `QueueV
 
 **Data source:** `GET /queues` for queue definitions. `GET /queues/summary` for per-queue counts and breach indicators in a single call (returns `{queueId, count, breachCount}[]`).
 
-**Summary refresh:** When the selected queue's SSE stream fires `ADDED` or `REMOVED`, the pill bar locally adjusts that queue's count (increment/decrement) without a server round-trip. All other queue counts (unselected queues) refresh via `GET /queues/summary` on a 30-second polling interval matching the existing queue-board cadence. The selected queue also benefits from the 30-second poll as a consistency backstop.
+**Summary refresh:** When the inbox processes an `ADDED` or `REMOVED` event on the selected queue's SSE stream, it passes the updated item count to the pill bar via a reactive property. The pill bar renders the latest count without any server round-trip — it does not subscribe to SSE itself. All other queue counts (unselected queues) refresh via `GET /queues/summary` on a 30-second polling interval matching the existing queue-board cadence. The selected queue also benefits from the 30-second poll as a consistency backstop.
 
 ### Scope Context Bar
 
