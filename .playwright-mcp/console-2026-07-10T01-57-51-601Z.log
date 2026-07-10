@@ -1,0 +1,154 @@
+[     108ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95
+[     218ms] [ERROR] Failed to bootstrap examples: Error: Value passed to 'css' function must be a 'css' function result: 
+  .pt-object {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    align-items: baseline;
+  }
+
+  .pt-key {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--pages-neutral-11, #374151);
+    white-space: nowrap;
+  }
+
+  .pt-value {
+    font-size: 13px;
+    color: var(--pages-neutral-12, #111827);
+    word-break: break-word;
+  }
+
+  .pt-value.pt-nested {
+    grid-column: 1 / -1;
+    padding-left: 16px;
+    border-left: 2px solid var(--pages-neutral-4, #e5e7eb);
+    margin: 2px 0 4px 0;
+  }
+
+  .pt-null {
+    color: var(--pages-neutral-8, #9ca3af);
+    font-style: italic;
+  }
+
+  .pt-bool {
+    font-weight: 500;
+  }
+
+  .pt-number {
+    font-family: var(--pages-font-mono, monospace);
+    font-size: 13px;
+  }
+
+  .pt-string {
+    font-size: 13px;
+  }
+
+  .pt-list {
+    font-size: 13px;
+  }
+
+  .pt-array {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pt-array-item {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .pt-index {
+    color: var(--pages-neutral-8, #9ca3af);
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+. Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.
+    at textFromCSSResult (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:47:11)
+    at http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:52:92
+    at Array.reduce (<anonymous>)
+    at css (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:52:62)
+    at http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:327:30 @ http://localhost:5180/src/main.ts:25
+[   32103ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95
+[   32164ms] [ERROR] Failed to bootstrap examples: Error: Value passed to 'css' function must be a 'css' function result: 
+  .pt-object {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    align-items: baseline;
+  }
+
+  .pt-key {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--pages-neutral-11, #374151);
+    white-space: nowrap;
+  }
+
+  .pt-value {
+    font-size: 13px;
+    color: var(--pages-neutral-12, #111827);
+    word-break: break-word;
+  }
+
+  .pt-value.pt-nested {
+    grid-column: 1 / -1;
+    padding-left: 16px;
+    border-left: 2px solid var(--pages-neutral-4, #e5e7eb);
+    margin: 2px 0 4px 0;
+  }
+
+  .pt-null {
+    color: var(--pages-neutral-8, #9ca3af);
+    font-style: italic;
+  }
+
+  .pt-bool {
+    font-weight: 500;
+  }
+
+  .pt-number {
+    font-family: var(--pages-font-mono, monospace);
+    font-size: 13px;
+  }
+
+  .pt-string {
+    font-size: 13px;
+  }
+
+  .pt-list {
+    font-size: 13px;
+  }
+
+  .pt-array {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pt-array-item {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .pt-index {
+    color: var(--pages-neutral-8, #9ca3af);
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+. Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.
+    at textFromCSSResult (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:47:11)
+    at http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:52:92
+    at Array.reduce (<anonymous>)
+    at css (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:52:62)
+    at http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts?t=1783648703516:327:30 @ http://localhost:5180/src/main.ts?t=1783648703516:25
+[   36569ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95
+[   42278ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95

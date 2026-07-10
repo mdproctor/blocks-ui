@@ -1,0 +1,99 @@
+- generic [ref=f9e3]:
+  - navigation [ref=f9e4]:
+    - generic [ref=f9e5]: blocks-ui Examples
+    - generic [ref=f9e6]: Components
+    - button "Work Item Row" [ref=f9e7] [cursor=pointer]
+    - button "Work Item Inbox" [ref=f9e8] [cursor=pointer]
+    - button "Work Item Detail" [ref=f9e9] [cursor=pointer]
+    - button "Queue + Inbox" [ref=f9e10] [cursor=pointer]
+    - button "Schema Form" [ref=f9e11] [cursor=pointer]
+    - button "SLA Indicator" [ref=f9e12] [cursor=pointer]
+    - button "KPI Metric Row" [ref=f9e13] [cursor=pointer]
+    - button "Approval Gate" [ref=f9e14] [cursor=pointer]
+    - button "Confirm Dialog" [ref=f9e15] [cursor=pointer]
+    - button "Data Table" [ref=f9e16] [cursor=pointer]
+    - button "Notifications" [ref=f9e17] [cursor=pointer]
+    - button "Audit Trail Viewer" [ref=f9e18] [cursor=pointer]
+    - button "Case Timeline" [ref=f9e19] [cursor=pointer]
+    - button "Trust Score Panel" [ref=f9e20] [cursor=pointer]
+    - generic [ref=f9e21]: Composed
+    - button "Full Workbench" [ref=f9e22] [cursor=pointer]
+    - generic [ref=f9e23]:
+      - button "Light" [ref=f9e24] [cursor=pointer]
+      - button "Comfortable" [ref=f9e25] [cursor=pointer]
+  - main [ref=f9e26]:
+    - generic [ref=f9e28]:
+      - generic [ref=f9e29]:
+        - heading "Audit Trail Viewer" [level=1] [ref=f9e30]
+        - paragraph [ref=f9e31]: Displays chronological ledger entries with Merkle chain verification, attestations, and GDPR-compliant redaction handling. Demonstrates filterable entry list, expandable detail, and verification banner.
+      - generic [ref=f9e33]:
+        - status [ref=f9e34]:
+          - generic [ref=f9e35]: ✓
+          - generic [ref=f9e36]: Chain verified — 1 entries redacted
+          - code [ref=f9e37]: f7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2
+        - generic [ref=f9e38]:
+          - generic [ref=f9e39]:
+            - generic [ref=f9e40]: "Actor:"
+            - combobox "Actor:" [ref=f9e41]:
+              - option "All actors" [selected]
+              - option "user-001 (USER)"
+              - option "system (SYSTEM)"
+              - option "agent-042 (AGENT)"
+              - option "peer-review-001 (PEER)"
+          - group "Entry type filter" [ref=f9e42]:
+            - generic [ref=f9e43]: "Type:"
+            - checkbox "COMMAND" [ref=f9e44] [cursor=pointer]
+            - checkbox "EVENT" [ref=f9e45] [cursor=pointer]
+            - checkbox "ATTESTATION" [ref=f9e46] [cursor=pointer]
+          - generic [ref=f9e47]:
+            - generic [ref=f9e48]: "From:"
+            - textbox "From:" [ref=f9e49]
+            - generic [ref=f9e50]: "To:"
+            - textbox "To:" [ref=f9e51]
+        - grid [ref=f9e53]:
+          - generic [ref=f9e54]:
+            - row "Timestamp ▲ Actor ▲ Type ▲ Digest" [ref=f9e55]:
+              - columnheader "Timestamp ▲" [ref=f9e56] [cursor=pointer]:
+                - text: Timestamp
+                - generic [ref=f9e57]: ▲
+              - columnheader "Actor ▲" [ref=f9e58] [cursor=pointer]:
+                - text: Actor
+                - generic [ref=f9e59]: ▲
+              - columnheader "Type ▲" [ref=f9e60] [cursor=pointer]:
+                - text: Type
+                - generic [ref=f9e61]: ▲
+              - columnheader "Digest" [ref=f9e62]
+            - generic [ref=f9e63]:
+              - textbox "Filter..." [ref=f9e64]
+              - button "Table options" [ref=f9e66] [cursor=pointer]: ⋮
+          - generic [ref=f9e67]: No data
+      - generic [ref=f9e68]:
+        - heading "Component Features" [level=2] [ref=f9e69]
+        - list [ref=f9e70]:
+          - listitem [ref=f9e71]:
+            - strong [ref=f9e72]: "Verification Banner:"
+            - text: Shows chain integrity status with redaction count
+          - listitem [ref=f9e73]:
+            - strong [ref=f9e74]: "Filter Controls:"
+            - text: Actor dropdown, entry type chips, date range inputs
+          - listitem [ref=f9e75]:
+            - strong [ref=f9e76]: "Entry List:"
+            - text: Timestamp, actor with type badge, entry type, truncated digest
+          - listitem [ref=f9e77]:
+            - strong [ref=f9e78]: "Expandable Detail:"
+            - text: Full digest, trace ID, causal chain, attestations
+          - listitem [ref=f9e79]:
+            - strong [ref=f9e80]: "GDPR Compliance:"
+            - text: Null payloads show "Content redacted" placeholder
+          - listitem [ref=f9e81]:
+            - strong [ref=f9e82]: "Accessibility:"
+            - text: ARIA roles, keyboard navigation, live region announcements
+        - heading "Mock Data" [level=3] [ref=f9e83]
+        - paragraph [ref=f9e84]: "This example uses 5 mock ledger entries with various entry types (COMMAND, EVENT, ATTESTATION) and actors (USER, SYSTEM, AGENT, PEER). Entry #5 has a redacted payload to demonstrate GDPR handling."
+        - heading "Try It" [level=3] [ref=f9e85]
+        - list [ref=f9e86]:
+          - listitem [ref=f9e87]: Click a row to expand and see full details
+          - listitem [ref=f9e88]: Filter by actor using the dropdown
+          - listitem [ref=f9e89]: Toggle entry type chips to filter by COMMAND/EVENT/ATTESTATION
+          - listitem [ref=f9e90]: Note the verification banner showing 1 redacted entry
+          - listitem [ref=f9e91]: "Expand entry #5 to see the \"Content redacted\" message"

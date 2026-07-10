@@ -1,0 +1,13 @@
+- generic [ref=f4e5]:
+  - list [ref=f4e7]:
+    - listitem [ref=f4e8]:
+      - generic [ref=f4e9] [cursor=pointer]: Work Queue
+    - listitem [ref=f4e10]:
+      - generic [ref=f4e11] [cursor=pointer]: Safety Workbench
+    - listitem [ref=f4e12]:
+      - generic [ref=f4e13] [cursor=pointer]: Protocol Workbench
+    - listitem [ref=f4e14]:
+      - generic [ref=f4e15] [cursor=pointer]: Operations
+  - generic [ref=f4e20]:
+    - heading "Work Queue" [level=2] [ref=f4e21]
+    - paragraph [ref=f4e22]: Pending tasks across all clinical workflows.

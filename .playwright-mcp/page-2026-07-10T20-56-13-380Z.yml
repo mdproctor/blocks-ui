@@ -1,0 +1,15 @@
+- generic [active] [ref=f10e1]:
+  - generic [ref=f10e2]: "Error: Failed to fetch dynamically imported module: http://localhost:3002/src/pages/trust-score-page.ts"
+  - generic [ref=f10e5]:
+    - generic [ref=f10e6]: "[plugin:vite:esbuild] Transform failed with 1 error: /Users/mdproctor/claude/casehub/blocks-ui/components/trust-score-panel/src/trust-score-panel.ts:272:0: ERROR: Expected identifier but found \"!\""
+    - generic [ref=f10e7]: /Users/mdproctor/claude/casehub/blocks-ui/components/trust-score-panel/src/trust-score-panel.ts:272:0
+    - generic [ref=f10e8]: Expected identifier but found "!" 270| if( 271| 272| ! | ^ 273| this 274| .
+    - generic [ref=f10e9]: at failureErrorWithLog (/Users/mdproctor/claude/casehub/blocks-ui/node_modules/vite/node_modules/esbuild/lib/main.js:1472:15) at /Users/mdproctor/claude/casehub/blocks-ui/node_modules/vite/node_modules/esbuild/lib/main.js:755:50 at responseCallbacks.<computed> (/Users/mdproctor/claude/casehub/blocks-ui/node_modules/vite/node_modules/esbuild/lib/main.js:622:9) at handleIncomingPacket (/Users/mdproctor/claude/casehub/blocks-ui/node_modules/vite/node_modules/esbuild/lib/main.js:677:12) at Socket.readFromStdout (/Users/mdproctor/claude/casehub/blocks-ui/node_modules/vite/node_modules/esbuild/lib/main.js:600:7) at Socket.emit (node:events:509:20) at addChunk (node:internal/streams/readable:564:12) at readableAddChunkPushByteMode (node:internal/streams/readable:515:3) at Readable.push (node:internal/streams/readable:395:5) at Pipe.onStreamRead (node:internal/stream_base_commons:189:23
+    - generic [ref=f10e10]:
+      - text: Click outside, press Esc key, or fix the code to dismiss.You can also disable this overlay by setting
+      - code [ref=f10e11]: server.hmr.overlay
+      - text: to
+      - code [ref=f10e12]: "false"
+      - text: in
+      - code [ref=f10e13]: vite.config.ts
+      - text: .

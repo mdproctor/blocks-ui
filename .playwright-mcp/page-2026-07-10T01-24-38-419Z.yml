@@ -1,0 +1,234 @@
+- generic [active] [ref=f8e3]:
+  - navigation [ref=f8e4]:
+    - generic [ref=f8e5]: blocks-ui Examples
+    - generic [ref=f8e6]: Components
+    - button "Work Item Row" [ref=f8e7] [cursor=pointer]
+    - button "Work Item Inbox" [ref=f8e8] [cursor=pointer]
+    - button "Work Item Detail" [ref=f8e9] [cursor=pointer]
+    - button "Queue + Inbox" [ref=f8e10] [cursor=pointer]
+    - button "Schema Form" [ref=f8e11] [cursor=pointer]
+    - button "SLA Indicator" [ref=f8e12] [cursor=pointer]
+    - button "KPI Metric Row" [ref=f8e13] [cursor=pointer]
+    - button "Approval Gate" [ref=f8e14] [cursor=pointer]
+    - button "Confirm Dialog" [ref=f8e15] [cursor=pointer]
+    - button "Data Table" [ref=f8e16] [cursor=pointer]
+    - button "Notifications" [ref=f8e17] [cursor=pointer]
+    - button "Audit Trail Viewer" [ref=f8e18] [cursor=pointer]
+    - button "Case Timeline" [ref=f8e19] [cursor=pointer]
+    - button "Trust Score Panel" [ref=f8e20] [cursor=pointer]
+    - generic [ref=f8e21]: Composed
+    - button "Full Workbench" [ref=f8e22] [cursor=pointer]
+    - generic [ref=f8e23]:
+      - button "Light" [ref=f8e24] [cursor=pointer]
+      - button "Comfortable" [ref=f8e25] [cursor=pointer]
+  - main [ref=f8e26]:
+    - generic [ref=f8e186]:
+      - generic [ref=f8e187]:
+        - heading "Case Timeline" [level=1] [ref=f8e188]
+        - paragraph [ref=f8e189]: Visualizes case lifecycle events with full (vertical) and compact (horizontal strip) modes. Demonstrates event categorization, filtering by stream type, expandable payloads, and keyboard navigation.
+      - button "Switch to Compact Mode" [ref=f8e191] [cursor=pointer]
+      - generic [ref=f8e194]:
+        - group "Event type filter" [ref=f8e195]:
+          - checkbox "CASE" [checked] [ref=f8e196] [cursor=pointer]
+          - checkbox "WORKER" [checked] [ref=f8e197] [cursor=pointer]
+          - checkbox "ORCHESTRATION" [checked] [ref=f8e198] [cursor=pointer]
+          - checkbox "TIMER" [checked] [ref=f8e199] [cursor=pointer]
+          - checkbox "SYSTEM" [checked] [ref=f8e200] [cursor=pointer]
+        - list "Case timeline" [ref=f8e201]:
+          - listitem "CASE STARTED, Jul 1" [ref=f8e202]:
+            - generic [ref=f8e204]:
+              - generic [ref=f8e206] [cursor=pointer]:
+                - generic [ref=f8e207]: CASE STARTED
+                - generic [ref=f8e208]: 11:00 AM
+              - button "▶ Details" [ref=f8e209] [cursor=pointer]
+          - listitem "TASK CREATED, Jul 1" [ref=f8e210]:
+            - generic [ref=f8e212]:
+              - generic [ref=f8e214] [cursor=pointer]:
+                - generic [ref=f8e215]: TASK CREATED
+                - generic [ref=f8e216]: 11:05 AM
+              - button "▶ Details" [ref=f8e217] [cursor=pointer]
+          - listitem "AGENT DISPATCHED, Jul 1" [ref=f8e218]:
+            - generic [ref=f8e220]:
+              - generic [ref=f8e221] [cursor=pointer]:
+                - generic [ref=f8e222]:
+                  - generic [ref=f8e223]: AGENT DISPATCHED
+                  - generic [ref=f8e224]: 11:15 AM
+                - generic [ref=f8e225]: "Worker: Alice Smith"
+                - generic [ref=f8e226]: "Trust: 0.92"
+              - button "▶ Details" [ref=f8e227] [cursor=pointer]
+          - listitem "MILESTONE REACHED, Jul 1" [ref=f8e228]:
+            - generic [ref=f8e230]:
+              - generic [ref=f8e232] [cursor=pointer]:
+                - generic [ref=f8e233]: MILESTONE REACHED
+                - generic [ref=f8e234]: 12:00 PM
+              - button "▶ Details" [ref=f8e235] [cursor=pointer]
+          - listitem "TASK COMPLETED, Jul 1" [ref=f8e236]:
+            - generic [ref=f8e238]:
+              - generic [ref=f8e240] [cursor=pointer]:
+                - generic [ref=f8e241]: TASK COMPLETED
+                - generic [ref=f8e242]: 12:30 PM
+              - button "▶ Details" [ref=f8e243] [cursor=pointer]
+          - listitem "ORCHESTRATION STARTED, Jul 1" [ref=f8e244]:
+            - generic [ref=f8e246]:
+              - generic [ref=f8e248] [cursor=pointer]:
+                - generic [ref=f8e249]: ORCHESTRATION STARTED
+                - generic [ref=f8e250]: 12:45 PM
+              - button "▶ Details" [ref=f8e251] [cursor=pointer]
+          - listitem "ACTION GATE PENDING, Jul 1" [ref=f8e252]:
+            - generic [ref=f8e254]:
+              - generic [ref=f8e256] [cursor=pointer]:
+                - generic [ref=f8e257]: ACTION GATE PENDING
+                - generic [ref=f8e258]: 01:00 PM
+              - button "▶ Details" [ref=f8e259] [cursor=pointer]
+          - listitem "AGENT COMPLETED, Jul 1" [ref=f8e260]:
+            - generic [ref=f8e262]:
+              - generic [ref=f8e263] [cursor=pointer]:
+                - generic [ref=f8e264]:
+                  - generic [ref=f8e265]: AGENT COMPLETED
+                  - generic [ref=f8e266]: 01:15 PM
+                - generic [ref=f8e267]: "Worker: Alice Smith"
+                - generic [ref=f8e268]: "Trust: 0.93"
+              - button "▶ Details" [ref=f8e269] [cursor=pointer]
+          - listitem "ACTION GATE APPROVED, Jul 1" [ref=f8e270]:
+            - generic [ref=f8e272]:
+              - generic [ref=f8e274] [cursor=pointer]:
+                - generic [ref=f8e275]: ACTION GATE APPROVED
+                - generic [ref=f8e276]: 01:30 PM
+              - button "▶ Details" [ref=f8e277] [cursor=pointer]
+          - listitem "MILESTONE REACHED, Jul 1" [ref=f8e278]:
+            - generic [ref=f8e280]:
+              - generic [ref=f8e282] [cursor=pointer]:
+                - generic [ref=f8e283]: MILESTONE REACHED
+                - generic [ref=f8e284]: 02:00 PM
+              - button "▶ Details" [ref=f8e285] [cursor=pointer]
+          - listitem "TASK CREATED, Jul 1" [ref=f8e286]:
+            - generic [ref=f8e288]:
+              - generic [ref=f8e290] [cursor=pointer]:
+                - generic [ref=f8e291]: TASK CREATED
+                - generic [ref=f8e292]: 02:15 PM
+              - button "▶ Details" [ref=f8e293] [cursor=pointer]
+          - listitem "TIMER SCHEDULED, Jul 1" [ref=f8e294]:
+            - generic [ref=f8e296]:
+              - generic [ref=f8e298] [cursor=pointer]:
+                - generic [ref=f8e299]: TIMER SCHEDULED
+                - generic [ref=f8e300]: 02:20 PM
+              - button "▶ Details" [ref=f8e301] [cursor=pointer]
+          - listitem "TASK COMPLETED, Jul 1" [ref=f8e302]:
+            - generic [ref=f8e304]:
+              - generic [ref=f8e306] [cursor=pointer]:
+                - generic [ref=f8e307]: TASK COMPLETED
+                - generic [ref=f8e308]: 03:00 PM
+              - button "▶ Details" [ref=f8e309] [cursor=pointer]
+          - listitem "ORCHESTRATION COMPLETED, Jul 1" [ref=f8e310]:
+            - generic [ref=f8e312]:
+              - generic [ref=f8e314] [cursor=pointer]:
+                - generic [ref=f8e315]: ORCHESTRATION COMPLETED
+                - generic [ref=f8e316]: 03:15 PM
+              - button "▶ Details" [ref=f8e317] [cursor=pointer]
+          - listitem "CASE COMPLETED, Jul 1" [ref=f8e318]:
+            - generic [ref=f8e320]:
+              - generic [ref=f8e322] [cursor=pointer]:
+                - generic [ref=f8e323]: CASE COMPLETED
+                - generic [ref=f8e324]: 03:30 PM
+              - button "▶ Details" [ref=f8e325] [cursor=pointer]
+      - generic [ref=f8e326]:
+        - heading "Component Features" [level=2] [ref=f8e327]
+        - list [ref=f8e328]:
+          - listitem [ref=f8e329]:
+            - strong [ref=f8e330]: "Full Mode:"
+            - text: Vertical timeline with CSS line, categorized nodes (lifecycle/task/agent/milestone/action-gate/orchestration)
+          - listitem [ref=f8e331]:
+            - strong [ref=f8e332]: "Compact Mode:"
+            - text: Horizontal strip showing lifecycle + milestone events only, with truncation (first 3 + last 2 when >7)
+          - listitem [ref=f8e333]:
+            - strong [ref=f8e334]: "Filter Bar:"
+            - text: Stream type chips (CASE, WORKER, ORCHESTRATION, TIMER, SYSTEM) to filter visible events
+          - listitem [ref=f8e335]:
+            - strong [ref=f8e336]: "Expandable Payloads:"
+            - text: Click "Details" to toggle full payload JSON
+          - listitem [ref=f8e337]:
+            - strong [ref=f8e338]: "Event Emission:"
+            - text: Emits
+            - code [ref=f8e339]: timeline.event-selected
+            - text: ","
+            - code [ref=f8e340]: work-item.selected
+            - text: (for tasks),
+            - code [ref=f8e341]: timeline.expand-requested
+          - listitem [ref=f8e342]:
+            - strong [ref=f8e343]: "Accessibility:"
+            - text: ARIA roles, keyboard navigation (Arrow Up/Down), live region announcements
+        - heading "Mock Data" [level=3] [ref=f8e344]
+        - paragraph [ref=f8e345]: "This example uses 15 mock case events spanning a complete fraud investigation:"
+        - list [ref=f8e346]:
+          - listitem [ref=f8e347]:
+            - strong [ref=f8e348]: "Lifecycle events:"
+            - text: CASE_STARTED, CASE_COMPLETED
+          - listitem [ref=f8e349]:
+            - strong [ref=f8e350]: "Tasks:"
+            - text: 2 tasks created and completed (document review, compliance check)
+          - listitem [ref=f8e351]:
+            - strong [ref=f8e352]: "Agent activity:"
+            - text: Agent dispatched and completed with trust scores
+          - listitem [ref=f8e353]:
+            - strong [ref=f8e354]: "Milestones:"
+            - text: 2 milestones reached (initial assessment, risk approval)
+          - listitem [ref=f8e355]:
+            - strong [ref=f8e356]: "Action gates:"
+            - text: Manager approval required for escalation
+          - listitem [ref=f8e357]:
+            - strong [ref=f8e358]: "Orchestration:"
+            - text: Risk assessment workflow started and completed
+          - listitem [ref=f8e359]:
+            - strong [ref=f8e360]: "Timers:"
+            - text: SLA reminder scheduled
+        - heading "Try It" [level=3] [ref=f8e361]
+        - list [ref=f8e362]:
+          - listitem [ref=f8e363]:
+            - strong [ref=f8e364]: "Full Mode:"
+            - text: Click a node to see the event. Click "Details" to expand payload JSON.
+          - listitem [ref=f8e365]:
+            - strong [ref=f8e366]: "Filter:"
+            - text: Click stream type chips to toggle visibility of CASE, WORKER, ORCHESTRATION, etc.
+          - listitem [ref=f8e367]:
+            - strong [ref=f8e368]: "Compact Mode:"
+            - text: Switch to compact to see the horizontal summary strip. Click the strip to emit
+            - code [ref=f8e369]: timeline.expand-requested
+            - text: .
+          - listitem [ref=f8e370]:
+            - strong [ref=f8e371]: "Keyboard:"
+            - text: Tab to a node, use Arrow Up/Down to navigate, Enter/Space to expand details.
+          - listitem [ref=f8e372]:
+            - strong [ref=f8e373]: "Hover:"
+            - text: In compact mode, hover over dots to see event type + timestamp tooltip.
+        - heading "Node Categorization" [level=3] [ref=f8e374]
+        - table [ref=f8e375]:
+          - rowgroup [ref=f8e376]:
+            - row "Category Event Types Styling" [ref=f8e377]:
+              - columnheader "Category" [ref=f8e378]
+              - columnheader "Event Types" [ref=f8e379]
+              - columnheader "Styling" [ref=f8e380]
+          - rowgroup [ref=f8e381]:
+            - row "Lifecycle CASE_STARTED, CASE_COMPLETED, CASE_FAULTED, etc. Green dot, prominent styling" [ref=f8e382]:
+              - cell "Lifecycle" [ref=f8e383]
+              - cell "CASE_STARTED, CASE_COMPLETED, CASE_FAULTED, etc." [ref=f8e384]
+              - cell "Green dot, prominent styling" [ref=f8e385]
+            - row "Task TASK_CREATED, TASK_COMPLETED, TASK_FAILED Amber/orange dot, emits work-item.selected on click" [ref=f8e386]:
+              - cell "Task" [ref=f8e387]
+              - cell "TASK_CREATED, TASK_COMPLETED, TASK_FAILED" [ref=f8e388]
+              - cell "Amber/orange dot, emits work-item.selected on click" [ref=f8e389]
+            - row "Agent AGENT_DISPATCHED, AGENT_COMPLETED, AGENT_FAILED Purple dot, shows worker name + trust score from metadata" [ref=f8e390]:
+              - cell "Agent" [ref=f8e391]
+              - cell "AGENT_DISPATCHED, AGENT_COMPLETED, AGENT_FAILED" [ref=f8e392]
+              - cell "Purple dot, shows worker name + trust score from metadata" [ref=f8e393]
+            - row "Milestone MILESTONE_REACHED, MILESTONE_ACTIVATED, SLA_VIOLATED Blue diamond (rotated square)" [ref=f8e394]:
+              - cell "Milestone" [ref=f8e395]
+              - cell "MILESTONE_REACHED, MILESTONE_ACTIVATED, SLA_VIOLATED" [ref=f8e396]
+              - cell "Blue diamond (rotated square)" [ref=f8e397]
+            - row "Action Gate ACTION_GATE_PENDING, ACTION_GATE_APPROVED, ACTION_GATE_REJECTED Red dot, decision points" [ref=f8e398]:
+              - cell "Action Gate" [ref=f8e399]
+              - cell "ACTION_GATE_PENDING, ACTION_GATE_APPROVED, ACTION_GATE_REJECTED" [ref=f8e400]
+              - cell "Red dot, decision points" [ref=f8e401]
+            - row "Orchestration ORCHESTRATION_STARTED, ORCHESTRATION_COMPLETED, ORCHESTRATION_ESCALATED Grey dot, workflow containers" [ref=f8e402]:
+              - cell "Orchestration" [ref=f8e403]
+              - cell "ORCHESTRATION_STARTED, ORCHESTRATION_COMPLETED, ORCHESTRATION_ESCALATED" [ref=f8e404]
+              - cell "Grey dot, workflow containers" [ref=f8e405]

@@ -1,0 +1,14 @@
+[     102ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95
+[     328ms] [ERROR] Failed to bootstrap examples: SyntaxError: Invalid or unexpected token @ http://localhost:5180/src/main.ts:25
+[ 1143074ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5180/@vite/client:559
+[ 1143366ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=6a8167aa:95
+[ 1143555ms] [WARNING] Element pages-data-table scheduled an update (generally because a property was set) after an update completed, causing a new update to be scheduled. This is inefficient and should be avoided unless the next update can only be scheduled as a side effect of the previous update. See https://lit.dev/msg/change-in-update for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=6a8167aa:95
+[ 1149681ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5180/@vite/client:559
+[ 1149683ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
+[ 1150684ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
+[ 1151685ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
+[ 1152688ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
+[ 1153690ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
+[ 1154692ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
+[ 1156043ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95
+[ 1156123ms] [WARNING] Element pages-data-table scheduled an update (generally because a property was set) after an update completed, causing a new update to be scheduled. This is inefficient and should be avoided unless the next update can only be scheduled as a side effect of the previous update. See https://lit.dev/msg/change-in-update for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95

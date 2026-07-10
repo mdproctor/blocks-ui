@@ -1,0 +1,71 @@
+- generic [active] [ref=f9e3]:
+  - navigation [ref=f9e4]:
+    - generic [ref=f9e5]: blocks-ui Examples
+    - generic [ref=f9e6]: Components
+    - button "Work Item Row" [ref=f9e7] [cursor=pointer]
+    - button "Work Item Inbox" [ref=f9e8] [cursor=pointer]
+    - button "Work Item Detail" [ref=f9e9] [cursor=pointer]
+    - button "Queue + Inbox" [ref=f9e10] [cursor=pointer]
+    - button "Schema Form" [ref=f9e11] [cursor=pointer]
+    - button "SLA Indicator" [ref=f9e12] [cursor=pointer]
+    - button "KPI Metric Row" [ref=f9e13] [cursor=pointer]
+    - button "Approval Gate" [ref=f9e14] [cursor=pointer]
+    - button "Confirm Dialog" [ref=f9e15] [cursor=pointer]
+    - button "Data Table" [ref=f9e16] [cursor=pointer]
+    - button "Notifications" [ref=f9e17] [cursor=pointer]
+    - button "Audit Trail Viewer" [ref=f9e18] [cursor=pointer]
+    - button "Case Timeline" [ref=f9e19] [cursor=pointer]
+    - button "Trust Score Panel" [ref=f9e20] [cursor=pointer]
+    - generic [ref=f9e21]: Composed
+    - button "Full Workbench" [ref=f9e22] [cursor=pointer]
+    - generic [ref=f9e23]:
+      - button "Light" [ref=f9e24] [cursor=pointer]
+      - button "Comfortable" [ref=f9e25] [cursor=pointer]
+  - main [ref=f9e26]:
+    - generic [ref=f9e92]:
+      - heading "Trust Score Panel Demo" [level=1] [ref=f9e93]
+      - generic [ref=f9e94]:
+        - generic [ref=f9e95]:
+          - generic [ref=f9e96]: Select Actor
+          - combobox "Select Actor" [ref=f9e97]:
+            - option "agent-alice (0.87)" [selected]
+            - option "agent-bob (0.52)"
+            - option "agent-charlie (0.31)"
+            - option "agent-new (no data)"
+        - generic [ref=f9e98]:
+          - generic [ref=f9e99]: Display Mode
+          - combobox "Display Mode" [ref=f9e100]:
+            - option "Full" [selected]
+            - option "Compact"
+      - generic [ref=f9e104]:
+        - img "Trust score 0.87, high trust" [ref=f9e106]:
+          - img [ref=f9e107]:
+            - generic [ref=f9e110]: "0.87"
+        - generic [ref=f9e111]:
+          - heading "Per-Capability Breakdown" [level=3] [ref=f9e112]
+          - grid [ref=f9e114]:
+            - generic [ref=f9e115]:
+              - row "▲ ▲" [ref=f9e116]:
+                - columnheader "▲" [ref=f9e117] [cursor=pointer]:
+                  - generic [ref=f9e118]: ▲
+                - columnheader "▲" [ref=f9e119] [cursor=pointer]:
+                  - generic [ref=f9e120]: ▲
+              - button "Table options" [ref=f9e123] [cursor=pointer]: ⋮
+            - generic [ref=f9e124]: No data
+        - generic [ref=f9e125]:
+          - heading "Trust Trend" [level=3] [ref=f9e126]
+          - generic [ref=f9e127]: Trend data requires backend endpoint
+      - heading "Compact Mode Examples (Pre-fetched Data)" [level=2] [ref=f9e128]
+      - generic [ref=f9e129]:
+        - generic [ref=f9e130]:
+          - generic [ref=f9e131]: "agent-alice:"
+          - img "Trust score 0.87, high trust" [ref=f9e134]: "0.87"
+        - generic [ref=f9e135]:
+          - generic [ref=f9e136]: "agent-bob:"
+          - img "Trust score 0.52, adequate trust" [ref=f9e139]: "0.52"
+        - generic [ref=f9e140]:
+          - generic [ref=f9e141]: "agent-charlie:"
+          - img "Trust score 0.31, low trust" [ref=f9e144]: "0.31"
+        - generic [ref=f9e145]:
+          - generic [ref=f9e146]: "No data:"
+          - img "No trust data" [ref=f9e149]: —

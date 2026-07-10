@@ -1,0 +1,51 @@
+[     105ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95
+[     165ms] [WARNING] Element pages-data-table scheduled an update (generally because a property was set) after an update completed, causing a new update to be scheduled. This is inefficient and should be avoided unless the next update can only be scheduled as a side effect of the previous update. See https://lit.dev/msg/change-in-update for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95
+[   13974ms] TypeError: Failed to construct 'URL': Invalid URL
+    at AuditTrailViewer._updateEndpoints (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:95:24)
+    at http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:111:12
+[   13974ms] TypeError: Failed to construct 'URL': Invalid URL
+    at AuditTrailViewer._updateEndpoints (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:95:24)
+    at AuditTrailViewer.willUpdate (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:77:12)
+    at AuditTrailViewer.performUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:753:14)
+    at AuditTrailViewer.scheduleUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:700:25)
+    at AuditTrailViewer.__enqueueUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:676:25)
+[   39515ms] TypeError: Failed to construct 'URL': Invalid URL
+    at AuditTrailViewer._updateEndpoints (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:95:24)
+    at http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:111:12
+[   39515ms] TypeError: Failed to construct 'URL': Invalid URL
+    at AuditTrailViewer._updateEndpoints (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:95:24)
+    at AuditTrailViewer.willUpdate (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:77:12)
+    at AuditTrailViewer.performUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:753:14)
+    at AuditTrailViewer.scheduleUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:700:25)
+    at AuditTrailViewer.__enqueueUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:676:25)
+[   39897ms] [ERROR] Failed to initialize mock state: SyntaxError: Failed to execute 'json' on 'Response': Unexpected token 'N', "Not found" is not valid JSON
+    at http://localhost:5180/src/pages/notification-page.ts:35:62
+    at async Promise.all (index 0)
+    at async NotificationPage.initMockState (http://localhost:5180/src/pages/notification-page.ts:34:66) @ http://localhost:5180/src/pages/notification-page.ts:43
+[   42022ms] SyntaxError: Failed to execute 'json' on 'Response': Unexpected token 'N', "Not found" is not valid JSON
+    at DetailPage.connectedCallback (http://localhost:5180/src/pages/detail-page.ts:28:29)
+[   62188ms] TypeError: Failed to construct 'URL': Invalid URL
+    at AuditTrailViewer._updateEndpoints (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:95:24)
+    at http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:111:12
+[   62188ms] TypeError: Failed to construct 'URL': Invalid URL
+    at AuditTrailViewer._updateEndpoints (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:95:24)
+    at AuditTrailViewer.willUpdate (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:77:12)
+    at AuditTrailViewer.performUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:753:14)
+    at AuditTrailViewer.scheduleUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:700:25)
+    at AuditTrailViewer.__enqueueUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:676:25)
+[   73838ms] SyntaxError: Failed to execute 'json' on 'Response': Unexpected token 'N', "Not found" is not valid JSON
+    at DataTablePage.connectedCallback (http://localhost:5180/src/pages/data-table-page.ts:83:29)
+[   74309ms] [ERROR] Failed to initialize mock state: SyntaxError: Failed to execute 'json' on 'Response': Unexpected token 'N', "Not found" is not valid JSON
+    at http://localhost:5180/src/pages/notification-page.ts:35:62
+    at async Promise.all (index 0)
+    at async NotificationPage.initMockState (http://localhost:5180/src/pages/notification-page.ts:34:66) @ http://localhost:5180/src/pages/notification-page.ts:43
+[   76685ms] TypeError: Failed to construct 'URL': Invalid URL
+    at AuditTrailViewer._updateEndpoints (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:95:24)
+    at http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:111:12
+[   76685ms] TypeError: Failed to construct 'URL': Invalid URL
+    at AuditTrailViewer._updateEndpoints (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:95:24)
+    at AuditTrailViewer.willUpdate (http://localhost:5180/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/audit-trail-viewer/src/audit-trail-viewer.ts:77:12)
+    at AuditTrailViewer.performUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:753:14)
+    at AuditTrailViewer.scheduleUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:700:25)
+    at AuditTrailViewer.__enqueueUpdate (http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:676:25)
+[   87148ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:5180/node_modules/.vite/deps/lit.js?v=69085c3e:95

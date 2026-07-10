@@ -1,0 +1,163 @@
+- generic [ref=f11e1]:
+  - generic [active] [ref=f11e3]:
+    - navigation [ref=f11e4]:
+      - generic [ref=f11e5]: blocks-ui Examples
+      - generic [ref=f11e6]: Components
+      - button "Work Item Row" [ref=f11e7] [cursor=pointer]
+      - button "Work Item Inbox" [ref=f11e8] [cursor=pointer]
+      - button "Work Item Detail" [ref=f11e9] [cursor=pointer]
+      - button "Queue + Inbox" [ref=f11e10] [cursor=pointer]
+      - button "Schema Form" [ref=f11e11] [cursor=pointer]
+      - button "SLA Indicator" [ref=f11e12] [cursor=pointer]
+      - button "KPI Metric Row" [ref=f11e13] [cursor=pointer]
+      - button "Approval Gate" [ref=f11e14] [cursor=pointer]
+      - button "Confirm Dialog" [ref=f11e15] [cursor=pointer]
+      - button "Data Table" [ref=f11e16] [cursor=pointer]
+      - button "Notifications" [ref=f11e17] [cursor=pointer]
+      - button "Audit Trail Viewer" [ref=f11e18] [cursor=pointer]
+      - button "Case Timeline" [ref=f11e19] [cursor=pointer]
+      - button "Trust Score Panel" [ref=f11e20] [cursor=pointer]
+      - generic [ref=f11e21]: Composed
+      - button "Full Workbench" [ref=f11e22] [cursor=pointer]
+      - generic [ref=f11e23]:
+        - button "Light" [ref=f11e24] [cursor=pointer]
+        - button "Comfortable" [ref=f11e25] [cursor=pointer]
+    - main [ref=f11e26]:
+      - generic [ref=f11e32]:
+        - region "List" [ref=f11e33]:
+          - generic [ref=f11e35]:
+            - radiogroup "Queue scope" [ref=f11e37]:
+              - generic [ref=f11e38]: "Queues:"
+              - radio "IoT Operations 3 3" [ref=f11e39] [cursor=pointer]:
+                - text: IoT Operations
+                - generic [ref=f11e40]: "3"
+                - generic [ref=f11e41]: "3"
+              - radio "AML Investigations 5 2" [ref=f11e185] [cursor=pointer]:
+                - text: AML Investigations
+                - generic [ref=f11e43]: "5"
+                - generic [ref=f11e44]: "2"
+              - radio "Clinical Reviews 4 2" [ref=f11e186] [cursor=pointer]:
+                - text: Clinical Reviews
+                - generic [ref=f11e46]: "4"
+                - generic [ref=f11e47]: "2"
+              - radio "DevTown 3 2" [ref=f11e187] [cursor=pointer]:
+                - text: DevTown
+                - generic [ref=f11e49]: "3"
+                - generic [ref=f11e50]: "2"
+              - radio "Life Insurance 3" [ref=f11e51] [cursor=pointer]:
+                - text: Life Insurance
+                - generic [ref=f11e52]: "3"
+            - generic [ref=f11e53]:
+              - button "My Work (6)" [ref=f11e188] [cursor=pointer]:
+                - text: My Work
+                - generic [ref=f11e55]: (6)
+              - button "Claimable (5)" [ref=f11e189] [cursor=pointer]:
+                - text: Claimable
+                - generic [ref=f11e57]: (5)
+              - button "All (15)" [ref=f11e190] [cursor=pointer]:
+                - text: All
+                - generic [ref=f11e59]: (15)
+            - generic [ref=f11e62]:
+              - generic [ref=f11e63]:
+                - generic [ref=f11e64]: "Total:"
+                - generic [ref=f11e65]: "6"
+              - 'button "Overdue: 3" [ref=f11e191] [cursor=pointer]':
+                - generic [ref=f11e67]: "Overdue:"
+                - generic [ref=f11e68]: "3"
+            - generic [ref=f11e71]:
+              - generic [ref=f11e72]:
+                - generic [ref=f11e73]: "Status:"
+                - button "Pending" [ref=f11e74] [cursor=pointer]
+                - button "Assigned (1)" [ref=f11e75] [cursor=pointer]:
+                  - text: Assigned
+                  - generic [ref=f11e76]: (1)
+                - button "In Progress (4)" [ref=f11e77] [cursor=pointer]:
+                  - text: In Progress
+                  - generic [ref=f11e78]: (4)
+                - button "Suspended" [ref=f11e192] [cursor=pointer]
+                - button "Delegated (1)" [ref=f11e81] [cursor=pointer]:
+                  - text: Delegated
+                  - generic [ref=f11e82]: (1)
+              - generic [ref=f11e84]:
+                - generic [ref=f11e85]: "Priority:"
+                - button "Urgent (2)" [ref=f11e193] [cursor=pointer]:
+                  - text: Urgent
+                  - generic [ref=f11e87]: (2)
+                - button "High (3)" [ref=f11e88] [cursor=pointer]:
+                  - text: High
+                  - generic [ref=f11e89]: (3)
+                - button "Medium (1)" [ref=f11e90] [cursor=pointer]:
+                  - text: Medium
+                  - generic [ref=f11e91]: (1)
+                - button "Low" [ref=f11e92] [cursor=pointer]
+            - grid "Data table" [ref=f11e95]:
+              - generic [ref=f11e96]:
+                - row "Select all Title ▲ Status ▲ Category ▲ Created ▲" [ref=f11e97]:
+                  - checkbox "Select all" [ref=f11e99] [cursor=pointer]
+                  - columnheader "Title ▲" [ref=f11e100] [cursor=pointer]:
+                    - text: Title
+                    - generic [ref=f11e101]: ▲
+                  - columnheader "Status ▲" [ref=f11e102] [cursor=pointer]:
+                    - text: Status
+                    - generic [ref=f11e103]: ▲
+                  - columnheader "Category ▲" [ref=f11e104] [cursor=pointer]:
+                    - text: Category
+                    - generic [ref=f11e105]: ▲
+                  - columnheader "Created ▲" [ref=f11e106] [cursor=pointer]:
+                    - text: Created
+                    - generic [ref=f11e107]: ▲
+                - button "Table options" [ref=f11e110] [cursor=pointer]: ⋮
+              - generic [ref=f11e112]:
+                - row "Select row Appeal review — Denied lumbar fusion surgery ASSIGNED APPEAL 02/07/2026" [ref=f11e113]:
+                  - checkbox "Select row" [ref=f11e115] [cursor=pointer]
+                  - gridcell "Appeal review — Denied lumbar fusion surgery" [ref=f11e116]
+                  - gridcell "ASSIGNED" [ref=f11e117]:
+                    - generic [ref=f11e118]: ASSIGNED
+                  - gridcell "APPEAL" [ref=f11e119]
+                  - gridcell "02/07/2026" [ref=f11e120]:
+                    - generic [ref=f11e121]: 02/07/2026
+                - row "Select row Sanctions screening hit — Wire to OFAC-listed entity IN_PROGRESS AML_SANCTIONS 5d ago" [ref=f11e122]:
+                  - checkbox "Select row" [ref=f11e124] [cursor=pointer]
+                  - gridcell "Sanctions screening hit — Wire to OFAC-listed entity" [ref=f11e125]
+                  - gridcell "IN_PROGRESS" [ref=f11e126]:
+                    - generic [ref=f11e127]: IN_PROGRESS
+                  - gridcell "AML_SANCTIONS" [ref=f11e128]
+                  - gridcell "5d ago" [ref=f11e129]:
+                    - generic [ref=f11e130]: 5d ago
+                - row "Select row Anomaly detection — Temperature spike in cold storage unit CS-22 IN_PROGRESS IOT_ANOMALY 5d ago" [ref=f11e131]:
+                  - checkbox "Select row" [ref=f11e133] [cursor=pointer]
+                  - gridcell "Anomaly detection — Temperature spike in cold storage unit CS-22" [ref=f11e134]
+                  - gridcell "IN_PROGRESS" [ref=f11e135]:
+                    - generic [ref=f11e136]: IN_PROGRESS
+                  - gridcell "IOT_ANOMALY" [ref=f11e137]
+                  - gridcell "5d ago" [ref=f11e138]:
+                    - generic [ref=f11e139]: 5d ago
+                - row "Select row Claims investigation — Suspicious death claim IN_PROGRESS SIU_INVESTIGATION 01/07/2026" [ref=f11e194]:
+                  - checkbox "Select row" [ref=f11e142] [cursor=pointer]
+                  - gridcell "Claims investigation — Suspicious death claim" [ref=f11e195]
+                  - gridcell "IN_PROGRESS" [ref=f11e144]:
+                    - generic [ref=f11e145]: IN_PROGRESS
+                  - gridcell "SIU_INVESTIGATION" [ref=f11e196]
+                  - gridcell "01/07/2026" [ref=f11e197]:
+                    - generic [ref=f11e198]: 01/07/2026
+                - row "Select row Peer-to-peer review — Denied spinal cord stimulator IN_PROGRESS PEER_REVIEW 01/07/2026" [ref=f11e199]:
+                  - checkbox "Select row" [ref=f11e151] [cursor=pointer]
+                  - gridcell "Peer-to-peer review — Denied spinal cord stimulator" [ref=f11e200]
+                  - gridcell "IN_PROGRESS" [ref=f11e153]:
+                    - generic [ref=f11e154]: IN_PROGRESS
+                  - gridcell "PEER_REVIEW" [ref=f11e201]
+                  - gridcell "01/07/2026" [ref=f11e156]:
+                    - generic [ref=f11e157]: 01/07/2026
+                - row "Select row Structuring investigation — Multiple cash deposits under $10K DELEGATED AML_INVESTIGATION 30/06/2026" [ref=f11e202]:
+                  - checkbox "Select row" [ref=f11e160] [cursor=pointer]
+                  - gridcell "Structuring investigation — Multiple cash deposits under $10K" [ref=f11e203]
+                  - gridcell "DELEGATED" [ref=f11e204]:
+                    - generic [ref=f11e163]: DELEGATED
+                  - gridcell "AML_INVESTIGATION" [ref=f11e205]
+                  - gridcell "30/06/2026" [ref=f11e206]:
+                    - generic [ref=f11e166]: 30/06/2026
+        - separator [ref=f11e176]
+        - region "Detail" [ref=f11e177]:
+          - generic [ref=f11e207]: "Error: outgoing.map is not a function or its return value is not iterable"
+  - status [ref=f11e184]: Live updates connected
+  - status [ref=f11e208]: Showing detail

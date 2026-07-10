@@ -1,0 +1,4 @@
+[      92ms] [WARNING] Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information. @ http://localhost:3002/node_modules/.vite/deps/lit.js?v=69085c3e:95
+[      99ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3002/favicon.ico:0
+[     244ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/@fs/Users/mdproctor/claude/casehub/blocks-ui/components/trust-score-panel/src/trust-score-panel.ts:0
+[     244ms] [ERROR] Failed to bootstrap examples: TypeError: Failed to fetch dynamically imported module: http://localhost:3002/src/pages/trust-score-page.ts @ http://localhost:3002/src/main.ts:25
