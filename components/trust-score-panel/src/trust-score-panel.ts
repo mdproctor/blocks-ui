@@ -1,12 +1,11 @@
-import { LitElement, html, css, type PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { DataSourceMixin, TrendSourceMixin, renderSparkline } from '@casehubio/blocks-ui-core';
-import { LiveRegionMixin } from '@casehubio/blocks-ui-core/mixins/live-region.js';
-import type { TrustScoreResponse, TrustLevel } from './types.js';
-import { trustLevelFromScore } from './types.js';
+import {css, html, LitElement, type PropertyValues} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
+import {DataSourceMixin, renderSparkline, TrendSourceMixin} from '@casehubio/blocks-ui-core';
+import {LiveRegionMixin} from '@casehubio/blocks-ui-core/mixins/live-region.js';
+import type {TrustLevel, TrustScoreResponse} from './types.js';
+import {trustLevelFromScore} from './types.js';
 import '@casehubio/blocks-ui-data-table';
-import type { ColumnDef } from '@casehubio/blocks-ui-data-table';
-import type { SourceFactory } from '@casehubio/pages-component';
+import type {ColumnDef} from '@casehubio/blocks-ui-data-table';
 
 const TRUST_LEVEL_COLORS: Record<string, string> = {
   high: 'var(--color-success, #28a745)',
@@ -280,13 +279,15 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
 
     const columns: ColumnDef<{ tag: string; score: number }>[] = [
       {
-        key: 'tag',
-        header: 'Capability',
+        id: 'tag',
+        label: 'Capability',
+        getValue: (row) => row.tag,
         sortable: true,
       },
       {
-        key: 'score',
-        header: 'Score',
+        id: 'score',
+        label: 'Score',
+        getValue: (row) => row.score,
         sortable: true,
         render: (value) => {
           const numValue = value as number;
@@ -307,7 +308,7 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
     return html`
       <pages-data-table
         .columns=${columns}
-        .data=${capabilities}
+        .rows=${capabilities}
         @row-click=${this._handleCapabilityClick}
       ></pages-data-table>
     `;

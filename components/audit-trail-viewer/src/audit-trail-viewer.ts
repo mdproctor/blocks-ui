@@ -1,10 +1,10 @@
-import { LitElement, html, css, type TemplateResult, type PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { DataSourceAdapter, fetchSource, renderPropertyTree, propertyTreeStyles } from '@casehubio/blocks-ui-core';
-import { LiveRegionMixin } from '@casehubio/blocks-ui-core/mixins/live-region.js';
-import type { WorkIdentity } from '@casehubio/blocks-ui-core';
-import type { ColumnDef } from '@casehubio/blocks-ui-data-table';
-import type { LedgerEntry, VerificationResult, Attestation, EntryTypeFilter } from './types.js';
+import {css, html, LitElement, type PropertyValues, type TemplateResult} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
+import type {WorkIdentity} from '@casehubio/blocks-ui-core';
+import {DataSourceAdapter, fetchSource, propertyTreeStyles, renderPropertyTree} from '@casehubio/blocks-ui-core';
+import {LiveRegionMixin} from '@casehubio/blocks-ui-core/mixins/live-region.js';
+import type {ColumnDef} from '@casehubio/blocks-ui-data-table';
+import type {Attestation, EntryTypeFilter, LedgerEntry, VerificationResult} from './types.js';
 import '@casehubio/blocks-ui-data-table';
 
 @customElement('audit-trail-viewer')
@@ -31,46 +31,50 @@ export class AuditTrailViewer extends LiveRegionMixin(LitElement) {
   @state() private _dateFrom: string = '';
   @state() private _dateTo: string = '';
 
-  private _columns: ColumnDef<LedgerEntry>[] = [
-    {
-      id: 'occurredAt',
-      label: 'Timestamp',
-      sortable: true,
-      render: (value) => {
-        const date = new Date(value as string);
-        return html`<span>${date.toLocaleTimeString()}</span>`;
+  private private _columns: ColumnDef<LedgerEntry>[] = [
+      {
+          id: 'occurredAt',
+          label: 'Timestamp',
+          getValue: (row) => row.occurredAt,
+          sortable: true,
+          render: (value) => {
+              const date = new Date(value as string);
+              return html`<span>${date.toLocaleTimeString()}</span>`;
+          },
       },
-    },
-    {
-      id: 'actorId',
-      label: 'Actor',
-      sortable: true,
-      render: (value, row) => {
-        if (!value) return html`<span class="redacted">Redacted</span>`;
-        return html`
+      {
+          id: 'actorId',
+          label: 'Actor',
+          getValue: (row) => row.actorId,
+          sortable: true,
+          render: (value, row) => {
+              if (!value) return html`<span class="redacted">Redacted</span>`;
+              return html`
           <div class="actor-cell">
             <span>${value as string}</span>
             ${row.actorType ? html`<span class="badge actor-type">${row.actorType}</span>` : ''}
           </div>
         `;
+          },
       },
-    },
-    {
-      id: 'entryType',
-      label: 'Type',
-      sortable: true,
-      render: (value) => html`<span class="entry-type">${value as string}</span>`,
-    },
-    {
-      id: 'digest',
-      label: 'Digest',
-      sortable: false,
-      render: (value) => {
-        const digest = value as string;
-        return html`<code class="digest">${digest.substring(0, 8)}...</code>`;
+      {
+          id: 'entryType',
+          label: 'Type',
+          getValue: (row) => row.entryType,
+          sortable: true,
+          render: (value) => html`<span class="entry-type">${value as string}</span>`,
       },
-    },
-  ];
+      {
+          id: 'digest',
+          label: 'Digest',
+          getValue: (row) => row.digest,
+          sortable: false,
+          render: (value) => {
+              const digest = value as string;
+              return html`<code class="digest">${digest.substring(0, 8)}...</code>`;
+          },
+      },
+  ];;
 
   override willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed);
@@ -361,7 +365,7 @@ export class AuditTrailViewer extends LiveRegionMixin(LitElement) {
       ${verifyBanner} ${this._renderFilterControls()}
       <pages-data-table
         .columns=${this._columns}
-        .data=${this._filteredEntries}
+        .rows=${this._filteredEntries}
         client-filter
         @row-activate=${this._handleRowActivate}
       >
