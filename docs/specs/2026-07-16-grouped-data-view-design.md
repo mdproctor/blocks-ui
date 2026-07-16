@@ -37,26 +37,19 @@ The wrapper bridges two rendering models:
 In `willUpdate`/`updated`, the wrapper converts and forwards properties:
 ```typescript
 // Convert string groupBy to GroupingKey
-const groupingKey: GroupingKey = {
-  sourceId: this.groupBy as ColumnId,
-  columnId: this.groupBy as ColumnId,
-  strategy: { mode: 'distinct' },
-  maxIntervals: 100,
-  emptyIntervals: false,
-  ascendingOrder: true,
-};
+const groupingKey = this._toGroupingKey(this.groupBy);
 
 this._groupedView.props = { groupBy: groupingKey, columnConfig, rowStyle, ... };
 
-// Apply groupOrder by sorting dataset rows before forwarding
-const orderedDataSet = this.groupOrder
-  ? this._reorderByGroup(this.dataSet, this.groupBy, this.groupOrder)
-  : this.dataSet;
-this._groupedView.dataSet = orderedDataSet;
+// ALWAYS sort dataset to ensure group adjacency — extractGroupBoundaries()
+// is a transition scan that produces duplicate groups on interleaved data.
+// When groupOrder is set, apply explicit ordering; otherwise sort by column value.
+const preparedDataSet = this._prepareDataSet(this.dataSet, this.groupBy, this.groupOrder);
+this._groupedView.dataSet = preparedDataSet;
 
-// Apply group styling after render (synchronous — PagesElement.update()
-// completes within the dataSet setter call chain)
-this._applyGroupStyles();
+// Group styling via setGroupStyles() — PagesGroupedView applies during render
+this._groupedView.setGroupStyles((name: string) =>
+  this.groupStyle?.(name) ?? this.groupConfig?.get(name));
 
 this._groupedView.setColumnRenderers(this.columnRenderers);
 ```
@@ -127,32 +120,56 @@ strategies (`fixedCalendar`, `dynamicRange`) are analytics concepts handled by
 `pages-grouped-view` directly — blocks-ui consumers group by discrete domain
 values (lane, queue, status).
 
-#### groupOrder implementation
+#### Dataset preparation — group adjacency and ordering
 
-When `groupOrder` is set, the wrapper sorts the `TypedDataSet` rows before
-forwarding to `pages-grouped-view`, so that `extractGroupBoundaries()` produces
-boundaries in the specified order:
+`extractGroupBoundaries()` in PagesGroupedView is a transition-scan algorithm —
+it detects value changes in the key column, not distinct-value grouping. If the
+dataset has interleaved values (e.g. API returns rows sorted by date, not by lane),
+it produces duplicate groups. In the pages YAML pipeline, `applyGroupSequence()`
+handles this. In blocks-ui's endpoint mode, no such pipeline runs.
+
+The wrapper ALWAYS sorts the dataset by the groupBy column before forwarding,
+via `_prepareDataSet()`:
 
 ```typescript
-private _reorderByGroup(
+private _prepareDataSet(
   ds: TypedDataSet,
   keyColumn: string,
-  order: string[],
+  groupOrder?: string[],
 ): TypedDataSet {
-  const orderIndex = new Map(order.map((name, i) => [name, i]));
+  const colId = keyColumn as ColumnId;
+
+  if (groupOrder) {
+    const orderIndex = new Map(groupOrder.map((name, i) => [name, i]));
+    const sorted = [...ds.rows].sort((a, b) => {
+      const aName = String(a.cell(colId).value ?? '');
+      const bName = String(b.cell(colId).value ?? '');
+      const aIdx = orderIndex.get(aName) ?? groupOrder.length;
+      const bIdx = orderIndex.get(bName) ?? groupOrder.length;
+      if (aIdx !== bIdx) return aIdx - bIdx;
+      // Tiebreak: group by name so different unordered groups don't interleave
+      return aName < bName ? -1 : aName > bName ? 1 : 0;
+    });
+    return { columns: ds.columns, rows: sorted };
+  }
+
+  // No explicit order — sort by column value to ensure group adjacency
   const sorted = [...ds.rows].sort((a, b) => {
-    const aName = String(a.cell(keyColumn as ColumnId).value ?? '');
-    const bName = String(b.cell(keyColumn as ColumnId).value ?? '');
-    const aIdx = orderIndex.get(aName) ?? order.length;
-    const bIdx = orderIndex.get(bName) ?? order.length;
-    return aIdx - bIdx;
+    const aName = String(a.cell(colId).value ?? '');
+    const bName = String(b.cell(colId).value ?? '');
+    return aName < bName ? -1 : aName > bName ? 1 : 0;
   });
   return { columns: ds.columns, rows: sorted };
 }
 ```
 
-Groups not in the `groupOrder` array appear after all ordered groups, in their
-original dataset order. Row order within each group is preserved (stable sort).
+When `groupOrder` is set: ordered groups appear first in the specified order,
+unordered groups appear after all ordered groups sorted alphabetically. The
+name-based tiebreaker ensures rows from different unordered groups are never
+interleaved.
+
+When `groupOrder` is not set: groups appear in alphabetical order by column
+value. Row order within each group is preserved (stable sort).
 
 ### Group Styling
 
@@ -249,19 +266,25 @@ re-dispatches with the namespaced topic:
 // In connectedCallback:
 this._groupedView.addEventListener('pages-event', (e: CustomEvent) => {
   if (e.detail.topic === 'group-toggle') {
+    e.stopPropagation();
     emitPagesEvent(this, GroupedDataViewTopics.GROUP_TOGGLE, e.detail.payload);
   }
 });
 ```
 
+`stopPropagation()` prevents the original `group-toggle` event (dispatched with
+`composed: true`) from leaking past the wrapper. Without it, consumers would
+receive both the raw `group-toggle` and the namespaced `grouped-data.group-toggle`.
+
 **row-activated:** pages-table dispatches `row-activate` as a framework-level
 CustomEvent (not a `pages-event` topic) with `RowActivateDetail { row, key? }`.
 Since pages-table uses `composed: true`, the event crosses shadow DOM boundaries.
-The wrapper captures it and translates to a `pages-event`:
+The wrapper captures it, stops propagation, and translates to a `pages-event`:
 
 ```typescript
 // In connectedCallback:
 this._groupedView.addEventListener('row-activate', (e: CustomEvent) => {
+  e.stopPropagation();
   emitPagesEvent(this, GroupedDataViewTopics.ROW_ACTIVATED, e.detail);
 });
 ```
@@ -373,6 +396,54 @@ No content slots — group styling and column rendering via typed properties and
 
 - **PagesGroupedView `setGroupStyles()` API** — new setter method on PagesGroupedView
   following the established pattern. Filed as casehub-pages#TBD.
+
+## Testing Strategy
+
+### _toGroupingKey()
+- Converts string column ID to GroupingKey with `distinct` strategy
+- Sets `sourceId` and `columnId` to the provided column ID
+
+### _prepareDataSet()
+- **Interleaved data:** rows `[A, B, A, B]` produce two groups, not four
+- **groupOrder specified:** ordered groups first in specified order, unordered groups after, sorted alphabetically
+- **groupOrder not specified:** groups in alphabetical order by column value
+- **Stable within-group order:** rows within same group preserve original relative order
+- **Empty dataset:** returns empty dataset without error
+- **All rows same group:** single group, all rows preserved
+- **Unordered tiebreaker:** two different unordered groups are never interleaved (name-based tiebreaker)
+
+### Group styling resolution
+- `groupStyle` callback returns config → used
+- `groupStyle` returns `undefined` → falls back to `groupConfig` map
+- Neither returns config → empty object (no styling applied)
+- `groupStyle` absent, `groupConfig` present → map used
+
+### Event capture
+- `group-toggle` from PagesGroupedView intercepted, re-dispatched as `grouped-data.group-toggle`
+- `row-activate` from pages-table captured, translated to `grouped-data.row-activated`
+- Original events stopped (`stopPropagation`) — consumers see only namespaced events
+- Payload forwarded unchanged (no field loss or mutation)
+
+### DataSourceMixin integration
+- `endpoint` set → fetch triggers → `dataSet` populated → PagesGroupedView renders
+- Hosted push: `component.dataSet = typedDataSet` → forwarded to PagesGroupedView
+- `loading` state propagated to wrapper's loading display
+- `error` state propagated to wrapper's error display
+
+### configure()
+- All properties set before microtask fires
+- `super.configure()` called after component-specific properties
+- Re-configuration with changed endpoint triggers re-fetch
+- Re-configuration with unchanged endpoint but changed groupBy triggers re-render
+
+### Data request suppression
+- No `pages-data-request` dispatched when `pages-grouped-view` connects
+- Verified: forwarded props never include `lookup`
+
+### Edge cases
+- `groupBy` column not present in dataset columns → graceful handling (empty groups)
+- `groupOrder` references groups not in dataset → ignored (no empty placeholder groups)
+- Dataset arrives before `groupBy` is set → no render until both present
 
 ## Package Structure
 
