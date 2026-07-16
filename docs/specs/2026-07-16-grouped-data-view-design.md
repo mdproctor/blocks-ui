@@ -36,6 +36,8 @@ The wrapper bridges two rendering models:
 
 In `willUpdate`/`updated`, the wrapper converts and forwards properties:
 ```typescript
+if (!this.groupBy || !this.dataSet) return;
+
 // Convert string groupBy to GroupingKey
 const groupingKey = this._toGroupingKey(this.groupBy);
 
