@@ -149,6 +149,15 @@ describe('trust-workbench', () => {
       expect(panel?.actorId).toBe('worker-42');
     });
 
+    it('detail panel has left padding for divider clearance', async () => {
+      document.body.appendChild(el);
+      await el.updateComplete;
+      const detailPanel = el.shadowRoot!.querySelector('.detail-panel') as HTMLElement;
+      expect(detailPanel).toBeTruthy();
+      const styles = (el.constructor as any).styles.cssText ?? String((el.constructor as any).styles);
+      expect(styles).toContain('padding-left');
+    });
+
     it('renders empty detail pane when no decision selected', async () => {
       document.body.appendChild(el);
       await el.updateComplete;

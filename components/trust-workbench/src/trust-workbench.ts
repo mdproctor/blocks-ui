@@ -44,7 +44,7 @@ export class TrustWorkbench extends LiveRegionMixin(LitElement) {
     .left-panel { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
     .left-panel trust-score-panel { flex-shrink: 0; border-bottom: 1px solid var(--pages-neutral-4, #d4d4d4); }
     .left-panel list-pane { flex: 1; overflow: hidden; }
-    .detail-panel { display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
+    .detail-panel { display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding-left: var(--pages-space-3, 12px); }
     .feedback-section { border-top: 1px solid var(--pages-neutral-4, #d4d4d4); padding: var(--pages-space-3, 12px); }
     .feedback-section h3 {
       margin: 0 0 var(--pages-space-2, 8px) 0;
@@ -105,8 +105,8 @@ export class TrustWorkbench extends LiveRegionMixin(LitElement) {
 
   override updated(changed: PropertyValues): void {
     super.updated(changed);
-    if (changed.has('routingHistory') || changed.has('_selectedCapability')) {
-      this._updateInlineDataSet();
+    if (changed.has('routingHistory') || changed.has('_selectedCapability') || changed.has('endpoint') || changed.has('actorId')) {
+      this._syncListPane();
     }
   }
 
@@ -177,16 +177,20 @@ export class TrustWorkbench extends LiveRegionMixin(LitElement) {
     }
   }
 
-  private _updateInlineDataSet(): void {
-    if (!this.routingHistory) return;
+  private _syncListPane(): void {
     const listPane = this.shadowRoot?.querySelector('list-pane') as any;
     if (!listPane) return;
-    const source = this.routingHistory;
-    const filtered = this._selectedCapability
-      ? source.filter(s => s.capabilityTag === this._selectedCapability)
-      : source;
-    const dataset = fromRows(filtered, ROUTING_HISTORY_COLUMNS);
-    listPane.dataSet = dataset;
+
+    if (this.routingHistory) {
+      listPane.endpoint = undefined;
+      const source = this.routingHistory;
+      const filtered = this._selectedCapability
+        ? source.filter(s => s.capabilityTag === this._selectedCapability)
+        : source;
+      listPane.dataSet = fromRows(filtered, ROUTING_HISTORY_COLUMNS);
+    } else {
+      listPane.endpoint = this._routingEndpoint;
+    }
     listPane.columnConfig = this.routingColumns ?? ROUTING_HISTORY_TABLE_CONFIG;
     listPane.columnRenderers = this.routingColumnRenderers ?? DEFAULT_ROUTING_RENDERERS;
   }
@@ -199,7 +203,7 @@ export class TrustWorkbench extends LiveRegionMixin(LitElement) {
 
   private get _routingEndpoint(): string | undefined {
     if (this.routingHistory) return undefined;
-    if (!this.endpoint || !this.actorId) return undefined;
+    if (this.endpoint == null || !this.actorId) return undefined;
     const base = `${this.endpoint}/trust/${this.actorId}/routing-history`;
     return this._selectedCapability ? `${base}?capability=${this._selectedCapability}` : base;
   }
@@ -214,10 +218,7 @@ export class TrustWorkbench extends LiveRegionMixin(LitElement) {
             actor-id=${this.actorId}
           ></trust-score-panel>
           <list-pane
-            .endpoint=${this._routingEndpoint}
             selection-topic="trust-routing"
-            .columnConfig=${this.routingColumns ?? ROUTING_HISTORY_TABLE_CONFIG}
-            .columnRenderers=${this.routingColumnRenderers ?? DEFAULT_ROUTING_RENDERERS}
             .getRowKey=${(row: TypedRow) => row.text(ID_COL)}
             empty-message="No routing decisions"
           ></list-pane>
