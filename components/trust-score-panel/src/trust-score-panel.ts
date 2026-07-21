@@ -37,7 +37,7 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
     }
 
     .trust-score-panel {
-      padding: var(--spacing-md, 16px);
+      padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
     }
 
     .error-message {
@@ -55,49 +55,27 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
 
     /* Full mode layout */
     .full-mode {
-      display: grid;
-      gap: var(--spacing-lg, 24px);
-    }
-
-    .score-section {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: var(--spacing-sm, 8px);
-    }
-
-    .score-gauge {
-      width: 200px;
-      height: 200px;
-    }
-
-    .capability-section {
-      margin-top: var(--spacing-md, 16px);
+      gap: var(--spacing-xs, 4px);
     }
 
     .capability-section h3 {
-      margin: 0 0 var(--spacing-sm, 8px) 0;
-      font-size: var(--font-size-lg, 18px);
+      margin: 0 0 var(--spacing-xs, 4px) 0;
+      font-size: var(--font-size-sm, 13px);
       font-weight: var(--font-weight-semibold, 600);
-    }
-
-    .trend-section {
-      margin-top: var(--spacing-md, 16px);
+      color: var(--color-text-secondary, #666);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .trend-section h3 {
-      margin: 0 0 var(--spacing-sm, 8px) 0;
-      font-size: var(--font-size-lg, 18px);
+      margin: 0 0 var(--spacing-xs, 4px) 0;
+      font-size: var(--font-size-sm, 13px);
       font-weight: var(--font-weight-semibold, 600);
-    }
-
-    .trend-placeholder {
-      padding: var(--spacing-lg, 24px);
-      text-align: center;
-      background: var(--color-surface-secondary, #f5f5f5);
-      border-radius: var(--border-radius-md, 8px);
       color: var(--color-text-secondary, #666);
-      font-style: italic;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     /* Compact mode badge */
@@ -361,9 +339,7 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
     }
     const points = this.trendPoints;
     if (points.length < 2) {
-      return html`<div class="trend-placeholder">
-        Trend data requires backend endpoint
-      </div>`;
+      return nothing;
     }
     const scores = points.map(p => p.score);
     const level = this._getDisplayTrustLevel();
@@ -401,10 +377,12 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
           ${this._renderCapabilityTable()}
         </section>
 
-        <section class="trend-section">
-          <h3>Trust Trend</h3>
-          ${this._renderTrendSection()}
-        </section>
+        ${this.trendPoints.length >= 2 ? html`
+          <section class="trend-section">
+            <h3>Trend</h3>
+            ${this._renderTrendSection()}
+          </section>
+        ` : nothing}
       </div>
     `;
   }

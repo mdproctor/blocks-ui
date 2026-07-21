@@ -142,7 +142,7 @@ describe('trust-score-panel', () => {
       expect(table).toBeTruthy();
     });
 
-    it('renders trend placeholder when no trend data available', async () => {
+    it('hides trend section when no trend data available', async () => {
       const mockResponse: TrustScoreResponse = {
         actorId: 'agent-123',
         globalScore: 0.85,
@@ -163,9 +163,8 @@ describe('trust-score-panel', () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
       await el.updateComplete;
 
-      const placeholder = el.shadowRoot!.querySelector('.trend-placeholder');
-      expect(placeholder).toBeTruthy();
-      expect(placeholder!.textContent).toContain('Trend data requires backend endpoint');
+      const trendSection = el.shadowRoot!.querySelector('.trend-section');
+      expect(trendSection).toBeNull();
     });
 
     it('handles error state gracefully', async () => {
@@ -319,7 +318,7 @@ describe('trust-score-panel', () => {
   });
 
   describe('Trend Section', () => {
-    it('shows placeholder when no trend data', async () => {
+    it('hides trend section when no trend data', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({
@@ -337,9 +336,8 @@ describe('trust-score-panel', () => {
       await el.updateComplete;
       await new Promise(r => setTimeout(r, 50));
       await el.updateComplete;
-      const placeholder = el.shadowRoot!.querySelector('.trend-placeholder');
-      expect(placeholder).toBeTruthy();
-      expect(placeholder!.textContent).toContain('Trend data requires backend endpoint');
+      const trendSection = el.shadowRoot!.querySelector('.trend-section');
+      expect(trendSection).toBeNull();
     });
 
     it('renders sparkline when trendData is provided', async () => {
@@ -408,7 +406,7 @@ describe('trust-score-panel', () => {
       expect(trendSection).toBeFalsy();
     });
 
-    it('shows single point as placeholder (graceful degradation)', async () => {
+    it('hides trend section with single point (graceful degradation)', async () => {
       const el = document.createElement('trust-score-panel') as TrustScorePanel;
       el.mode = 'full';
       el.score = 0.87;
@@ -416,8 +414,8 @@ describe('trust-score-panel', () => {
       (el as any).trendData = [{ timestamp: 1000, score: 0.87 }];
       document.body.appendChild(el);
       await el.updateComplete;
-      const placeholder = el.shadowRoot!.querySelector('.trend-placeholder');
-      expect(placeholder).toBeTruthy();
+      const trendSection = el.shadowRoot!.querySelector('.trend-section');
+      expect(trendSection).toBeNull();
     });
   });
 });
