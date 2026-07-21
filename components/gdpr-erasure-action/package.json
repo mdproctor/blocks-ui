@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@casehubio/blocks-ui-core": "workspace:*",
+    "@casehubio/pages-form": "portal:/Users/mdproctor/claude/casehub/pages/packages/pages-form",
     "lit": "^3.2.1"
   },
   "devDependencies": {

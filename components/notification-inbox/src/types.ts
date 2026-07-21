@@ -6,7 +6,7 @@
 export type NotificationStatus = 'UNREAD' | 'READ' | 'DISMISSED';
 export type NotificationSeverity = 'INFO' | 'WARNING' | 'URGENT';
 export type ConstraintOp = 'EQ' | 'NEQ' | 'GT' | 'LT' | 'GTE' | 'LTE' | 'IN' | 'STARTS_WITH' | 'CONTAINS';
-export type TargetType = 'USER' | 'GROUP' | 'EVENT_FIELD';
+export type TargetType = 'USER' | 'GROUP' | 'EVENT_FIELD' | 'ENTITY_WATCHERS';
 export type MuteScope = 'ENTITY' | 'CATEGORY';
 
 // Core notification types
@@ -139,7 +139,7 @@ export interface SnoozeInput {
 }
 
 // Digest schedule types
-export type DigestSchedule = DigestScheduleInterval | DigestScheduleDailyAt;
+export type DigestSchedule = DigestScheduleInterval | DigestScheduleDailyAt | DigestScheduleWeeklyAt;
 
 export interface DigestScheduleInterval {
   readonly type: 'interval';
@@ -152,16 +152,29 @@ export interface DigestScheduleDailyAt {
   readonly timezone: string;
 }
 
+export interface DigestScheduleWeeklyAt {
+  readonly type: 'weekly_at';
+  readonly day: string;
+  readonly time: string;
+  readonly timezone: string;
+}
+
+export type DigestGroupBy = 'FLAT' | 'CATEGORY' | 'ENTITY';
+
+export type QuietHoursAction = 'SUPPRESS' | 'BUFFER_FOR_DIGEST';
+
 export interface ChannelPreference {
   readonly enabled: boolean;
   readonly minSeverity: NotificationSeverity;
   readonly digestSchedule: DigestSchedule | null;
+  readonly groupBy?: DigestGroupBy;
 }
 
 export interface QuietHours {
-  readonly start: string; // HH:mm format
-  readonly end: string;   // HH:mm format
+  readonly start: string;
+  readonly end: string;
   readonly timezone: string;
+  readonly action?: QuietHoursAction;
 }
 
 export interface NotificationPreferences {

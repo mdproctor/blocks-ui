@@ -8,6 +8,11 @@ export const NotificationEventTopics = {
   MUTED: 'notification.muted',
   SUBSCRIPTION_CREATED: 'subscription.created',
   SUBSCRIPTION_DELETED: 'subscription.deleted',
+  PREFERENCE_UPDATED: 'preference.updated',
+  MUTE_CREATED: 'mute.created',
+  MUTE_DELETED: 'mute.deleted',
+  SNOOZE_ACTIVATED: 'snooze.activated',
+  SNOOZE_CANCELLED: 'snooze.cancelled',
 } as const;
 
 /**

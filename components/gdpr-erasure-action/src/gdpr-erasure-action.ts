@@ -2,6 +2,8 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { emitPagesEvent } from '@casehubio/blocks-ui-core';
 import '@casehubio/blocks-ui-core';
+import '@casehubio/pages-form';
+import type { FieldSchema } from '@casehubio/pages-form';
 import type { ErasureReceipt } from './types.js';
 
 export const GdprErasureTopics = {
@@ -30,27 +32,7 @@ export class GdprErasureAction extends LitElement {
       background: var(--pages-neutral-1, #fff);
       max-width: 500px;
     }
-    .form-field { margin-bottom: var(--pages-space-3, 0.75rem); }
-    label {
-      display: block;
-      font-weight: 600;
-      color: var(--pages-neutral-11, #555);
-      font-size: 13px;
-      margin-bottom: var(--pages-space-2, 0.5rem);
-    }
-    input, select {
-      width: 100%;
-      padding: var(--pages-space-3, 0.75rem);
-      border: 1px solid var(--pages-neutral-6, #a3a3a3);
-      border-radius: var(--pages-radius-2, 4px);
-      font-size: 14px;
-      font-family: inherit;
-      box-sizing: border-box;
-    }
-    input:focus, select:focus {
-      outline: 2px solid var(--pages-accent-9, #3b82f6);
-      border-color: transparent;
-    }
+    pages-schema-form { margin-bottom: var(--pages-space-3, 0.75rem); }
     .button-group {
       display: flex;
       gap: var(--pages-space-2, 0.5rem);
@@ -117,12 +99,41 @@ export class GdprErasureAction extends LitElement {
     }
   `;
 
+  private _buildSchema(): FieldSchema {
+    return {
+      type: 'object',
+      properties: {
+        subjectId: {
+          type: 'string',
+          title: `${this.subjectLabel} ID`,
+          placeholder: `Enter ${this.subjectLabel.toLowerCase()} ID`,
+        },
+        reason: {
+          type: 'string',
+          title: 'Erasure Reason',
+          oneOf: this.reasonOptions.map(opt => ({ const: opt, title: opt })),
+        },
+      },
+      required: ['subjectId', 'reason'],
+    };
+  }
+
+  private _handleFormChange(e: CustomEvent) {
+    const { data } = e.detail;
+    this._subjectId = data.subjectId ?? '';
+    this._reason = data.reason ?? '';
+  }
+
   private _handleSubmit(e: Event) {
     e.preventDefault();
-    if (!this._subjectId || !this._reason) {
+    const form = this.shadowRoot!.querySelector('pages-schema-form') as any;
+    const result = form?.submit();
+    if (!result) {
       this._error = `${this.subjectLabel} ID and reason are required`;
       return;
     }
+    this._subjectId = result.subjectId;
+    this._reason = result.reason;
     this._error = '';
     this._confirmPending = true;
   }
@@ -220,29 +231,12 @@ export class GdprErasureAction extends LitElement {
         <div class="warning" role="alert" aria-live="assertive">
           This action is irreversible. All data for the specified ${this.subjectLabel.toLowerCase()} will be permanently erased.
         </div>
-        <div class="form-field">
-          <label for="subject-id">${this.subjectLabel} ID</label>
-          <input
-            id="subject-id"
-            type="text"
-            .value=${this._subjectId}
-            @input=${(e: InputEvent) => { this._subjectId = (e.target as HTMLInputElement).value; }}
-            placeholder="Enter ${this.subjectLabel.toLowerCase()} ID"
-            ?disabled=${this._loading}
-          />
-        </div>
-        <div class="form-field">
-          <label for="reason">Erasure Reason</label>
-          <select
-            id="reason"
-            .value=${this._reason}
-            @change=${(e: Event) => { this._reason = (e.target as HTMLSelectElement).value; }}
-            ?disabled=${this._loading}
-          >
-            <option value="">Select a reason</option>
-            ${this.reasonOptions.map(opt => html`<option value="${opt}">${opt}</option>`)}
-          </select>
-        </div>
+        <pages-schema-form
+          .schema=${this._buildSchema()}
+          .data=${{ subjectId: this._subjectId, reason: this._reason }}
+          mode="edit"
+          @pages-form-change=${this._handleFormChange}
+        ></pages-schema-form>
         ${this._error ? html`<div class="error-text">${this._error}</div>` : ''}
         <div class="button-group">
           <button type="submit" class="btn-primary" ?disabled=${this._loading}>

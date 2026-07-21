@@ -154,6 +154,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@casehubio/blocks-ui-case-explorer@workspace:components/case-explorer":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/blocks-ui-case-explorer@workspace:components/case-explorer"
+  dependencies:
+    "@casehubio/blocks-ui-core": "workspace:*"
+    "@casehubio/blocks-ui-list-pane": "workspace:*"
+    "@casehubio/blocks-ui-split-workbench": "workspace:*"
+    "@casehubio/pages-component": "npm:^0.2.2"
+    "@casehubio/pages-data": "npm:^0.2.2"
+    "@casehubio/pages-primitives": "npm:^0.2.2"
+    "@casehubio/pages-table": "npm:^0.2.2"
+    lit: "npm:^3.2.1"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/blocks-ui-channel-activity@workspace:components/channel-activity":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-channel-activity@workspace:components/channel-activity"
@@ -223,6 +241,7 @@ __metadata:
   resolution: "@casehubio/blocks-ui-gdpr-erasure-action@workspace:components/gdpr-erasure-action"
   dependencies:
     "@casehubio/blocks-ui-core": "workspace:*"
+    "@casehubio/pages-form": "portal:/Users/mdproctor/claude/casehub/pages/packages/pages-form"
     lit: "npm:^3.2.1"
     rimraf: "npm:^6.1.0"
     typescript: "npm:^5.6.0"
@@ -259,7 +278,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/blocks-ui-list-pane@workspace:components/list-pane":
+"@casehubio/blocks-ui-list-pane@workspace:*, @casehubio/blocks-ui-list-pane@workspace:components/list-pane":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-list-pane@workspace:components/list-pane"
   dependencies:
@@ -281,6 +300,7 @@ __metadata:
   dependencies:
     "@casehubio/blocks-ui-core": "workspace:*"
     "@casehubio/pages-data": "npm:^0.2.2"
+    "@casehubio/pages-form": "portal:/Users/mdproctor/claude/casehub/pages/packages/pages-form"
     "@casehubio/pages-primitives": "npm:^0.2.2"
     "@casehubio/pages-table": "npm:^0.2.2"
     "@vitest/browser": "npm:^2.1.8"
@@ -292,7 +312,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/blocks-ui-routing-rationale@workspace:components/routing-rationale":
+"@casehubio/blocks-ui-routing-rationale@workspace:*, @casehubio/blocks-ui-routing-rationale@workspace:components/routing-rationale":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-routing-rationale@workspace:components/routing-rationale"
   dependencies:
@@ -364,7 +384,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/blocks-ui-trust-feedback-display@workspace:components/trust-feedback-display":
+"@casehubio/blocks-ui-trust-feedback-display@workspace:*, @casehubio/blocks-ui-trust-feedback-display@workspace:components/trust-feedback-display":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-trust-feedback-display@workspace:components/trust-feedback-display"
   dependencies:
@@ -376,11 +396,31 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/blocks-ui-trust-score-panel@workspace:components/trust-score-panel":
+"@casehubio/blocks-ui-trust-score-panel@workspace:*, @casehubio/blocks-ui-trust-score-panel@workspace:components/trust-score-panel":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-trust-score-panel@workspace:components/trust-score-panel"
   dependencies:
     "@casehubio/blocks-ui-core": "workspace:*"
+    "@casehubio/pages-data": "npm:^0.2.2"
+    "@casehubio/pages-primitives": "npm:^0.2.2"
+    "@casehubio/pages-table": "npm:^0.2.2"
+    lit: "npm:^3.2.1"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehubio/blocks-ui-trust-workbench@workspace:components/trust-workbench":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/blocks-ui-trust-workbench@workspace:components/trust-workbench"
+  dependencies:
+    "@casehubio/blocks-ui-core": "workspace:*"
+    "@casehubio/blocks-ui-list-pane": "workspace:*"
+    "@casehubio/blocks-ui-routing-rationale": "workspace:*"
+    "@casehubio/blocks-ui-split-workbench": "workspace:*"
+    "@casehubio/blocks-ui-trust-feedback-display": "workspace:*"
+    "@casehubio/blocks-ui-trust-score-panel": "workspace:*"
     "@casehubio/pages-data": "npm:^0.2.2"
     "@casehubio/pages-primitives": "npm:^0.2.2"
     "@casehubio/pages-table": "npm:^0.2.2"
@@ -472,6 +512,22 @@ __metadata:
   checksum: 10c0/3db3365f126ebf38fab7691aeac0a4309136d61a0ff347d7d2cab29012fd70ba2b2c030de5651fb693345b65eb43a4b2567afb446e531ecde98f0a396ebbe858
   languageName: node
   linkType: hard
+
+"@casehubio/pages-form@portal:/Users/mdproctor/claude/casehub/pages/packages/pages-form::locator=%40casehubio%2Fblocks-ui-gdpr-erasure-action%40workspace%3Acomponents%2Fgdpr-erasure-action":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/pages-form@portal:/Users/mdproctor/claude/casehub/pages/packages/pages-form::locator=%40casehubio%2Fblocks-ui-gdpr-erasure-action%40workspace%3Acomponents%2Fgdpr-erasure-action"
+  dependencies:
+    lit: "npm:^3.0.0"
+  languageName: node
+  linkType: soft
+
+"@casehubio/pages-form@portal:/Users/mdproctor/claude/casehub/pages/packages/pages-form::locator=%40casehubio%2Fblocks-ui-notification-inbox%40workspace%3Acomponents%2Fnotification-inbox":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/pages-form@portal:/Users/mdproctor/claude/casehub/pages/packages/pages-form::locator=%40casehubio%2Fblocks-ui-notification-inbox%40workspace%3Acomponents%2Fnotification-inbox"
+  dependencies:
+    lit: "npm:^3.0.0"
+  languageName: node
+  linkType: soft
 
 "@casehubio/pages-primitives@npm:0.2.2, @casehubio/pages-primitives@npm:^0.2.2":
   version: 0.2.2

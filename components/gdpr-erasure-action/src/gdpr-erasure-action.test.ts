@@ -10,6 +10,21 @@ type GdprErasureActionEl = HTMLElement & {
 
 let originalFetch: typeof globalThis.fetch;
 
+function fillAndSubmit(el: GdprErasureActionEl, subjectId: string, reason: string) {
+  const schemaForm = el.shadowRoot!.querySelector('pages-schema-form')!;
+  schemaForm.dispatchEvent(new CustomEvent('pages-form-change', {
+    bubbles: true, composed: true,
+    detail: { key: 'subjectId', value: subjectId, data: { subjectId, reason } },
+  }));
+  schemaForm.dispatchEvent(new CustomEvent('pages-form-change', {
+    bubbles: true, composed: true,
+    detail: { key: 'reason', value: reason, data: { subjectId, reason } },
+  }));
+  (schemaForm as any).submit = () => ({ subjectId, reason });
+  const form = el.shadowRoot!.querySelector('form') as HTMLFormElement;
+  form.dispatchEvent(new Event('submit', { cancelable: true }));
+}
+
 describe('gdpr-erasure-action', () => {
   let el: GdprErasureActionEl;
 
@@ -25,27 +40,30 @@ describe('gdpr-erasure-action', () => {
     globalThis.fetch = originalFetch;
   });
 
-  it('renders form with subject and reason fields', async () => {
+  it('renders form with schema-form component', async () => {
     await el.updateComplete;
     const form = el.shadowRoot!.querySelector('form');
     expect(form).toBeTruthy();
-    const inputs = el.shadowRoot!.querySelectorAll('input, select');
-    expect(inputs.length).toBeGreaterThanOrEqual(2);
+    const schemaForm = el.shadowRoot!.querySelector('pages-schema-form');
+    expect(schemaForm).toBeTruthy();
   });
 
-  it('renders custom subjectLabel in form', async () => {
+  it('renders custom subjectLabel in warning and schema', async () => {
     el.subjectLabel = 'Patient';
     await el.updateComplete;
-    expect(el.shadowRoot!.textContent).toContain('Patient');
+    expect(el.shadowRoot!.textContent).toContain('patient');
+    const schemaForm = el.shadowRoot!.querySelector('pages-schema-form') as any;
+    expect(schemaForm.schema.properties.subjectId.title).toBe('Patient ID');
   });
 
-  it('renders custom reasonOptions in dropdown', async () => {
+  it('renders custom reasonOptions in schema', async () => {
     el.reasonOptions = ['Custom Reason 1', 'Custom Reason 2'];
     await el.updateComplete;
-    const options = el.shadowRoot!.querySelectorAll('option');
-    const texts = Array.from(options).map(o => o.textContent);
-    expect(texts).toContain('Custom Reason 1');
-    expect(texts).toContain('Custom Reason 2');
+    const schemaForm = el.shadowRoot!.querySelector('pages-schema-form') as any;
+    const reasonOneOf = schemaForm.schema.properties.reason.oneOf;
+    expect(reasonOneOf).toHaveLength(2);
+    expect(reasonOneOf[0].title).toBe('Custom Reason 1');
+    expect(reasonOneOf[1].title).toBe('Custom Reason 2');
   });
 
   it('shows validation error when submitting empty fields', async () => {
@@ -53,22 +71,12 @@ describe('gdpr-erasure-action', () => {
     const form = el.shadowRoot!.querySelector('form') as HTMLFormElement;
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     await el.updateComplete;
-    expect(el.shadowRoot!.textContent).toContain('required');
+    expect(el.shadowRoot!.textContent!.toLowerCase()).toContain('required');
   });
 
   it('opens confirm dialog on valid submit', async () => {
     await el.updateComplete;
-    const input = el.shadowRoot!.querySelector('input') as HTMLInputElement;
-    const select = el.shadowRoot!.querySelector('select') as HTMLSelectElement;
-
-    input.value = 'subject-123';
-    input.dispatchEvent(new Event('input'));
-    select.value = el.reasonOptions[0]!;
-    select.dispatchEvent(new Event('change'));
-    await el.updateComplete;
-
-    const form = el.shadowRoot!.querySelector('form') as HTMLFormElement;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    fillAndSubmit(el, 'subject-123', el.reasonOptions[0]!);
     await el.updateComplete;
 
     const dialog = el.shadowRoot!.querySelector('blocks-confirm-dialog') as HTMLElement & { open: boolean };
@@ -88,17 +96,7 @@ describe('gdpr-erasure-action', () => {
     globalThis.fetch = mockFetch as unknown as typeof fetch;
 
     await el.updateComplete;
-    const input = el.shadowRoot!.querySelector('input') as HTMLInputElement;
-    const select = el.shadowRoot!.querySelector('select') as HTMLSelectElement;
-
-    input.value = 'subject-123';
-    input.dispatchEvent(new Event('input'));
-    select.value = el.reasonOptions[0]!;
-    select.dispatchEvent(new Event('change'));
-    await el.updateComplete;
-
-    const form = el.shadowRoot!.querySelector('form') as HTMLFormElement;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    fillAndSubmit(el, 'subject-123', el.reasonOptions[0]!);
     await el.updateComplete;
 
     const dialog = el.shadowRoot!.querySelector('blocks-confirm-dialog') as HTMLElement;
@@ -131,17 +129,7 @@ describe('gdpr-erasure-action', () => {
     document.addEventListener('pages-event', handler);
 
     await el.updateComplete;
-    const input = el.shadowRoot!.querySelector('input') as HTMLInputElement;
-    const select = el.shadowRoot!.querySelector('select') as HTMLSelectElement;
-
-    input.value = 'subject-456';
-    input.dispatchEvent(new Event('input'));
-    select.value = el.reasonOptions[0]!;
-    select.dispatchEvent(new Event('change'));
-    await el.updateComplete;
-
-    const form = el.shadowRoot!.querySelector('form') as HTMLFormElement;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    fillAndSubmit(el, 'subject-456', el.reasonOptions[0]!);
     await el.updateComplete;
 
     const dialog = el.shadowRoot!.querySelector('blocks-confirm-dialog') as HTMLElement;
@@ -162,17 +150,7 @@ describe('gdpr-erasure-action', () => {
     globalThis.fetch = mockFetch as unknown as typeof fetch;
 
     await el.updateComplete;
-    const input = el.shadowRoot!.querySelector('input') as HTMLInputElement;
-    const select = el.shadowRoot!.querySelector('select') as HTMLSelectElement;
-
-    input.value = 'subject-fail';
-    input.dispatchEvent(new Event('input'));
-    select.value = el.reasonOptions[0]!;
-    select.dispatchEvent(new Event('change'));
-    await el.updateComplete;
-
-    const form = el.shadowRoot!.querySelector('form') as HTMLFormElement;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    fillAndSubmit(el, 'subject-fail', el.reasonOptions[0]!);
     await el.updateComplete;
 
     const dialog = el.shadowRoot!.querySelector('blocks-confirm-dialog') as HTMLElement;
@@ -183,17 +161,7 @@ describe('gdpr-erasure-action', () => {
 
   it('cancels confirmation and returns to form', async () => {
     await el.updateComplete;
-    const input = el.shadowRoot!.querySelector('input') as HTMLInputElement;
-    const select = el.shadowRoot!.querySelector('select') as HTMLSelectElement;
-
-    input.value = 'subject-123';
-    input.dispatchEvent(new Event('input'));
-    select.value = el.reasonOptions[0]!;
-    select.dispatchEvent(new Event('change'));
-    await el.updateComplete;
-
-    const form = el.shadowRoot!.querySelector('form') as HTMLFormElement;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    fillAndSubmit(el, 'subject-123', el.reasonOptions[0]!);
     await el.updateComplete;
 
     const dialog = el.shadowRoot!.querySelector('blocks-confirm-dialog') as HTMLElement;
@@ -211,17 +179,7 @@ describe('gdpr-erasure-action', () => {
     globalThis.fetch = mockFetch as unknown as typeof fetch;
 
     await el.updateComplete;
-    const input = el.shadowRoot!.querySelector('input') as HTMLInputElement;
-    const select = el.shadowRoot!.querySelector('select') as HTMLSelectElement;
-
-    input.value = 'subject-reset';
-    input.dispatchEvent(new Event('input'));
-    select.value = el.reasonOptions[0]!;
-    select.dispatchEvent(new Event('change'));
-    await el.updateComplete;
-
-    const form = el.shadowRoot!.querySelector('form') as HTMLFormElement;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    fillAndSubmit(el, 'subject-reset', el.reasonOptions[0]!);
     await el.updateComplete;
 
     const dialog = el.shadowRoot!.querySelector('blocks-confirm-dialog') as HTMLElement;
