@@ -90,7 +90,7 @@ describe('trust-score-panel', () => {
       );
     });
 
-    it('renders score gauge with correct value', async () => {
+    it('renders score header with correct value', async () => {
       const mockResponse: TrustScoreResponse = {
         actorId: 'agent-123',
         globalScore: 0.85,
@@ -111,9 +111,9 @@ describe('trust-score-panel', () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
       await el.updateComplete;
 
-      const gauge = el.shadowRoot!.querySelector('.score-gauge');
-      expect(gauge).toBeTruthy();
-      const scoreText = gauge!.textContent;
+      const header = el.shadowRoot!.querySelector('.score-header');
+      expect(header).toBeTruthy();
+      const scoreText = header!.textContent;
       expect(scoreText).toContain('0.85');
     });
 

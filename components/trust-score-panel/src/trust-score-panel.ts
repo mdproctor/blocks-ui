@@ -249,7 +249,7 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
     `;
   }
 
-  private _renderScoreGauge() {
+  private _renderScoreHeader() {
     const score = this._getDisplayScore();
     const level = this._getDisplayTrustLevel();
     const label = score !== undefined
@@ -257,69 +257,40 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
       : 'No trust data available';
 
     if (score === undefined) {
-      return html`
-        <div class="score-gauge" role="img" aria-label="No trust data available">
-          <svg viewBox="0 0 200 200">
-            <text x="100" y="110" text-anchor="middle" font-size="24" fill="currentColor">
-              No Data
-            </text>
-          </svg>
-        </div>
-      `;
+      return html`<div class="score-header" role="img" aria-label="No trust data available">
+        <span class="score-value" style="color: var(--color-text-secondary, #666);">—</span>
+        <span class="score-level none">No data</span>
+      </div>`;
     }
 
-    // Simple arc gauge - 270 degrees arc
-    const radius = 70;
-    const centerX = 100;
-    const centerY = 100;
-    const startAngle = -225; // Start at bottom left
-    const endAngle = startAngle + 270; // 270 degree arc
-    const scoreAngle = startAngle + (score * 270); // Map 0-1 to arc
-
-    const polarToCartesian = (angle: number) => {
-      const angleInRadians = ((angle - 90) * Math.PI) / 180;
-      return {
-        x: centerX + radius * Math.cos(angleInRadians),
-        y: centerY + radius * Math.sin(angleInRadians),
-      };
+    const colors: Record<string, string> = {
+      high: 'var(--color-success, #28a745)',
+      adequate: 'var(--color-warning, #ffc107)',
+      low: 'var(--color-error, #dc3545)',
+      none: 'var(--color-neutral, #ccc)',
     };
 
-    const startPoint = polarToCartesian(startAngle);
-    const endPoint = polarToCartesian(scoreAngle);
+    const bgColors: Record<string, string> = {
+      high: 'var(--color-success-bg, #d4edda)',
+      adequate: 'var(--color-warning-bg, #fff3cd)',
+      low: 'var(--color-error-bg, #f8d7da)',
+      none: 'var(--color-neutral-bg, #e9ecef)',
+    };
 
-    const arcPath = `M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 ${score > 0.5 ? 1 : 0} 1 ${endPoint.x} ${endPoint.y}`;
-
-    const colors = {
-      high: '#28a745',
-      adequate: '#ffc107',
-      low: '#dc3545',
-      none: '#ccc',
+    const textColors: Record<string, string> = {
+      high: 'var(--color-success-text, #155724)',
+      adequate: 'var(--color-warning-text, #856404)',
+      low: 'var(--color-error-text, #721c24)',
+      none: 'var(--color-text-secondary, #666)',
     };
 
     return html`
-      <div class="score-gauge" role="img" aria-label=${label}>
-        <svg viewBox="0 0 200 200">
-          <!-- Background arc -->
-          <path
-            d=${arcPath}
-            fill="none"
-            stroke="#e9ecef"
-            stroke-width="20"
-            stroke-linecap="round"
-          />
-          <!-- Score arc -->
-          <path
-            d=${arcPath}
-            fill="none"
-            stroke=${colors[level]}
-            stroke-width="20"
-            stroke-linecap="round"
-          />
-          <!-- Score text -->
-          <text x="100" y="110" text-anchor="middle" font-size="32" font-weight="600" fill="currentColor">
-            ${score.toFixed(2)}
-          </text>
-        </svg>
+      <div class="score-header" role="img" aria-label=${label}>
+        <span class="score-value">${score.toFixed(2)}</span>
+        <span class="score-level" style="background: ${bgColors[level]}; color: ${textColors[level]};">${level}</span>
+        <div class="score-bar-track">
+          <div class="fill" style="width: ${Math.round(score * 100)}%; background: ${colors[level]};"></div>
+        </div>
       </div>
     `;
   }
@@ -423,9 +394,7 @@ export class TrustScorePanel extends TrendSourceMixin(DataSourceMixin(LiveRegion
 
     return html`
       <div class="full-mode">
-        <section class="score-section">
-          ${this._renderScoreGauge()}
-        </section>
+        ${this._renderScoreHeader()}
 
         <section class="capability-section">
           <h3>Per-Capability Breakdown</h3>
