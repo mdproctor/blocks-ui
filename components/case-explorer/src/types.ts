@@ -57,6 +57,8 @@ export interface EntityTypeRegistration {
   readonly subTypes?: readonly string[];
   readonly treeEndpoint?: (rootId: string) => string;
   readonly eventTopics?: readonly string[];
+  readonly reader?: EntityReader;
+  readonly responseReader?: ResponseReader;
 }
 
 export interface RelationshipDeclaration {
@@ -123,4 +125,21 @@ export interface EntityEvent {
   readonly eventType: string;
   readonly data?: Record<string, unknown>;
   readonly timestamp: string;
+}
+
+export interface EntityReader<T = any> {
+  id: (entity: T) => string;
+  type?: (entity: T) => string;
+  summary: (entity: T) => string;
+  status: (entity: T) => string;
+  createdAt?: (entity: T) => string;
+  updatedAt?: (entity: T) => string;
+  state?: (entity: T) => Record<string, unknown>;
+  commands?: (entity: T) => readonly CommandDescriptor[];
+}
+
+export interface ResponseReader<T = any> {
+  entities: (response: any) => readonly T[];
+  nextCursor?: (response: any) => string | undefined;
+  totalCount?: (response: any) => number | undefined;
 }

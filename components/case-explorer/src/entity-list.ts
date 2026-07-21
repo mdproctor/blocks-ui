@@ -7,7 +7,8 @@ import { ColumnType, columnId as toColumnId } from '@casehubio/pages-data/dist/d
 import type { TypedDataSet, ColumnId } from '@casehubio/pages-data/dist/dataset/types.js';
 import '@casehubio/blocks-ui-list-pane';
 import type { TypedRow } from '@casehubio/pages-data/dist/dataset/types.js';
-import type { EntityTypeRegistration, EntityListResponse, EntityInstance, EntitySelection, FilterDescriptor } from './types.js';
+import type { EntityTypeRegistration, EntitySelection, FilterDescriptor } from './types.js';
+import { DEFAULT_READER, DEFAULT_RESPONSE_READER } from './readers.js';
 
 const ENTITY_ID_COLUMN = toColumnId('_entityId');
 
@@ -25,7 +26,7 @@ export class EntityList extends LiveRegionMixin(LitElement) {
 
   @state() _loading = false;
   @state() _error: string | null = null;
-  @state() private _entities: EntityInstance[] = [];
+  @state() private _entities: any[] = [];
   @state() private _nextCursor: string | null = null;
   @state() private _dataSet: TypedDataSet | undefined;
   @state() private _filters: Record<string, string> = {};
@@ -196,7 +197,8 @@ export class EntityList extends LiveRegionMixin(LitElement) {
     const index = detail?.index ?? 0;
     const entity = this._entities[index];
     if (entity) {
-      this._handleRowActivation({ id: entity.id, type: entity.type });
+      const reader = this.registration?.reader ?? DEFAULT_READER;
+      this._handleRowActivation({ id: reader.id(entity), type: reader.type?.(entity) ?? this.registration?.type ?? '' });
     }
   };
 
@@ -234,15 +236,16 @@ export class EntityList extends LiveRegionMixin(LitElement) {
         return;
       }
 
-      const data: EntityListResponse = await response.json();
+      const data = await response.json();
+      const responseReader = this.registration?.responseReader ?? DEFAULT_RESPONSE_READER;
 
       if (cursor) {
-        this._entities = [...this._entities, ...data.entities];
+        this._entities = [...this._entities, ...responseReader.entities(data)];
       } else {
-        this._entities = [...data.entities];
+        this._entities = [...responseReader.entities(data)];
       }
 
-      this._nextCursor = data.nextCursor ?? null;
+      this._nextCursor = responseReader.nextCursor?.(data) ?? null;
       this._dataSet = this._buildDataSet(this._entities, reg);
       this.announce(`Loaded ${String(this._entities.length)} ${reg.label.toLowerCase()}`);
     } catch (e) {
@@ -260,22 +263,25 @@ export class EntityList extends LiveRegionMixin(LitElement) {
     }
   }
 
-  private _buildDataSet(entities: readonly EntityInstance[], reg: EntityTypeRegistration): TypedDataSet {
+  private _buildDataSet(entities: readonly any[], reg: EntityTypeRegistration): TypedDataSet {
+    const reader = reg.reader ?? DEFAULT_READER;
     const idColumn = {
       id: ENTITY_ID_COLUMN,
       name: '_entityId',
       type: ColumnType.TEXT,
-      getValue: (entity: EntityInstance): unknown => entity.id,
+      getValue: (entity: unknown): unknown => reader.id(entity),
     };
 
     const dataColumns = reg.columnConfig.map(col => ({
       id: col.id,
       name: col.label ?? String(col.id),
       type: ColumnType.TEXT,
-      getValue: (entity: EntityInstance): unknown => {
+      getValue: (entity: unknown): unknown => {
         const key = String(col.id);
-        if (key in entity) return (entity as unknown as Record<string, unknown>)[key];
-        return entity.state[key];
+        const record = entity as Record<string, unknown>;
+        if (key in record) return record[key];
+        const stateBag = reader.state?.(entity);
+        return stateBag?.[key];
       },
     }));
 

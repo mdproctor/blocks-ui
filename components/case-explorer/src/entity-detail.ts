@@ -3,7 +3,8 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { emitPagesEvent, onPagesEvent } from '@casehubio/blocks-ui-core';
 import { LiveRegionMixin } from '@casehubio/pages-primitives';
 import './entity-command-bar.js';
-import type { EntityTypeRegistration, EntityInstance, EntitySelection, DetailRenderer } from './types.js';
+import type { EntityTypeRegistration, EntitySelection, DetailRenderer } from './types.js';
+import { DEFAULT_READER } from './readers.js';
 
 @customElement('entity-detail')
 export class EntityDetail extends LiveRegionMixin(LitElement) {
@@ -11,12 +12,14 @@ export class EntityDetail extends LiveRegionMixin(LitElement) {
   @property({ type: String, attribute: 'selection-topic' }) selectionTopic = '';
   @property({ attribute: false }) fetchFn: typeof fetch = fetch;
 
-  @state() private _entity: EntityInstance | null = null;
+  @state() private _entity: any | null = null;
   @state() _loading = false;
   @state() _error: string | null = null;
   @state() private _activeTab = 0;
 
   private _unsubs: Array<() => void> = [];
+
+  private get _reader() { return this.registration?.reader ?? DEFAULT_READER; }
 
   static override styles = css`
     :host { display: block; height: 100%; overflow-y: auto; }
@@ -165,7 +168,7 @@ export class EntityDetail extends LiveRegionMixin(LitElement) {
 
     return html`
       <div class="header">
-        <h2>${this._entity.summary}<span class="status">${this._entity.status}</span></h2>
+        <h2>${this._reader.summary(this._entity)}<span class="status">${this._reader.status(this._entity)}</span></h2>
       </div>
       ${tabs.length > 1 ? html`
         <div class="tabs" role="tablist">
@@ -182,12 +185,12 @@ export class EntityDetail extends LiveRegionMixin(LitElement) {
       <div class="tab-content" role="tabpanel">
         ${tabs[this._activeTab]?.render() ?? nothing}
       </div>
-      ${this._entity.availableCommands.length > 0 ? html`
+      ${(this._reader.commands?.(this._entity) ?? []).length > 0 ? html`
         <div class="command-section">
           <entity-command-bar
-            .commands=${this._entity.availableCommands}
-            entity-id=${this._entity.id}
-            entity-type=${this._entity.type}
+            .commands=${this._reader.commands?.(this._entity) ?? []}
+            entity-id=${this._reader.id(this._entity)}
+            entity-type=${this._reader.type?.(this._entity) ?? this.registration?.type ?? ''}
             .fetchFn=${this.fetchFn}
           ></entity-command-bar>
         </div>
@@ -217,7 +220,7 @@ export class EntityDetail extends LiveRegionMixin(LitElement) {
     return tabs;
   }
 
-  private _renderOverview(entity: EntityInstance): TemplateResult {
+  private _renderOverview(entity: any): TemplateResult {
     const renderer = this._resolveRenderer(entity);
     if (renderer) {
       return renderer(entity);
@@ -225,7 +228,7 @@ export class EntityDetail extends LiveRegionMixin(LitElement) {
     return this._renderDefaultState(entity);
   }
 
-  private _resolveRenderer(entity: EntityInstance): DetailRenderer | undefined {
+  private _resolveRenderer(entity: any): DetailRenderer | undefined {
     const reg = this.registration;
     if (!reg) return undefined;
 
@@ -243,8 +246,8 @@ export class EntityDetail extends LiveRegionMixin(LitElement) {
     return undefined;
   }
 
-  private _renderDefaultState(entity: EntityInstance): TemplateResult {
-    const entries = Object.entries(entity.state);
+  private _renderDefaultState(entity: any): TemplateResult {
+    const entries = Object.entries(this._reader.state?.(entity) ?? entity);
     if (entries.length === 0) {
       return html`<p>No state data available.</p>`;
     }
@@ -305,7 +308,7 @@ export class EntityDetail extends LiveRegionMixin(LitElement) {
       }
 
       this._entity = await response.json();
-      this.announce(`Loaded ${this._entity!.summary}`);
+      this.announce(`Loaded ${this._reader.summary(this._entity!)}`);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       this._error = `Failed to load: ${message}`;
