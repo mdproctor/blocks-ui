@@ -55,10 +55,13 @@ describe('stateProgressionStrategy', () => {
       expect(nodes.find(n => n.key === 'EXPIRED')!.status).toBe('failed');
     });
 
-    it('marks DELEGATED (non-terminal) as active', () => {
+    it('marks DELEGATED as completed (terminal transfer)', () => {
       const strategy = stateProgressionStrategy();
-      const nodes = strategy.toNodes({ currentState: 'DELEGATED' });
-      expect(nodes.find(n => n.key === 'DELEGATED')!.status).toBe('active');
+      const nodes = strategy.toNodes({
+        currentState: 'DELEGATED',
+        transitions: [{ state: 'OPEN' }, { state: 'DELEGATED' }],
+      });
+      expect(nodes.find(n => n.key === 'DELEGATED')!.status).toBe('completed');
     });
 
     it('marks visited stages from transitions as completed', () => {
@@ -209,6 +212,7 @@ describe('linearResolveStatus', () => {
     { key: 'B', label: 'B' },
     { key: 'C', label: 'C', terminal: 'success' },
     { key: 'D', label: 'D', terminal: 'failure' },
+    { key: 'E', label: 'E', terminal: 'transfer' },
   ];
 
   it('marks stages before current as completed', () => {
@@ -230,6 +234,10 @@ describe('linearResolveStatus', () => {
   it('marks stages after current as pending', () => {
     expect(linearResolveStatus(stages[2]!, 'B', [], stages)).toBe('pending');
     expect(linearResolveStatus(stages[3]!, 'B', [], stages)).toBe('pending');
+  });
+
+  it('marks current terminal transfer as completed', () => {
+    expect(linearResolveStatus(stages[4]!, 'E', [], stages)).toBe('completed');
   });
 
   it('handles unknown current state — all pending', () => {
@@ -261,9 +269,12 @@ describe('QHORUS_STAGES', () => {
     expect(QHORUS_STAGES.find(s => s.key === 'EXPIRED')!.terminal).toBe('failure');
   });
 
-  it('has OPEN, ACKNOWLEDGED, DELEGATED without terminal', () => {
+  it('has OPEN, ACKNOWLEDGED without terminal', () => {
     expect(QHORUS_STAGES.find(s => s.key === 'OPEN')!.terminal).toBeUndefined();
     expect(QHORUS_STAGES.find(s => s.key === 'ACKNOWLEDGED')!.terminal).toBeUndefined();
-    expect(QHORUS_STAGES.find(s => s.key === 'DELEGATED')!.terminal).toBeUndefined();
+  });
+
+  it('has DELEGATED as terminal transfer', () => {
+    expect(QHORUS_STAGES.find(s => s.key === 'DELEGATED')!.terminal).toBe('transfer');
   });
 });

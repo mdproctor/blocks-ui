@@ -40,7 +40,7 @@ export class CommitmentLifecyclePage extends LitElement {
 
     return html`
       <h2>Commitment Lifecycle (Timeline Strategy)</h2>
-      <p>Uses commitmentLifecycleStrategy() with blocks-timeline. COMMANDED → ACKNOWLEDGED → DONE/DECLINED pipeline.</p>
+      <p>Uses commitmentLifecycleStrategy() with blocks-timeline. OPEN → ACKNOWLEDGED → FULFILLED/FAILED/DECLINED/DELEGATED/EXPIRED (7-state model).</p>
 
       <div class="controls">
         <select @change=${(e: Event) => { this._selectedId = (e.target as HTMLSelectElement).value; }}>
@@ -50,7 +50,7 @@ export class CommitmentLifecyclePage extends LitElement {
         </select>
       </div>
 
-      <h3>Default Stages (Qhorus Commitment)</h3>
+      <h3>Default Stages (7-State Model)</h3>
       <div class="demo-section">
         ${commitment ? html`
           <blocks-timeline

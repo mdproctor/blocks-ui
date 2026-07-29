@@ -1,84 +1,78 @@
 import { describe, it, expect } from 'vitest';
 import {
   commitmentLifecycleStrategy,
-  COMMITMENT_STAGES,
   type CommitmentLifecycleData,
 } from './commitment-lifecycle.js';
-import { linearResolveStatus } from './state-progression.js';
+import { QHORUS_STAGES } from './state-progression.js';
 import type { StageConfig } from '../types.js';
 
 describe('commitmentLifecycleStrategy', () => {
-  describe('COMMITMENT_STAGES', () => {
-    it('has 4 stages', () => {
-      expect(COMMITMENT_STAGES).toHaveLength(4);
-    });
-
-    it('defines COMMANDED, ACKNOWLEDGED, DONE, DECLINED', () => {
-      expect(COMMITMENT_STAGES.map(s => s.key)).toEqual([
-        'COMMANDED', 'ACKNOWLEDGED', 'DONE', 'DECLINED',
+  describe('default stages (QHORUS_STAGES)', () => {
+    it('uses all 7 qhorus stages', () => {
+      const strategy = commitmentLifecycleStrategy();
+      const nodes = strategy.toNodes({
+        currentState: 'OPEN',
+        transitions: [{ state: 'OPEN' }],
+      });
+      expect(nodes).toHaveLength(7);
+      expect(nodes.map(n => n.key)).toEqual([
+        'OPEN', 'ACKNOWLEDGED', 'FULFILLED', 'DECLINED', 'FAILED', 'DELEGATED', 'EXPIRED',
       ]);
     });
 
-    it('marks DONE as terminal success', () => {
-      expect(COMMITMENT_STAGES.find(s => s.key === 'DONE')!.terminal).toBe('success');
-    });
-
-    it('marks DECLINED as terminal failure', () => {
-      expect(COMMITMENT_STAGES.find(s => s.key === 'DECLINED')!.terminal).toBe('failure');
-    });
-
-    it('has COMMANDED and ACKNOWLEDGED without terminal', () => {
-      expect(COMMITMENT_STAGES.find(s => s.key === 'COMMANDED')!.terminal).toBeUndefined();
-      expect(COMMITMENT_STAGES.find(s => s.key === 'ACKNOWLEDGED')!.terminal).toBeUndefined();
-    });
-  });
-
-  describe('toNodes with default stages', () => {
-    it('maps commitment stages to nodes', () => {
+    it('marks current non-terminal stage as active', () => {
       const strategy = commitmentLifecycleStrategy();
       const nodes = strategy.toNodes({
-        currentState: 'COMMANDED',
-        transitions: [],
+        currentState: 'ACKNOWLEDGED',
+        transitions: [{ state: 'OPEN' }, { state: 'ACKNOWLEDGED' }],
       });
-      expect(nodes).toHaveLength(4);
-      expect(nodes.map(n => n.key)).toEqual(['COMMANDED', 'ACKNOWLEDGED', 'DONE', 'DECLINED']);
-    });
-
-    it('uses stage labels as node labels', () => {
-      const strategy = commitmentLifecycleStrategy();
-      const nodes = strategy.toNodes({ currentState: 'COMMANDED', transitions: [] });
-      expect(nodes[0]!.label).toBe('Commanded');
-      expect(nodes[1]!.label).toBe('Acknowledged');
-    });
-
-    it('marks current stage as active for non-terminal', () => {
-      const strategy = commitmentLifecycleStrategy();
-      const nodes = strategy.toNodes({ currentState: 'ACKNOWLEDGED', transitions: [] });
       expect(nodes.find(n => n.key === 'ACKNOWLEDGED')!.status).toBe('active');
     });
 
-    it('marks stages before current as completed (linearResolveStatus)', () => {
+    it('marks visited stages as completed', () => {
       const strategy = commitmentLifecycleStrategy();
-      const nodes = strategy.toNodes({ currentState: 'ACKNOWLEDGED', transitions: [] });
-      expect(nodes.find(n => n.key === 'COMMANDED')!.status).toBe('completed');
+      const nodes = strategy.toNodes({
+        currentState: 'ACKNOWLEDGED',
+        transitions: [{ state: 'OPEN' }, { state: 'ACKNOWLEDGED' }],
+      });
+      expect(nodes.find(n => n.key === 'OPEN')!.status).toBe('completed');
     });
 
-    it('marks stages after current as pending', () => {
+    it('marks FULFILLED as completed (terminal success)', () => {
       const strategy = commitmentLifecycleStrategy();
-      const nodes = strategy.toNodes({ currentState: 'ACKNOWLEDGED', transitions: [] });
-      expect(nodes.find(n => n.key === 'DONE')!.status).toBe('pending');
-      expect(nodes.find(n => n.key === 'DECLINED')!.status).toBe('pending');
+      const nodes = strategy.toNodes({
+        currentState: 'FULFILLED',
+        transitions: [{ state: 'OPEN' }, { state: 'ACKNOWLEDGED' }, { state: 'FULFILLED' }],
+      });
+      expect(nodes.find(n => n.key === 'FULFILLED')!.status).toBe('completed');
     });
 
-    it('marks DONE as completed when reached', () => {
+    it('marks FAILED as failed (terminal failure)', () => {
       const strategy = commitmentLifecycleStrategy();
-      const nodes = strategy.toNodes({ currentState: 'DONE', transitions: [] });
-      expect(nodes.find(n => n.key === 'DONE')!.status).toBe('completed');
+      const nodes = strategy.toNodes({
+        currentState: 'FAILED',
+        transitions: [{ state: 'OPEN' }, { state: 'ACKNOWLEDGED' }, { state: 'FAILED' }],
+      });
+      expect(nodes.find(n => n.key === 'FAILED')!.status).toBe('failed');
     });
 
-    it('marks DECLINED as failed when reached', () => {
+    it('marks DELEGATED as completed (terminal transfer)', () => {
       const strategy = commitmentLifecycleStrategy();
-      const nodes = strategy.toNodes({ currentState: 'DECLINED', transitions: [] });
+      const nodes = strategy.toNodes({
+        currentState: 'DELEGATED',
+        transitions: [{ state: 'OPEN' }, { state: 'DELEGATED' }],
+      });
+      expect(nodes.find(n => n.key === 'DELEGATED')!.status).toBe('completed');
+    });
+
+    it('handles non-linear path: OPEN → DECLINED skipping ACKNOWLEDGED', () => {
+      const strategy = commitmentLifecycleStrategy();
+      const nodes = strategy.toNodes({
+        currentState: 'DECLINED',
+        transitions: [{ state: 'OPEN' }, { state: 'DECLINED' }],
+      });
+      expect(nodes.find(n => n.key === 'OPEN')!.status).toBe('completed');
+      expect(nodes.find(n => n.key === 'ACKNOWLEDGED')!.status).toBe('skipped');
       expect(nodes.find(n => n.key === 'DECLINED')!.status).toBe('failed');
     });
 
@@ -87,20 +81,23 @@ describe('commitmentLifecycleStrategy', () => {
       const nodes = strategy.toNodes({
         currentState: 'ACKNOWLEDGED',
         transitions: [
-          { state: 'COMMANDED', actor: 'requester', timestamp: '2026-01-01T00:00:00Z' },
+          { state: 'OPEN', actor: 'requester', timestamp: '2026-01-01T00:00:00Z' },
           { state: 'ACKNOWLEDGED', actor: 'agent-1', timestamp: '2026-01-01T01:00:00Z' },
         ],
       });
-      expect(nodes.find(n => n.key === 'COMMANDED')!.actor).toBe('requester');
-      expect(nodes.find(n => n.key === 'COMMANDED')!.timestamp).toBe('2026-01-01T00:00:00Z');
+      expect(nodes.find(n => n.key === 'OPEN')!.actor).toBe('requester');
+      expect(nodes.find(n => n.key === 'OPEN')!.timestamp).toBe('2026-01-01T00:00:00Z');
       expect(nodes.find(n => n.key === 'ACKNOWLEDGED')!.actor).toBe('agent-1');
     });
 
-    it('leaves actor/timestamp undefined for stages without transitions', () => {
+    it('leaves actor/timestamp undefined for non-visited stages', () => {
       const strategy = commitmentLifecycleStrategy();
-      const nodes = strategy.toNodes({ currentState: 'COMMANDED', transitions: [] });
-      expect(nodes.find(n => n.key === 'DONE')!.actor).toBeUndefined();
-      expect(nodes.find(n => n.key === 'DONE')!.timestamp).toBeUndefined();
+      const nodes = strategy.toNodes({
+        currentState: 'OPEN',
+        transitions: [{ state: 'OPEN' }],
+      });
+      expect(nodes.find(n => n.key === 'FULFILLED')!.actor).toBeUndefined();
+      expect(nodes.find(n => n.key === 'FULFILLED')!.timestamp).toBeUndefined();
     });
   });
 
@@ -115,16 +112,15 @@ describe('commitmentLifecycleStrategy', () => {
         id: 'c1',
         currentStage: 'ACKNOWLEDGED',
         stages: [
-          { key: 'COMMANDED', status: 'completed', actor: 'sys', timestamp: '2026-01-01T00:00:00Z' },
+          { key: 'OPEN', status: 'completed', actor: 'sys', timestamp: '2026-01-01T00:00:00Z' },
           { key: 'ACKNOWLEDGED', status: 'active', actor: 'agent-1', timestamp: '2026-01-01T01:00:00Z' },
         ],
       };
-
       const transformed = strategy.transformData!(raw);
       expect(transformed).toEqual({
         currentState: 'ACKNOWLEDGED',
         transitions: [
-          { state: 'COMMANDED', actor: 'sys', timestamp: '2026-01-01T00:00:00Z' },
+          { state: 'OPEN', actor: 'sys', timestamp: '2026-01-01T00:00:00Z' },
           { state: 'ACKNOWLEDGED', actor: 'agent-1', timestamp: '2026-01-01T01:00:00Z' },
         ],
       });
@@ -134,20 +130,20 @@ describe('commitmentLifecycleStrategy', () => {
       const strategy = commitmentLifecycleStrategy();
       const transformed = strategy.transformData!({
         id: 'c1',
-        currentStage: 'COMMANDED',
+        currentStage: 'OPEN',
         stages: [],
       });
       expect(transformed).toEqual({
-        currentState: 'COMMANDED',
+        currentState: 'OPEN',
         transitions: [],
       });
     });
 
-    it('preserves messages on the raw object (not in transformed)', () => {
+    it('does not include messages in transformed output', () => {
       const strategy = commitmentLifecycleStrategy();
       const raw: CommitmentLifecycleData = {
         id: 'c1',
-        currentStage: 'COMMANDED',
+        currentStage: 'OPEN',
         stages: [],
         messages: [{ sender: 'user', content: 'hello', timestamp: '2026-01-01T00:00:00Z' }],
       };
@@ -164,7 +160,10 @@ describe('commitmentLifecycleStrategy', () => {
         { key: 'COMPLETED', label: 'Completed', terminal: 'success' },
       ];
       const strategy = commitmentLifecycleStrategy({ stages: customStages });
-      const nodes = strategy.toNodes({ currentState: 'IN_PROGRESS', transitions: [] });
+      const nodes = strategy.toNodes({
+        currentState: 'IN_PROGRESS',
+        transitions: [{ state: 'REQUESTED' }, { state: 'IN_PROGRESS' }],
+      });
       expect(nodes).toHaveLength(3);
       expect(nodes[1]!.label).toBe('In Progress');
       expect(nodes[1]!.status).toBe('active');
@@ -176,7 +175,7 @@ describe('commitmentLifecycleStrategy', () => {
       const strategy = commitmentLifecycleStrategy({
         resolveStatus: () => 'completed',
       });
-      const nodes = strategy.toNodes({ currentState: 'COMMANDED', transitions: [] });
+      const nodes = strategy.toNodes({ currentState: 'OPEN', transitions: [] });
       expect(nodes.every(n => n.status === 'completed')).toBe(true);
     });
   });
@@ -199,11 +198,12 @@ describe('commitmentLifecycleStrategy', () => {
       const nodes = strategy.toNodes({
         currentState: 'ACKNOWLEDGED',
         transitions: [
-          { state: 'COMMANDED', timestamp: '2026-01-01T00:00:00Z' },
-          { state: 'COMMANDED', timestamp: '2026-01-01T00:01:00Z' },
+          { state: 'OPEN', timestamp: '2026-01-01T00:00:00Z' },
+          { state: 'OPEN', timestamp: '2026-01-01T00:01:00Z' },
+          { state: 'ACKNOWLEDGED' },
         ],
       });
-      expect(nodes.find(n => n.key === 'COMMANDED')!.status).toBe('completed');
+      expect(nodes.find(n => n.key === 'OPEN')!.status).toBe('completed');
     });
   });
 });

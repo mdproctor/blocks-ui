@@ -6,23 +6,23 @@ export const QHORUS_STAGES: readonly StageConfig[] = [
   { key: 'FULFILLED', label: 'Fulfilled', terminal: 'success' },
   { key: 'DECLINED', label: 'Declined', terminal: 'failure' },
   { key: 'FAILED', label: 'Failed', terminal: 'failure' },
-  { key: 'DELEGATED', label: 'Delegated' },
+  { key: 'DELEGATED', label: 'Delegated', terminal: 'transfer' },
   { key: 'EXPIRED', label: 'Expired', terminal: 'failure' },
 ];
 
-interface StateData {
+export interface StateData {
   currentState: string;
   transitions?: ReadonlyArray<{ state: string; actor?: string; timestamp?: string }>;
 }
 
-type ResolveStatus = (
+export type ResolveStatus = (
   stage: StageConfig,
   currentState: string,
   transitions: Array<{ state: string; actor?: string; timestamp?: string }>,
   stages: readonly StageConfig[],
 ) => NodeStatus;
 
-function defaultResolveStatus(
+export function defaultResolveStatus(
   stage: StageConfig,
   currentState: string,
   transitions: Array<{ state: string; actor?: string; timestamp?: string }>,
@@ -31,6 +31,7 @@ function defaultResolveStatus(
   if (stage.key === currentState) {
     if (stage.terminal === 'success') return 'completed';
     if (stage.terminal === 'failure') return 'failed';
+    if (stage.terminal === 'transfer') return 'completed';
     return 'active';
   }
   if (transitions.length > 0) {
@@ -52,6 +53,7 @@ export function linearResolveStatus(
   if (stageIndex === currentIndex) {
     if (stage.terminal === 'success') return 'completed';
     if (stage.terminal === 'failure') return 'failed';
+    if (stage.terminal === 'transfer') return 'completed';
     return 'active';
   }
   return 'pending';

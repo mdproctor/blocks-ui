@@ -35,5 +35,5 @@ export interface StageConfig {
   key: string;
   label: string;
   icon?: string;
-  terminal?: 'success' | 'failure';
+  terminal?: 'success' | 'failure' | 'transfer';
 }

@@ -14,6 +14,5 @@ export {
 } from './strategies/event-chronology.js';
 export {
   commitmentLifecycleStrategy,
-  COMMITMENT_STAGES,
   type CommitmentLifecycleData,
 } from './strategies/commitment-lifecycle.js';

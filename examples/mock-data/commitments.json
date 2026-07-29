@@ -4,7 +4,7 @@
       "id": "commit-001",
       "currentStage": "ACKNOWLEDGED",
       "stages": [
-        { "key": "COMMANDED", "status": "completed", "actor": "system", "timestamp": "2026-07-14T08:00:00Z" },
+        { "key": "OPEN", "status": "completed", "actor": "system", "timestamp": "2026-07-14T08:00:00Z" },
         { "key": "ACKNOWLEDGED", "status": "active", "actor": "agent-alice", "timestamp": "2026-07-14T08:15:00Z" }
       ],
       "messages": [
@@ -14,18 +14,18 @@
     },
     {
       "id": "commit-002",
-      "currentStage": "DONE",
+      "currentStage": "FULFILLED",
       "stages": [
-        { "key": "COMMANDED", "status": "completed", "actor": "coordinator", "timestamp": "2026-07-13T10:00:00Z" },
+        { "key": "OPEN", "status": "completed", "actor": "coordinator", "timestamp": "2026-07-13T10:00:00Z" },
         { "key": "ACKNOWLEDGED", "status": "completed", "actor": "agent-bob", "timestamp": "2026-07-13T10:30:00Z" },
-        { "key": "DONE", "status": "completed", "actor": "agent-bob", "timestamp": "2026-07-13T14:00:00Z" }
+        { "key": "FULFILLED", "status": "completed", "actor": "agent-bob", "timestamp": "2026-07-13T14:00:00Z" }
       ]
     },
     {
       "id": "commit-003",
       "currentStage": "DECLINED",
       "stages": [
-        { "key": "COMMANDED", "status": "completed", "actor": "system", "timestamp": "2026-07-12T09:00:00Z" },
+        { "key": "OPEN", "status": "completed", "actor": "system", "timestamp": "2026-07-12T09:00:00Z" },
         { "key": "DECLINED", "status": "failed", "actor": "agent-carol", "timestamp": "2026-07-12T09:45:00Z" }
       ],
       "messages": [
@@ -34,9 +34,17 @@
     },
     {
       "id": "commit-004",
-      "currentStage": "COMMANDED",
+      "currentStage": "OPEN",
       "stages": [
-        { "key": "COMMANDED", "status": "active", "actor": "system", "timestamp": "2026-07-14T12:00:00Z" }
+        { "key": "OPEN", "status": "active", "actor": "system", "timestamp": "2026-07-14T12:00:00Z" }
+      ]
+    },
+    {
+      "id": "commit-005",
+      "currentStage": "DELEGATED",
+      "stages": [
+        { "key": "OPEN", "status": "completed", "actor": "system", "timestamp": "2026-07-14T14:00:00Z" },
+        { "key": "DELEGATED", "status": "completed", "actor": "agent-alice", "timestamp": "2026-07-14T14:30:00Z" }
       ]
     }
   ]
