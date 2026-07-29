@@ -2,7 +2,7 @@ import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import type { QhorusMessage, Reaction, CommitmentState, ActorType } from './types.js';
-import { messageTypeCategory, commitmentStateCategory, isObligationCreating } from './types.js';
+import { messageTypeCategory, isObligationCreating } from './types.js';
 import { renderMarkdown } from './markdown.js';
 import { emitPagesEvent } from '@casehubio/blocks-ui-core';
 import { ChannelEventTopics } from './events.js';
@@ -67,18 +67,7 @@ export class ChannelMessageElement extends LitElement {
     .badge-warning { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-11, #92400e); }
     .badge-transfer { background: var(--pages-info-3, #dbeafe); color: var(--pages-info-11, #1e40af); }
     .badge-telemetry { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-9, #737373); }
-    .commitment-badge {
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: var(--pages-radius-sm, 4px);
-    }
-    .commitment-active { background: var(--pages-accent-3, #e0e7ff); color: var(--pages-accent-11, #3730a3); }
-    .commitment-info { background: var(--pages-info-3, #dbeafe); color: var(--pages-info-11, #1e40af); }
-    .commitment-success { background: var(--pages-success-3, #d1fae5); color: var(--pages-success-11, #065f46); }
-    .commitment-danger { background: var(--pages-danger-3, #fee2e2); color: var(--pages-danger-11, #991b1b); }
-    .commitment-neutral { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-9, #737373); }
-    .commitment-transfer { background: var(--pages-info-3, #dbeafe); color: var(--pages-info-11, #1e40af); }
-    .commitment-warning { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-11, #92400e); }
+
     .content {
       font-size: var(--pages-font-size-base, 14px);
       line-height: var(--pages-line-height-base, 20px);
@@ -238,7 +227,7 @@ export class ChannelMessageElement extends LitElement {
           <div class="commitment-details">
             <div class="detail-row">
               <span class="detail-label">State:</span>
-              <span class="commitment-badge commitment-${commitmentStateCategory(this.commitmentState)}">${this.commitmentState}</span>
+              <commitment-state-pill .state=${this.commitmentState}></commitment-state-pill>
             </div>
             ${m.deadline ? html`
               <div class="detail-row">
@@ -285,7 +274,7 @@ export class ChannelMessageElement extends LitElement {
           <span class="speech-act-badge badge-${category}">${m.messageType}</span>
         ` : nothing}
         ${this.commitmentState && isObligationCreating(m.messageType) ? html`
-          <span class="commitment-badge commitment-${commitmentStateCategory(this.commitmentState)}">${this.commitmentState}</span>
+          <commitment-state-pill .state=${this.commitmentState}></commitment-state-pill>
         ` : nothing}
         <time datetime=${m.createdAt}>${this._formatTime(m.createdAt)}</time>
         <pages-button class="expand-toggle" variant="ghost" size="sm" @click=${this._toggle} aria-expanded=${this._expanded}>

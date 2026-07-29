@@ -96,9 +96,9 @@ describe('blocks-channel-message', () => {
     const el = await renderMessage({ message: { messageType: 'COMMAND', commitmentId: 'c-1' } });
     (el as any).commitmentState = 'OPEN';
     await (el as any).updateComplete;
-    const badge = el.shadowRoot!.querySelector('.commitment-badge');
+    const badge = el.shadowRoot!.querySelector('commitment-state-pill');
     expect(badge).toBeTruthy();
-    expect(badge!.textContent!.trim()).toBe('OPEN');
+    expect((badge as any).state).toBe('OPEN');
   });
 
   it('renders delegation indicator for HANDOFF messages', async () => {

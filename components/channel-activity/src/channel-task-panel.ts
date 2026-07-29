@@ -1,7 +1,8 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { QhorusMessage } from './types.js';
-import { commitmentStateCategory, isObligationCreating } from './types.js';
+import { isObligationCreating, isTerminalCommitmentState } from './types.js';
+import type { CommitmentState } from './types.js';
 import { emitPagesEvent } from '@casehubio/blocks-ui-core';
 import { ChannelEventTopics } from './events.js';
 import type { CommitmentRecord } from './commitment.js';
@@ -51,20 +52,7 @@ export class ChannelTaskPanelElement extends LitElement {
       align-items: center;
       gap: var(--pages-space-2);
     }
-    .state-badge {
-      font-size: 10px;
-      font-weight: var(--pages-font-weight-medium);
-      padding: 1px 6px;
-      border-radius: var(--pages-radius-sm);
-      text-transform: uppercase;
-    }
-    .badge-active { background: var(--pages-accent-3); color: var(--pages-accent-11); }
-    .badge-info { background: var(--pages-info-3); color: var(--pages-info-11); }
-    .badge-success { background: var(--pages-success-3); color: var(--pages-success-11); }
-    .badge-danger { background: var(--pages-danger-3); color: var(--pages-danger-11); }
-    .badge-neutral { background: var(--pages-neutral-3); color: var(--pages-neutral-9); }
-    .badge-transfer { background: var(--pages-info-3); color: var(--pages-info-11); }
-    .badge-warning { background: var(--pages-warning-3); color: var(--pages-warning-11); }
+
     .sender-target {
       font-size: var(--pages-font-size-xs);
       color: var(--pages-neutral-9);
@@ -106,7 +94,7 @@ export class ChannelTaskPanelElement extends LitElement {
   }
 
   private _isTerminal(state: string): boolean {
-    return ['FULFILLED', 'FAILED', 'DECLINED', 'DELEGATED', 'EXPIRED'].includes(state);
+    return isTerminalCommitmentState(state as CommitmentState);
   }
 
   private _formatTime(iso: string): string {
@@ -136,7 +124,7 @@ export class ChannelTaskPanelElement extends LitElement {
     const terminal: QhorusMessage[] = [];
 
     for (const cmd of commands) {
-      const record = this.commitments.get(cmd.id);
+      const record = cmd.correlationId ? this.commitments.get(cmd.correlationId) : undefined;
       const state = record?.state ?? 'OPEN';
       if (this._isOverdue(record)) {
         overdue.push(cmd);
@@ -167,9 +155,8 @@ export class ChannelTaskPanelElement extends LitElement {
   }
 
   private _renderRow(msg: QhorusMessage) {
-    const record = this.commitments.get(msg.id);
+    const record = msg.correlationId ? this.commitments.get(msg.correlationId) : undefined;
     const state = record?.state ?? 'OPEN';
-    const category = commitmentStateCategory(state as any);
     const isOverdue = this._isOverdue(record);
     const isSelected = this.selectedMessageId === msg.id;
 
@@ -177,7 +164,7 @@ export class ChannelTaskPanelElement extends LitElement {
       <div class="task-row ${isOverdue ? 'overdue' : ''} ${isSelected ? 'selected' : ''}"
            @click=${() => this._onRowClick(msg)}>
         <div class="task-header">
-          <span class="state-badge badge-${category}">${state}</span>
+          <commitment-state-pill .state=${state}></commitment-state-pill>
           <span class="timestamp">${this._formatTime(msg.createdAt)}</span>
           ${isOverdue && record?.deadline ? html`
             <span class="deadline-indicator">overdue</span>

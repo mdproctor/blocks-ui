@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { TransitionRecord } from './types.js';
-import './commitment-state-pill.js';
+import '@casehubio/blocks-ui-core';
 
 @customElement('commitment-transition-badge')
 export class CommitmentTransitionBadge extends LitElement {

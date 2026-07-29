@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { TransitionRecord } from './types.js';
 import './commitment-transition-badge.js';
-import './commitment-state-pill.js';
+import '@casehubio/blocks-ui-core';
 
 type BadgeEl = HTMLElement & {
   transition?: TransitionRecord;

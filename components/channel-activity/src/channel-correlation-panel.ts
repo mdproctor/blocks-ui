@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { QhorusMessage } from './types.js';
-import { messageTypeCategory, commitmentStateCategory, isObligationCreating } from './types.js';
+import { messageTypeCategory, isObligationCreating } from './types.js';
 import { emitPagesEvent } from '@casehubio/blocks-ui-core';
 import { ChannelEventTopics } from './events.js';
 import type { CommitmentRecord } from './commitment.js';
@@ -64,14 +64,7 @@ export class ChannelCorrelationPanelElement extends LitElement {
     .badge-warning { background: var(--pages-warning-3); color: var(--pages-warning-11); }
     .badge-transfer { background: var(--pages-info-3); color: var(--pages-info-11); }
     .badge-telemetry { background: var(--pages-neutral-3); color: var(--pages-neutral-9); }
-    .commitment-badge {
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: var(--pages-radius-sm);
-    }
-    .commitment-active { background: var(--pages-accent-3); color: var(--pages-accent-11); }
-    .commitment-success { background: var(--pages-success-3); color: var(--pages-success-11); }
-    .commitment-danger { background: var(--pages-danger-3); color: var(--pages-danger-11); }
+
     .node-content {
       font-size: var(--pages-font-size-sm);
       color: var(--pages-neutral-11);
@@ -201,8 +194,7 @@ export class ChannelCorrelationPanelElement extends LitElement {
   private _renderNode(msg: QhorusMessage) {
     const category = messageTypeCategory(msg.messageType);
     const isSelected = this.selectedMessageId === msg.id;
-    const record = this.commitments.get(msg.id);
-    const commitCategory = record ? commitmentStateCategory(record.state as any) : undefined;
+    const record = msg.correlationId ? this.commitments.get(msg.correlationId) : undefined;
 
     return html`
       <div class="flow-node ${isSelected ? 'selected' : ''}" @click=${() => this._onNodeClick(msg)}>
@@ -210,8 +202,8 @@ export class ChannelCorrelationPanelElement extends LitElement {
           <span class="actor-icon">${this._actorIcon(msg.actorType)}</span>
           <span class="sender">${msg.sender}</span>
           <span class="speech-act-badge badge-${category}">${msg.messageType}</span>
-          ${isObligationCreating(msg.messageType) && commitCategory ? html`
-            <span class="commitment-badge commitment-${commitCategory}">${record!.state}</span>
+          ${isObligationCreating(msg.messageType) && record ? html`
+            <commitment-state-pill .state=${record.state}></commitment-state-pill>
           ` : nothing}
           <span class="node-time">${this._formatTime(msg.createdAt)}</span>
         </div>

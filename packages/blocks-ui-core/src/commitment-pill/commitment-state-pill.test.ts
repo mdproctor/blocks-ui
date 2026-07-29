@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import type { CommitmentState } from '@casehubio/blocks-ui-core';
+import type { CommitmentState } from '../types/commitment.js';
 import './commitment-state-pill.js';
 
 type PillEl = HTMLElement & {

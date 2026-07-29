@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { COMMITMENT_STATES, type CommitmentState, type CommitmentRecord } from '@casehubio/blocks-ui-core';
-import '../../../components/commitment-viz/src/commitment-state-pill.js';
+import '@casehubio/blocks-ui-core';
 import '../../../components/commitment-viz/src/commitment-transition-badge.js';
 import '../../../components/commitment-viz/src/commitment-range-bar.js';
 import { decorateCommitmentRanges } from '../../../components/commitment-viz/src/range-decorator.js';

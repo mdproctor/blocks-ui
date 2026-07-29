@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { QhorusMessage, QhorusTopic, Reaction, CommitmentState, ActorType } from './types.js';
+import type { QhorusMessage, QhorusTopic, Reaction, ActorType } from './types.js';
 import { isTerminalMessageType } from './types.js';
 import { emitPagesEvent } from '@casehubio/blocks-ui-core';
 import { ChannelEventTopics } from './events.js';
@@ -20,7 +20,6 @@ const CURSOR_STORAGE_KEY = 'channel-activity.cursors';
 export class ChannelFeedElement extends LitElement {
   @property({ type: Array }) messages: QhorusMessage[] = [];
   @property({ type: Array }) reactions: Reaction[] = [];
-  @property({ type: Object }) commitments: Map<string, CommitmentState> = new Map();
   @property({ type: String }) channelId = '';
   @property({ type: String }) channelName?: string;
   @property({ type: Boolean }) terminalDimming = true;
@@ -266,12 +265,12 @@ export class ChannelFeedElement extends LitElement {
     if (!feed) return;
     const target = feed.querySelector(`[data-message-id="${this.selectedMessageId}"]`) as HTMLElement | null;
     if (target) {
-      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      target.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
       return;
     }
     const thread = feed.querySelector(`blocks-channel-thread[data-contains~="${this.selectedMessageId}"]`) as HTMLElement | null;
     if (thread) {
-      thread.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      thread.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
     }
   }
 

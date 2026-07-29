@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { QhorusMessage, CommitmentState, Reaction, ActorType } from './types.js';
-import { commitmentStateCategory } from './types.js';
+
 import './channel-message.js';
 import '@casehubio/pages-ui-components';
 
@@ -33,18 +33,7 @@ export class ChannelThreadElement extends LitElement {
       font-size: var(--pages-font-size-xs, 11px);
       color: var(--pages-accent-9, #6366f1);
     }
-    .thread-commitment {
-      font-size: 10px;
-      padding: 1px 6px;
-      border-radius: var(--pages-radius-sm, 4px);
-    }
-    .commitment-active { background: var(--pages-accent-3, #e0e7ff); color: var(--pages-accent-11, #3730a3); }
-    .commitment-info { background: var(--pages-info-3, #dbeafe); color: var(--pages-info-11, #1e40af); }
-    .commitment-success { background: var(--pages-success-3, #d1fae5); color: var(--pages-success-11, #065f46); }
-    .commitment-danger { background: var(--pages-danger-3, #fee2e2); color: var(--pages-danger-11, #991b1b); }
-    .commitment-neutral { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-9, #737373); }
-    .commitment-transfer { background: var(--pages-info-3, #dbeafe); color: var(--pages-info-11, #1e40af); }
-    .commitment-warning { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-11, #92400e); }
+
     .reply { padding-left: var(--pages-space-4, 16px); }
     .root-message.selected,
     .reply.selected {
@@ -90,9 +79,7 @@ export class ChannelThreadElement extends LitElement {
             ${this.collapsed ? '▶' : '▼'} ${this._summary()}
           </pages-button>
           ${this.commitmentState ? html`
-            <span class="thread-commitment commitment-${commitmentStateCategory(this.commitmentState)}">
-              ${this.commitmentState}
-            </span>
+            <commitment-state-pill .state=${this.commitmentState}></commitment-state-pill>
           ` : nothing}
         </div>
         ${!this.collapsed ? html`

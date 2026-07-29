@@ -1,5 +1,5 @@
-import { commitmentStateCategory } from '@casehubio/blocks-ui-core';
-import type { StateCategory } from '@casehubio/blocks-ui-core';
+import { commitmentStateCategory } from '../types/commitment.js';
+import type { StateCategory } from '../types/commitment.js';
 
 export { commitmentStateCategory as stateCategory };
 

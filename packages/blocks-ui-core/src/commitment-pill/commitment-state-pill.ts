@@ -1,9 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import type { CommitmentState } from '@casehubio/blocks-ui-core';
-import { commitmentStateCategory } from '@casehubio/blocks-ui-core';
-import { stateCategoryStyles } from './colors.js';
+import type { CommitmentState } from '../types/commitment.js';
+import { commitmentStateCategory } from '../types/commitment.js';
+import { stateCategoryStyles } from './styles.js';
 
 const STATE_ICONS: Partial<Record<CommitmentState, string>> = {
   OPEN: '⏳',

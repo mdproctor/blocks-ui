@@ -35,9 +35,9 @@ describe('blocks-channel-task-panel', () => {
 
     element = document.createElement('blocks-channel-task-panel') as any;
     (element as any).messages = [
-      makeMsg({ id: 'active', content: 'Active task' }),
-      makeMsg({ id: 'overdue', content: 'Overdue task' }),
-      makeMsg({ id: 'done', content: 'Done task' }),
+      makeMsg({ id: 'active', correlationId: 'active', content: 'Active task' }),
+      makeMsg({ id: 'overdue', correlationId: 'overdue', content: 'Overdue task' }),
+      makeMsg({ id: 'done', correlationId: 'done', content: 'Done task' }),
     ];
     const commitments = new Map<string, CommitmentRecord>([
       ['active', { state: 'OPEN', deadline: future, createdAt: '2026-07-20T10:00:00Z', updatedAt: '2026-07-20T10:00:00Z' }],
@@ -58,7 +58,7 @@ describe('blocks-channel-task-panel', () => {
   it('marks overdue rows with overdue class', async () => {
     const past = new Date(Date.now() - 86400000).toISOString();
     element = document.createElement('blocks-channel-task-panel') as any;
-    (element as any).messages = [makeMsg({ id: 'od' })];
+    (element as any).messages = [makeMsg({ id: 'od', correlationId: 'od' })];
     (element as any).commitments = new Map([
       ['od', { state: 'OPEN', deadline: past, createdAt: '2026-07-20T10:00:00Z', updatedAt: '2026-07-20T10:00:00Z' }],
     ]);

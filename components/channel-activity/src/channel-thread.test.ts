@@ -65,9 +65,9 @@ describe('blocks-channel-thread', () => {
     document.body.appendChild(el);
     await el.updateComplete;
 
-    const badge = el.shadowRoot!.querySelector('.thread-commitment');
-    expect(badge).toBeTruthy();
-    expect(badge!.textContent).toContain('FULFILLED');
+    const pill = el.shadowRoot!.querySelector('commitment-state-pill');
+    expect(pill).toBeTruthy();
+    expect((pill as any).state).toBe('FULFILLED');
   });
 
   it('renders nothing when rootMessage is not set', async () => {
@@ -103,7 +103,7 @@ describe('blocks-channel-thread', () => {
     expect(toggle!.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('applies commitment-success CSS class for FULFILLED state', async () => {
+  it('renders commitment-state-pill with correct state for FULFILLED', async () => {
     const el = document.createElement('blocks-channel-thread') as any;
     el.rootMessage = msg('1', 'COMMAND', 'Task');
     el.replies = [msg('2', 'DONE', 'Done')];
@@ -112,8 +112,9 @@ describe('blocks-channel-thread', () => {
     document.body.appendChild(el);
     await el.updateComplete;
 
-    const badge = el.shadowRoot!.querySelector('.thread-commitment');
-    expect(badge!.classList.contains('commitment-success')).toBe(true);
+    const pill = el.shadowRoot!.querySelector('commitment-state-pill') as any;
+    expect(pill).toBeTruthy();
+    expect(pill.state).toBe('FULFILLED');
   });
 
   // --- renderContent passthrough ---
