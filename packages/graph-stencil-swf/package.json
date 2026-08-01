@@ -1,0 +1,34 @@
+{
+  "name": "@casehubio/graph-stencil-swf",
+  "version": "0.1.0",
+  "description": "SWF domain adapter using @openworkflowspec/sdk for graph editor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/blocks-ui.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@open-wc/testing": "^4.0.0",
+    "jsdom": "^29.1.1",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@casehubio/graph-core": "*",
+    "@openworkflowspec/sdk": "*",
+    "lit": "^3.3.3"
+  }
+}
