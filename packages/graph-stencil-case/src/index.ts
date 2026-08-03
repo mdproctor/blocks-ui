@@ -1,5 +1,4 @@
-export { CaseAdapter } from './adapter/case-adapter.js';
-export { caseStencils } from './stencils/index.js';
+export { toGraph } from './adapter/case-adapter.js';
 export type {
   CaseDefinition,
   CaseDefinitionSpec,

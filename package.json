@@ -19,7 +19,8 @@
     "@casehubio/pages-ui-components": "portal:./.casehub-packages/packages/pages-ui-components",
     "@casehubio/pages-ui-tokens": "portal:./.casehub-packages/packages/pages-ui-tokens",
     "@casehubio/pages-viz": "portal:./.casehub-packages/packages/pages-viz",
-    "@casehubio/graph-core": "portal:./.casehub-packages/packages/graph-core"
+    "@casehubio/graph-core": "portal:./.casehub-packages/packages/graph-core",
+    "@casehubio/graph-renderer": "portal:./.casehub-packages/packages/graph-renderer"
   },
   "scripts": {
     "build": "yarn workspaces foreach -A --topological run build",
