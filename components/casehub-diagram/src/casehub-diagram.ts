@@ -43,7 +43,7 @@ export class CasehubDiagram extends LitElement {
       this._error = '';
       const model = toGraph(yamlStr);
       const { nodes, edges } = toReactFlowGraph(model);
-      this._nodes = await computeElkLayout(nodes, edges, { direction: 'DOWN', spacing: 60 });
+      this._nodes = await computeElkLayout(nodes, edges, { direction: 'DOWN', spacing: 60 }) as RFNode[];
       this._edges = edges;
     } catch (e) {
       this._error = String(e);
