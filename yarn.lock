@@ -183,6 +183,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@casehubio/blocks-ui-casehub-diagram@workspace:components/casehub-diagram":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/blocks-ui-casehub-diagram@workspace:components/casehub-diagram"
+  dependencies:
+    "@casehubio/graph-core": "npm:*"
+    "@casehubio/graph-renderer": "npm:*"
+    "@casehubio/graph-stencil-case": "workspace:*"
+    jsdom: "npm:^29.1.1"
+    lit: "npm:^3.3.3"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.0.0"
+    yaml: "npm:^2.7.0"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/blocks-ui-channel-activity@workspace:components/channel-activity":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-channel-activity@workspace:components/channel-activity"
@@ -620,7 +636,7 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@casehubio/graph-stencil-case@workspace:packages/graph-stencil-case":
+"@casehubio/graph-stencil-case@workspace:*, @casehubio/graph-stencil-case@workspace:packages/graph-stencil-case":
   version: 0.0.0-use.local
   resolution: "@casehubio/graph-stencil-case@workspace:packages/graph-stencil-case"
   dependencies:
@@ -628,6 +644,8 @@ __metadata:
     "@casehubio/graph-renderer": "npm:*"
     "@casehubio/pages-component": "npm:*"
     "@open-wc/testing": "npm:^4.0.0"
+    "@types/react": "npm:^19.2.18"
+    "@types/react-dom": "npm:^19.2.4"
     jsdom: "npm:^29.1.1"
     json-schema-to-typescript: "npm:^15.0.4"
     lit: "npm:^3.3.3"
@@ -2367,6 +2385,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-dom@npm:^19.2.4":
+  version: 19.2.4
+  resolution: "@types/react-dom@npm:19.2.4"
+  peerDependencies:
+    "@types/react": ^19.2.0
+  checksum: 10c0/b7d854ce17bb51a3a067168268a90f0123d10dc490f63f1ff5409f07ac715febeb8f5b7b473404a9d437106571e0312fc2937a945634d590abfc9aa46a14b01b
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^19.2.18":
+  version: 19.2.18
+  resolution: "@types/react@npm:19.2.18"
+  dependencies:
+    csstype: "npm:^3.2.2"
+  checksum: 10c0/d04216172b4b4362b310017c210dfbe019fb4f4e7dffd0313e70b3acb3051d5c3e76e7e84e3cf4c6a3c824993ffadfe3949e589a6398a09d4200e7670e2962de
+  languageName: node
+  linkType: hard
+
 "@types/send@npm:*":
   version: 1.2.1
   resolution: "@types/send@npm:1.2.1"
@@ -3419,6 +3455,13 @@ __metadata:
     "@asamuzakjp/css-color": "npm:^3.2.0"
     rrweb-cssom: "npm:^0.8.0"
   checksum: 10c0/71add1b0ffafa1bedbef6855db6189b9523d3320e015a0bf3fbd504760efb9a81e1f1a225228d5fa892ee58e56d06994ca372e7f4e461cda7c4c9985fe075f65
+  languageName: node
+  linkType: hard
+
+"csstype@npm:^3.2.2":
+  version: 3.2.3
+  resolution: "csstype@npm:3.2.3"
+  checksum: 10c0/cd29c51e70fa822f1cecd8641a1445bed7063697469d35633b516e60fe8c1bde04b08f6c5b6022136bb669b64c63d4173af54864510fbb4ee23281801841a3ce
   languageName: node
   linkType: hard
 
