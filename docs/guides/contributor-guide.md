@@ -19,7 +19,15 @@
 
 ### Data Architecture
 
-**DataSourceMixin** — Lit mixin for pull-based data loading (REST endpoints). Adds `endpoint`, `loading`, `error`, `dataSet` properties. Wraps `DataSourceAdapter` -> `DataSourceController` from pages-component. Used by: similarity-panel, compliance-summary, grouped-data-view, list-pane.
+**DataSourceMixin** — Lit mixin for pull-based data loading (REST endpoints). Adds `endpoint`, `loading`, `error`, `dataSet` properties. Wraps `DataSourceAdapter` -> `DataSourceController` from pages-component, producing `TypedDataSet` via extraction pipeline. Used by: similarity-panel, compliance-summary, grouped-data-view, list-pane, routing-rationale.
+
+Additional data-source exports from blocks-ui-core:
+- `fetchSource(url, options)` — standalone fetch with TypedDataSet extraction
+- `createTypedFetchSource(options)` — factory for typed fetch sources
+- `EMPTY_DATASET` — empty TypedDataSet placeholder for initial state
+- `DatasetContract` — re-exported from `@casehubio/pages-data`, the contract type for dataset shapes
+
+**TrendSourceMixin** — Lit mixin for time-series trend data. Adds trend endpoint, provides `TrendPoint[]` via `extractTrendPoints`. Used by trust-score-panel for sparkline trend lines.
 
 **EventStreamController** — Lit `ReactiveController` for push-based data (SSE streams). Wraps `EventStream` from pages-data. Provides `latest`, `all`, and `status` (ConnectionStatus). Batches events by default. Connects/disconnects on host lifecycle.
 
@@ -27,12 +35,16 @@ Components can use both — DataSourceMixin for initial load, EventStreamControl
 
 ### Frontend Dependencies
 
-This project consumes frontend packages from casehub-pages via **Maven SNAPSHOT** artifacts (WebJar pattern) and **also publishes** its own components as Maven SNAPSHOT artifacts for downstream CaseHub apps. See [casehub-pages ADR-0001](https://github.com/casehubio/casehub-pages/blob/main/docs/adr/0001-cross-repo-frontend-dependency-management.md).
+This project consumes frontend packages from casehub-pages via Yarn **portal** resolutions (pointing to `.casehub-packages/`) and **also publishes** its own components as Maven SNAPSHOT artifacts for downstream CaseHub apps. See [casehub-pages ADR-0001](https://github.com/casehubio/casehub-pages/blob/main/docs/adr/0001-cross-repo-frontend-dependency-management.md).
 
 | Direction | Source | Mechanism |
 |-----------|--------|-----------|
-| Consumes | casehub-pages | Maven SNAPSHOT (`META-INF/resources/`) |
+| Consumes | casehub-pages | Yarn portal (`.casehub-packages/`) for dev; Maven SNAPSHOT (`META-INF/resources/`) for CI/apps |
+| Consumes | graph-core | Yarn portal (`.casehub-packages/packages/graph-core`) |
 | Publishes | blocks-ui components | Maven SNAPSHOT (`META-INF/resources/`) |
+
+Portal resolutions are declared in the root `package.json`:
+- `@casehubio/pages-component`, `@casehubio/pages-data`, `@casehubio/pages-primitives`, `@casehubio/pages-table`, `@casehubio/pages-ui-components`, `@casehubio/pages-ui-tokens`, `@casehubio/pages-viz`, `@casehubio/graph-core`
 
 **Local development:** after changing pages, run `yarn build && mvn install` in casehub-pages to publish the SNAPSHOT to `~/.m2`. After changing blocks-ui, run the same here so downstream apps pick up changes.
 
@@ -44,7 +56,46 @@ This project consumes frontend packages from casehub-pages via **Maven SNAPSHOT*
 
 ### blocks-ui-core (`packages/blocks-ui-core`)
 
-Tokens (re-exported from pages-ui-tokens), DataSourceMixin + DataSourceAdapter + fetchSource + createTypedFetchSource + EMPTY_DATASET (wrapping pages' DataSourceController, producing TypedDataSet via extraction pipeline), TrendSourceMixin + TrendPoint + extractTrendPoints (time-series trend data pattern), renderSparkline (shared SVG sparkline renderer), event helpers (re-exported from pages-component), domain types (TrustLevel, trustLevelFromScore, CommitmentState, CommitmentRecord, commitmentStateCategory, isTerminalCommitmentState, toCommitmentRecord, toCommitmentMap), SharedTimerController, EventStreamController, blocks-confirm-dialog (FocusTrapMixin, danger/success/neutral variants), schema-form (JSON-schema-driven), renderPropertyTree (recursive nested objects), pulseAnimation CSS, CommitmentStatePill + stateCategoryStyles.
+Core shared utilities re-exported from pages and domain-specific to blocks-ui:
+
+**Tokens** (re-exported from pages-ui-tokens): `generateScale`, `SPACING_SCALE`, `TYPOGRAPHY`, `MOTION`, `RADIUS`, `ELEVATION_LIGHT`, `ELEVATION_DARK`, `DENSITY_COMPACT_OVERRIDES`, `applyTheme`, `registerTheme`, `getTheme`, `listThemes`.
+
+**Data source** (wrapping pages DataSourceController): `DataSourceMixin`, `DataSourceAdapter`, `fetchSource` + `FetchSourceOptions`, `createTypedFetchSource` + `TypedFetchOptions`, `EMPTY_DATASET`, `TrendSourceMixin`, `TrendPoint`, `extractTrendPoints`.
+
+**Event stream**: `EventStreamController` (Lit ReactiveController for SSE).
+
+**Rendering**: `renderSparkline` + `SparklineOptions` (shared SVG sparkline), `renderPropertyTree` + `propertyTreeStyles` (recursive nested object renderer).
+
+**Domain types**: `TrustLevel`, `trustLevelFromScore(score)`, `CommitmentState` (7-state: OPEN/ACKNOWLEDGED/FULFILLED/FAILED/DECLINED/DELEGATED/EXPIRED), `CommitmentRecord`, `RawCommitment`, `commitmentStateCategory(state)`, `isTerminalCommitmentState(state)`, `toCommitmentRecord(raw)`, `toCommitmentMap(commitments)`, `StateCategory`.
+
+**UI components**: `BlocksConfirmDialog` (`<blocks-confirm-dialog>`, FocusTrapMixin, danger/success/neutral variants), `CommitmentStatePill` (`<commitment-state-pill>`, promoted from commitment-viz in #101), `stateCategoryStyles` + `CategoryStyle`.
+
+**Utilities**: `SharedTimerController` (`subscribe`/`unsubscribe`), `pulseAnimation` CSS, `DatasetContract` (re-exported from pages-data).
+
+**Event helpers**: re-exported from pages-component (`emitPagesEvent`, `onPagesEvent`).
+
+### graph-stencil-case (`packages/graph-stencil-case`)
+
+Case domain adapter for the visual diagram editor (epic #103). Exports:
+- `CaseAdapter` — implements `DomainAdapter<string>` from `@casehubio/graph-core`. `toGraph(yamlSource)` parses case definition YAML into `GraphModel`. `applyEdit(yamlSource, edit)` applies structural edits back to YAML. Currently stubbed.
+- `caseStencils` — array of `StencilDescriptor` objects defining the case domain grammar:
+  - **binding** — can be contained by worker, outbound to worker
+  - **worker** — container for bindings, connects to/from bindings
+  - **milestone** — connects from bindings/goals, outbound to bindings
+  - **goal** — terminal node (success/failure kind), inbound only
+  - **subcase** — sub-case reference (namespace/name/version), inbound only
+- `CaseDefinition` type
+
+Each stencil defines grammar rules (containment, connection min/max/allowedFrom/allowedTo) and JSON Schema property definitions.
+
+### graph-stencil-swf (`packages/graph-stencil-swf`)
+
+Serverless Workflow (SWF) domain adapter for the visual diagram editor (epic #103). Exports:
+- `SwfAdapter` — implements `DomainAdapter<string>`. Uses `@openworkflowspec/sdk` for SWF YAML parsing. Currently stubbed.
+- `swfStencils` — array of `StencilDescriptor` objects:
+  - **swf-call** — function call node, outbound to call/switch/raise/exit
+  - **swf-switch** — conditional branch, multiple outbound connections
+  - (TODO: raise, catch, entry, exit stencils)
 
 ### split-workbench (`components/split-workbench`)
 
@@ -52,7 +103,7 @@ Generic split-pane layout shell — draggable divider, localStorage-persisted ra
 
 ### list-pane (`components/list-pane`)
 
-Data list wrapping `<pages-table>` — paginated mode, single selection, client-sort/filter, emits selection events on topic. Uses DataSourceMixin for endpoint-driven data.
+Data list wrapping `<pages-table>` — paginated mode, single selection, client-sort/filter, emits selection events on topic. Uses DataSourceMixin for endpoint-driven data. Also supports inline data via the `data` property (data-property mode, used by case-explorer's entity-list).
 
 ### detail-pane (`components/detail-pane`)
 
@@ -60,11 +111,11 @@ Tabbed detail view — lazily creates tab panels via `TabDefinition[]`, receives
 
 ### grouped-data-view (`components/grouped-data-view`)
 
-Grouped data view — items grouped by column key with per-group pages-table rendering, DataSourceMixin, group styling. Thin wrapper over pages-grouped-view.
+Grouped data view — items grouped by column key with per-group pages-table rendering, DataSourceMixin, group styling. Thin wrapper over `<pages-grouped-view>`.
 
 ### work-item-inbox (`components/work-item-inbox`)
 
-Work item inbox — queue pill bar, scope context, filter bar, SSE lifecycle, three-tab perspective (My Work / Claimable / All). Uses pages-table for rendering, raw array + fromRows pattern.
+Work item inbox — queue pill bar, scope context bar, filter bar with counts, summary bar, three-tab perspective (My Work / Claimable / All), queue scope integration, SSE lifecycle. Uses pages-table for rendering with the raw array + `fromRows` pattern.
 
 ### work-item-detail (`components/work-item-detail`)
 
@@ -104,11 +155,11 @@ Trust score panel — SVG gauge, per-capability breakdown table, trend sparkline
 
 ### channel-activity (`components/channel-activity`)
 
-Qhorus channel activity — message feed with sender grouping and threading, channel nav with keyboard navigation, member panel with presence, message input with speech-act type selector, emoji reactions, stale cursor detection. Extension points: formatSender, renderContent, renderContextHeader, renderError, allowedTypes/deniedTypes filtering, channel-nav layout (sidebar/dropdown), showCreate/showDelete toggles, messageCounts. DOMPurify + marked for markdown rendering.
+Qhorus channel activity — message feed with sender grouping and threading, channel nav with keyboard navigation, member panel with presence, message input with speech-act type selector, emoji reactions, stale cursor detection. Promoted from connectors chat-demo. Extension points: `formatSender`, `renderContent`, `renderContextHeader`, `renderError`, `allowedTypes`/`deniedTypes` filtering (per protocol PP-20260713-8ea1af), channel-nav layout (sidebar/dropdown), `showCreate`/`showDelete` toggles, `messageCounts`. DOMPurify + marked for markdown rendering.
 
 ### commitment-viz (`components/commitment-viz`)
 
-Commitment lifecycle visualization — transition badges (`commitment-transition-badge`), range bars (compact/detailed modes), `decorateCommitmentRanges` pure function for feed decoration metadata. Props-driven, decoupled from channel-activity. Types and commitment-state-pill re-exported from blocks-ui-core.
+Commitment lifecycle visualization — transition badges (`commitment-transition-badge`), range bars (compact/detailed modes), `decorateCommitmentRanges` pure function for feed decoration metadata. Props-driven, decoupled from channel-activity. Types and commitment-state-pill re-exported from blocks-ui-core (pill promoted in #101).
 
 ### similarity-panel (`components/similarity-panel`)
 
@@ -128,11 +179,11 @@ SLA breach escalation tiers — active tier highlighting, optional embedded sla-
 
 ### gdpr-erasure-action (`components/gdpr-erasure-action`)
 
-GDPR data erasure form — three-phase (input, confirmation, receipt), customisable subjectLabel and reasonOptions. Extends LitElement directly (no DataSourceMixin). Promoted from clinical.
+GDPR data erasure form — three-phase (input, confirmation, receipt), customisable `subjectLabel` and `reasonOptions`. Extends LitElement directly (no DataSourceMixin). Promoted from clinical.
 
 ### routing-rationale (`components/routing-rationale`)
 
-Routing rationale — trust-weighted assignment explanation: score vs threshold with borderline margin, alternatives table with phase badges, policy summary. DataSourceMixin + LiveRegionMixin, inline-styled column renderers, renderCandidate callback, dual-data mode.
+Routing rationale — trust-weighted assignment explanation: score vs threshold with borderline margin, alternatives table with phase badges, policy summary. DataSourceMixin + LiveRegionMixin, inline-styled column renderers, `renderCandidate` callback, dual-data mode.
 
 ### trust-workbench (`components/trust-workbench`)
 
@@ -140,23 +191,47 @@ Trust workbench — composes trust-score-panel + list-pane (left) and routing-ra
 
 ### case-explorer (`components/case-explorer`)
 
-Composable case explorer — universal entity browser with registration-based entity types. Generic components: entity-list (cursor-aware fetch, list-pane data-property mode), entity-detail (three-tier renderer resolution: sub-type, entity-type, default), entity-tree (collapsible hierarchy with lazy loading, ARIA tree, M-of-N groups), entity-command-bar (MCP-tools-style dynamic commands with confirmation), case-explorer (full split-workbench composition with NavigationController, entity type tabs, list/tree mode, breadcrumbs). Presets: caseInstanceType, workerType, caseDefinitionType, gateType, channelType. Domain customisation via columnRenderers, detailRenderer, detailRendererMap, nodeRenderer, filters.
+Composable case explorer — universal entity browser with registration-based entity types. Generic components: entity-list (cursor-aware fetch, list-pane data-property mode), entity-detail (three-tier renderer resolution: sub-type, entity-type, default), entity-tree (collapsible hierarchy with lazy loading, ARIA tree, M-of-N groups), entity-command-bar (MCP-tools-style dynamic commands with confirmation), case-explorer (full split-workbench composition with NavigationController, entity type tabs, list/tree mode, breadcrumbs). Presets: caseInstanceType, workerType, caseDefinitionType, gateType, channelType. Convenience wrappers: case-instance-list, worker-list, case-definition-browser, case-detail-panel, worker-detail-panel. Domain customisation via `columnRenderers`, `detailRenderer`, `detailRendererMap`, `nodeRenderer`, `filters`.
 
 ### preferences-editor (`components/preferences-editor`)
 
-Preferences editor — tree-table UI for scope-aware preference management. Scope hierarchy (system, tenant, team, user) with preference key-value pairs as leaves. Type-aware inline editors (string, integer, number, boolean, duration, enum) driven by PreferenceSchemaDescriptor from platform REST API. Inheritance computation (local, inherited, overridden, default) with source scope badges. PreferencesApi REST client, ValueEditor sub-component.
+Preferences editor — tree-table UI for scope-aware preference management. Scope hierarchy (system, tenant, team, user) with preference key-value pairs as leaves. Type-aware inline editors (string, integer, number, boolean, duration, enum) driven by `PreferenceSchemaDescriptor` from platform REST API. Inheritance computation (local, inherited, overridden, default) with source scope badges. `PreferencesApi` REST client, `ValueEditor` sub-component.
 
 ### session-list (`components/session-list`)
 
-Session list — claudony session table with status badges (ACTIVE/WAITING/IDLE), inline spawn form, delete/restart actions with failure recovery. Uses raw array + fromRows pattern.
+Session list — claudony session table with status badges (ACTIVE/WAITING/IDLE), inline spawn form, delete/restart actions with failure recovery. Uses raw array + `fromRows` pattern (like work-item-inbox), `emitPagesEvent` for selection/change events. Types: `SessionResponse`, `SessionStatus`, `CreateSessionRequest`, `GitStatusResponse`, `PortStatus`.
 
 ### session-detail (`components/session-detail`)
 
-Session detail — tabbed detail pane for a selected session: Terminal (polling output), Git (branch/PR/checks), Health (port status via pages-table), Events (SSE via SSEManager). Tab lifecycle manages timers and SSE connections.
+Session detail — tabbed detail pane for a selected session: Terminal (polling output), Git (branch/PR/checks), Health (port status via pages-table), Events (SSE via SSEManager). Tab lifecycle manages timers and SSE connections. Listens for `session:selected`/`session:deselected` events.
 
 ### session-workbench (`components/session-workbench`)
 
-Session workbench — composition shell for session management. Composes session-list + session-detail in split-workbench with selection-topic="session". KeyboardShortcutMixin for overlay.
+Session workbench — composition shell for session management. Composes session-list + session-detail in split-workbench with `selection-topic="session"`. `KeyboardShortcutMixin` for overlay. `configure()` method for hostPanel integration.
+
+### document-workbench (`components/document-workbench`)
+
+Document review workbench panels for AI-assisted document review. Nine LitElement components:
+
+**DebateFeed** (`<debate-feed>`) — streaming debate entry viewer with round dividers, auto-scroll. Receives entries via `debate-entries` pages-event. Agent roles: REV, IMP, HUMAN, SUPERVISOR, MODERATOR, SELECTOR. Entry types: RAISE, AGREE, COUNTER, DISPUTE, QUALIFY, FLAG_HUMAN, DECLINED, MEMO, SUB_TASK_REQUEST/FINDING/ERROR, RESTART_CONTEXT, COMMENT, HUMAN_OVERRIDE, REPRIORITISE, VERIFIED, DEFERRED. Entries with `pointId` emit `point-selected` on click. CSS colour-codes entries by type (border-left colours, opacity for declined, warning banner for FLAG_HUMAN, indented for sub-tasks).
+
+**DocumentDiff** (`<document-diff>`) — side-by-side markdown diff viewer. Split and unified view modes. Line-level LCS diff with adjacent del+ins coalesced into mod chunks. Word-level diff highlighting within modified chunks. Scroll sync via heading-matched anchor interpolation. Minimap canvas in the divider gutter (red=deleted, green=inserted). Diff navigation (nextDiff/prevDiff with wrap-around). Drag-and-drop file loading. `loadFile(panel, path)` fetches via REST, `loadContent(panel, content, label)` for inline data. `scrollToLocation(location)` with heading fuzzy-match (numeric sections, substring, word overlap). `highlightSection(location)` adds vertical accent bar. `selection-changed` event for text selection. Listens to `timeline-comparison-changed` for snapshot pair loading. Uses marked for markdown rendering.
+
+**DocumentTimeline** (`<document-timeline>`) — horizontal snapshot timeline. Receives `ROUND_SNAPSHOT` entries from debate-entries. Click selects comparison range; shift-click for second endpoint. Emits `timeline-comparison-changed`. Trail highlight integration: `point-selected`/`point-deselected` events set raise/fix/verify round markers on the timeline.
+
+**ReviewTracker** (`<review-tracker>`) — review point tracker derived from debate entries. Derives point status from entry types (RAISE->OPEN, AGREE->AGREED, COUNTER->ACTIVE, DISPUTE->DISPUTED, QUALIFY->ACTIVE, FLAG_HUMAN->PENDING_HUMAN, DECLINED->DECLINED, VERIFIED->VERIFIED, DEFERRED->DEFERRED, HUMAN_OVERRIDE->HUMAN_OVERRIDE). Progress bar (resolved/total). Filter toggle (hide resolved). Per-point actions: comment (POST to `human/comment`), override (POST to `human/override`), priority change (POST to `human/prioritise`). Batch accept/defer for low-priority points (POST to `human/batch`). Agent trail display. Point selection emits `point-selected`/`point-deselected`.
+
+**ContextGauge** (`<context-gauge>`) — LLM context window usage. Receives `context-usage` pages-event with `effectivePercent`, `windowSizeChars`, `serverContributionChars`, `messageCount`, `agentReportedPercent`. Gauge bar with threshold colours (normal < 60%, warn < 80%, error >= 80%). Pulse animation on `thresholdExceeded`. Tooltip with detailed stats.
+
+**DocPicker** (`<doc-picker>`) — document slot picker dropdown. Shows available documents from `documents-changed` events. A/B slot buttons for comparison selection. Posts comparison changes to `api/debate/{sessionId}/comparison`. Visible only when documents exist.
+
+**BrainstormOptions** (`<brainstorm-options>`) — brainstorm option cards. Receives `brainstorm-options`, `brainstorm-converged`, `brainstorm-ended` events. Status badges (LIVE/RECOMMENDED/EXPLORED/ELIMINATED/SELECTED). Actions: recommend, eliminate, select (PATCH to `api/brainstorm/{sessionId}/options/{optionId}`). Converged/ended banners.
+
+**BrainstormPicker** (`<brainstorm-picker>`) — brainstorm session switcher. Lists sessions from `brainstorm-sessions` events. Emits `brainstorm-session-selected`.
+
+**WorkspaceStatus** (`<workspace-status>`) — agent workspace progress. Receives `workspace-progress` events. Progress types: AGENT_START, AGENT_STATUS, AGENT_COMPLETE, ISSUES_RAISED, ROUND_COMPLETE, REVIEW_TERMINAL. Elapsed timer, cost display, pulsing/terminal status dot.
+
+All panels follow the `configure(props)` pattern for hostPanel integration and use `onPagesEvent` for data flow. All listen for `reconnected` to reset state on SSE reconnect.
 
 ### work-item-row (`components/work-item-row`) — DEPRECATED
 
@@ -169,6 +244,14 @@ Single work item row component. Legacy — inbox now uses pages-table. Do not us
 ### Shadow DOM select
 
 The `<select>` element inside Shadow DOM can silently reset to the first option when `.value` is set before `<option>` children have rendered. The gdpr-erasure-action component demonstrates the workaround: dispatch a `change` event explicitly after setting the value programmatically.
+
+### Portal resolution ordering
+
+Yarn portal resolutions in root `package.json` must match the actual directory structure in `.casehub-packages/`. If a new pages package is added upstream, add a corresponding portal resolution here or the build will fail with unresolved peer dependencies.
+
+### blocks- prefix convention
+
+All custom element tag names use the `blocks-` prefix (adopted in #94). When adding new components, register with `@customElement('blocks-<name>')`. The document-workbench panels are an exception — they use unprefixed names (`<debate-feed>`, `<document-diff>`, etc.) because they predate the convention.
 
 ---
 
@@ -184,21 +267,25 @@ Key consumers by component:
 - **audit-trail-viewer:** aml, clinical, devtown, life, soc
 - **blocks-timeline:** aml, clinical, life, ops, drafthouse, devtown
 - **trust-score-panel:** aml, devtown, clinical, life, ops
+- **document-workbench:** drafthouse (document review workflow)
 
 ---
 
 ## Current State
 
-TypeScript/Yarn workspace monorepo with TypeScript project references. All Yarn workspace with no build-time configuration.
+TypeScript/Yarn workspace monorepo with TypeScript project references. Yarn 4.10.3. All Yarn workspace with no build-time configuration.
 
 Build commands:
 
 ```bash
 yarn install
-yarn build
-yarn test
-yarn typecheck
+yarn build            # topological build across all workspaces
+yarn test             # run tests across all workspaces
+yarn typecheck        # tsc --build
+yarn examples         # start Vite showcase server
 ```
+
+Test framework: Vitest with jsdom environment.
 
 ---
 
@@ -206,3 +293,6 @@ yarn typecheck
 
 - [UI Architecture](https://raw.githubusercontent.com/casehubio/parent/main/docs/platform/ui-architecture.md) — pages, blocks-ui, app layering
 - [Platform Index](https://raw.githubusercontent.com/casehubio/parent/main/docs/INDEX.md) — discovery index
+- `docs/specs/` — design specs for individual features (23+ specs since July 2026)
+- `docs/plans/` — implementation plans
+- `docs/blog/` — technical diary entries
