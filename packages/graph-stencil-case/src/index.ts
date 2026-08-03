@@ -1,4 +1,5 @@
 export { toGraph } from './adapter/case-adapter.js';
+export type { AdapterResult } from './adapter/case-adapter.js';
 export { applyPropertyEdit } from './adapter/yaml-editor.js';
 export { toReactFlowGraph } from './adapter/react-flow-transform.js';
 export type { RFNode, RFEdge } from './adapter/react-flow-transform.js';

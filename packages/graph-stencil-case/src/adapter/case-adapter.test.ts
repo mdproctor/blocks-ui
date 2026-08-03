@@ -10,7 +10,7 @@ const EXAMPLE_YAML = readFileSync(
 
 describe('toGraph', () => {
   it('creates worker nodes from spec.workers', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const workers = model.nodes.filter(n => n.type === 'worker');
     expect(workers).toHaveLength(5);
     expect(workers.map(w => w.id)).toContain('worker:ocr-worker');
@@ -19,14 +19,14 @@ describe('toGraph', () => {
   });
 
   it('creates binding nodes from spec.bindings', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const bindings = model.nodes.filter(n => n.type === 'binding');
     expect(bindings).toHaveLength(6);
     expect(bindings.map(b => b.id)).toContain('binding:extract-text');
   });
 
   it('creates milestone nodes', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const milestones = model.nodes.filter(n => n.type === 'milestone');
     expect(milestones).toHaveLength(3);
     expect(milestones[0]!.properties['name']).toBe('text-extracted');
@@ -34,14 +34,14 @@ describe('toGraph', () => {
   });
 
   it('creates goal nodes', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const goals = model.nodes.filter(n => n.type === 'goal');
     expect(goals).toHaveLength(1);
     expect(goals[0]!.properties['kind']).toBe('success');
   });
 
   it('derives capability-dispatch edges from binding.capability → worker.capabilities[]', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const capEdges = model.edges.filter(e => e.type === 'capability-dispatch');
     expect(capEdges).toHaveLength(6);
 
@@ -55,17 +55,26 @@ describe('toGraph', () => {
       'capabilities: [ "ocr" ]',
       'capabilities: [ "unused-cap" ]',
     );
-    const model = toGraph(yamlWithExternal);
+    const { model } = toGraph(yamlWithExternal);
     const extNodes = model.nodes.filter(n => n.type === 'external');
     expect(extNodes.length).toBeGreaterThan(0);
     expect(extNodes.some(n => n.id === 'external:ocr')).toBe(true);
   });
 
   it('carries trigger info in binding properties', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const binding = model.nodes.find(n => n.id === 'binding:on-external-document');
     expect(binding).toBeDefined();
     const on = binding!.properties['on'] as Record<string, unknown>;
     expect(on['cloudEvent']).toBeDefined();
+  });
+
+  it('returns yamlPaths mapping node IDs to YAML document paths', () => {
+    const { yamlPaths } = toGraph(EXAMPLE_YAML);
+    expect(yamlPaths).toBeDefined();
+    expect(yamlPaths.get('worker:ocr-worker')).toEqual(['spec', 'workers', 0]);
+    expect(yamlPaths.get('binding:extract-text')).toEqual(['spec', 'bindings', 1]);
+    expect(yamlPaths.get('milestone:text-extracted')).toEqual(['spec', 'milestones', 0]);
+    expect(yamlPaths.get('goal:processingComplete')).toEqual(['spec', 'goals', 0]);
   });
 });

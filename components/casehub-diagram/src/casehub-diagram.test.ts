@@ -10,7 +10,7 @@ const EXAMPLE_YAML = readFileSync(
 
 describe('casehub-diagram integration', () => {
   it('end-to-end: YAML → GraphModel → React Flow nodes', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const { nodes, edges } = toReactFlowGraph(model);
 
     expect(nodes.length).toBeGreaterThan(0);
@@ -27,7 +27,7 @@ describe('casehub-diagram integration', () => {
   });
 
   it('milestones and goals are present in output', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const { nodes } = toReactFlowGraph(model);
 
     const milestones = nodes.filter(n => n.type === 'milestone');
@@ -38,7 +38,7 @@ describe('casehub-diagram integration', () => {
   });
 
   it('all edges reference valid nodes', () => {
-    const model = toGraph(EXAMPLE_YAML);
+    const { model } = toGraph(EXAMPLE_YAML);
     const { nodes, edges } = toReactFlowGraph(model);
     const nodeIds = new Set(nodes.map(n => n.id));
 

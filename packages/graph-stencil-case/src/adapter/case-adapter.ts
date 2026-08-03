@@ -3,13 +3,20 @@ import { createGraph } from '@casehubio/graph-core';
 import type { GraphNode, GraphEdge, GraphModel } from '@casehubio/graph-core';
 import type { CaseDefinition } from '../types/case-definition.js';
 
-export function toGraph(yaml: string): GraphModel {
+export interface AdapterResult {
+  readonly model: GraphModel;
+  readonly yamlPaths: ReadonlyMap<string, readonly (string | number)[]>;
+}
+
+export function toGraph(yaml: string): AdapterResult {
   const def = parseYaml(yaml) as CaseDefinition;
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
+  const yamlPaths = new Map<string, (string | number)[]>();
 
   const capabilityToWorker = new Map<string, string>();
 
+  let workerIndex = 0;
   for (const worker of def.spec.workers ?? []) {
     const nodeId = `worker:${worker.name}`;
     nodes.push({
@@ -17,9 +24,11 @@ export function toGraph(yaml: string): GraphModel {
       type: 'worker',
       properties: { ...worker },
     });
+    yamlPaths.set(nodeId, ['spec', 'workers', workerIndex]);
     for (const cap of worker.capabilities) {
       capabilityToWorker.set(cap, nodeId);
     }
+    workerIndex++;
   }
 
   let bindingIndex = 0;
@@ -32,6 +41,7 @@ export function toGraph(yaml: string): GraphModel {
       type: 'binding',
       properties: { ...binding },
     });
+    yamlPaths.set(nodeId, ['spec', 'bindings', bindingIndex]);
 
     if (binding.capability) {
       const workerNodeId = capabilityToWorker.get(binding.capability);
@@ -81,21 +91,29 @@ export function toGraph(yaml: string): GraphModel {
     bindingIndex++;
   }
 
+  let milestoneIndex = 0;
   for (const milestone of def.spec.milestones ?? []) {
+    const nodeId = `milestone:${milestone.name}`;
     nodes.push({
-      id: `milestone:${milestone.name}`,
+      id: nodeId,
       type: 'milestone',
       properties: { ...milestone },
     });
+    yamlPaths.set(nodeId, ['spec', 'milestones', milestoneIndex]);
+    milestoneIndex++;
   }
 
+  let goalIndex = 0;
   for (const goal of def.spec.goals ?? []) {
+    const nodeId = `goal:${goal.name}`;
     nodes.push({
-      id: `goal:${goal.name}`,
+      id: nodeId,
       type: 'goal',
       properties: { ...goal },
     });
+    yamlPaths.set(nodeId, ['spec', 'goals', goalIndex]);
+    goalIndex++;
   }
 
-  return createGraph(nodes, edges);
+  return { model: createGraph(nodes, edges), yamlPaths };
 }
