@@ -256,6 +256,18 @@ Session detail — tabbed detail pane for a selected session: Terminal (polling 
 
 Session workbench — composition shell for session management. Composes session-list + session-detail in split-workbench with `selection-topic="session"`. `KeyboardShortcutMixin` for overlay. `configure()` method for hostPanel integration.
 
+### conversation-viewer (`components/conversation-viewer`)
+
+Conversation protocol viewer — five Lit components for structured deliberation. Extends `KeyboardShortcutMixin(LiveRegionMixin(LitElement))` for the workbench. Property-based data delivery (`ConversationState` as a single reactive property). All events use `emitPagesEvent` with colon-delimited topics (`${selectionTopic}:selected`/`:deselected`).
+
+Domain types live in `blocks-ui-core` (`types/conversation.ts`): `EpistemicStatus`, `ConvergenceState`, `ConvergenceSignal`, `CommonGroundState`, `GroundedFact`, `ConversationPoint`, `ConversationEntry`, `SubTaskFinding`, `FlagEntry`, `RoundMemo`, `ObligationChain`, `ConversationState`. `TransitionRecord` promoted from commitment-viz to `blocks-ui-core` (`types/commitment.ts`).
+
+Status registrations (`conversation` and `epistemic` domains) execute at module scope in `index.ts` as top-level side effects.
+
+Workbench internals: `_selectedPointId` tracks selection. `willUpdate` derives `_selectedPoint`, filtered findings/flags/obligations by point ID. Stale selection guard clears `_selectedPointId` and emits deselection when the selected point disappears from `conversationState`. Right pane swaps between `blocks-point-detail` (selected) and `blocks-common-ground-panel` (deselected).
+
+Extension points per PP-20260713-8ea1af: `renderPoint`, `renderEntry`, `renderFact` callbacks with inline styles. Generalization path for document-workbench tracked as #117.
+
 ### casehub-diagram (`components/casehub-diagram`)
 
 Visual diagram editor for CaseDefinition YAML. Orchestrates graph-stencil-case adapter + stencils, pages `<pages-graph-canvas>` rendering, ELK auto-layout. Sub-elements: `casehub-diagram-toolbar` (save/dirty/mode toggle/staleness), `casehub-diagram-palette` (add nodes), `casehub-diagram-properties` (schema-driven property editing, binding target switching).

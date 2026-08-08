@@ -61,6 +61,7 @@ Domain-aware but app-agnostic — components know about trust scores, case timel
 | `orchestration-workbench` | Orchestration workbench — execution monitor + audit timeline in split-workbench | Beta |
 | `trust-workbench` | Composite trust visibility — score panel, routing history, feedback display | Beta |
 | `document-workbench` | Document review workbench — 9 panels for AI-assisted document review: debate feed, document diff, timeline, review tracker, brainstorm options/picker, context gauge, doc picker, workspace status | Beta |
+| `conversation-viewer` | Conversation protocol viewer — convergence indicator, common ground panel, point list, point detail, conversation workbench. Structured deliberation UI with property-based data delivery. | Beta |
 | `casehub-diagram` | Visual diagram editor for CaseDefinition YAML — extends DiagramBaseMixin, case-specific palette, property panel with binding target selector, structural editing, runtime overlay with status badges, worker inline expand | Beta |
 | `swf-diagram` | Standalone SWF workflow diagram — extends DiagramBaseMixin, schema-driven property editing, degraded mode banner. Read-only + property editing (no structural editing). | Beta |
 | `work-item-row` | Single work item row (legacy — inbox now uses pages-table) | Deprecated |
@@ -156,6 +157,19 @@ Session workbench for claudony session management — composes session-list + se
 ### commitment-viz
 
 Commitment lifecycle visualization — transition badges (`commitment-transition-badge`), range bars (compact/detailed modes), `decorateCommitmentRanges` pure function for feed decoration metadata. Uses the 7-state commitment model (OPEN/ACKNOWLEDGED/FULFILLED/FAILED/DECLINED/DELEGATED/EXPIRED). Props-driven, decoupled from channel-activity.
+
+### conversation-viewer
+
+Conversation protocol viewer — structured deliberation UI rendering convergence state, epistemic common ground, and conversation points. The protocol lens over structured conversations that raw message feeds (channel-activity) and document-specific views (document-workbench) do not provide.
+
+Five components:
+- `<blocks-convergence-indicator>` — horizontal status bar showing convergence state (colour) and confidence (fill level). Sizes: `sm` (inline) and `md` (full with label).
+- `<blocks-common-ground-panel>` — three-column layout partitioning facts by epistemic status (Established / Pending / Disputed). Responsive collapse below 500px.
+- `<blocks-point-list>` — scrollable list of conversation points grouped by round, with single-selection via pages-event topics.
+- `<blocks-point-detail>` — thread view for a single point showing entry cards, sub-task findings, obligation chains (via commitment-viz), and flags.
+- `<blocks-conversation-workbench>` — convenience split-workbench wrapper composing all panels. Left: convergence indicator + point list. Right: point detail (when selected) or common ground panel (when not). KeyboardShortcutMixin (Escape deselects), LiveRegionMixin for accessibility, stale selection guard, `configure()` for hostPanel integration.
+
+Data delivery is property-based (`conversationState: ConversationState`) — host app owns fetching. Extension points via render callbacks (`renderPoint`, `renderEntry`, `renderFact`) per PP-20260713-8ea1af.
 
 ### casehub-diagram
 

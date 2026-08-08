@@ -53,6 +53,7 @@ const NAV: NavCategory[] = [
     items: [
       { id: 'workbench', label: 'Full Workbench', hash: '#composed/workbench' },
       { id: 'trust-workbench', label: 'Trust Workbench', hash: '#composed/trust-workbench' },
+      { id: 'conversation-viewer', label: 'Conversation Viewer', hash: '#composed/conversation-viewer' },
     ],
   },
   {
@@ -217,6 +218,7 @@ export class ExampleShell extends LitElement {
       case '#components/commitment-viz': return html`<blocks-example-commitment-viz></blocks-example-commitment-viz>`;
       case '#composed/workbench': return html`<blocks-example-workbench></blocks-example-workbench>`;
       case '#composed/trust-workbench': return html`<blocks-example-trust-workbench></blocks-example-trust-workbench>`;
+      case '#composed/conversation-viewer': return html`<blocks-example-conversation-viewer></blocks-example-conversation-viewer>`;
       default: return html`<blocks-example-workbench></blocks-example-workbench>`;
     }
   }

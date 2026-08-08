@@ -1,17 +1,10 @@
-import type { CommitmentState, CommitmentRecord, StateCategory } from '@casehubio/blocks-ui-core';
+import type { CommitmentState, CommitmentRecord, StateCategory, TransitionRecord } from '@casehubio/blocks-ui-core';
 
-export type { CommitmentState, CommitmentRecord, StateCategory };
+export type { CommitmentState, CommitmentRecord, StateCategory, TransitionRecord };
 
 export interface DecorableMessage {
   readonly id: string;
   readonly correlationId?: string;
-}
-
-export interface TransitionRecord {
-  readonly from: CommitmentState;
-  readonly to: CommitmentState;
-  readonly actor?: string;
-  readonly timestamp: string;
 }
 
 export interface RangeDecoration {

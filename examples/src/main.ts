@@ -50,6 +50,8 @@ async function bootstrap() {
   await import('./pages/brainstorm-picker-page.js');
   await import('./pages/workspace-status-page.js');
 
+  await import('./pages/conversation-viewer-page.js');
+
   app.textContent = '';
   app.appendChild(document.createElement('blocks-example-shell'));
 }

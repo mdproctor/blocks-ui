@@ -34,6 +34,7 @@
     { "path": "components/blocks-plan-item-tree/tsconfig.build.json" },
     { "path": "components/blocks-plan-model-dashboard/tsconfig.build.json" },
     { "path": "components/execution-monitor/tsconfig.build.json" },
-    { "path": "components/orchestration-workbench/tsconfig.build.json" }
+    { "path": "components/orchestration-workbench/tsconfig.build.json" },
+    { "path": "components/conversation-viewer/tsconfig.build.json" }
   ]
 }

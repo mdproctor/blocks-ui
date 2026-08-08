@@ -65,6 +65,13 @@ export function toCommitmentRecord(raw: RawCommitment): CommitmentRecord {
   };
 }
 
+export interface TransitionRecord {
+  readonly from: CommitmentState;
+  readonly to: CommitmentState;
+  readonly actor?: string;
+  readonly timestamp: string;
+}
+
 export function toCommitmentMap(
   commitments: RawCommitment[],
 ): Map<string, CommitmentRecord> {
