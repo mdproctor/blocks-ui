@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../../../components/grouped-data-view/src/grouped-data-view.js';
-import '../../../../pages/packages/pages-viz/src/components/grouped-view/PagesGroupedView.js';
+import '@casehubio/pages-viz/components/grouped-view/PagesGroupedView.js';
 import type { GroupStyleConfig } from '../../../components/grouped-data-view/src/types.js';
 import itemData from '../../mock-data/grouped-items.json';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';

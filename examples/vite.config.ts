@@ -15,8 +15,8 @@ export default defineConfig({
       { find: '@casehubio/blocks-ui-sla-indicator', replacement: resolve(__dirname, '../components/sla-indicator/src') },
       { find: '@casehubio/blocks-ui-kpi-metric-row', replacement: resolve(__dirname, '../components/kpi-metric-row/src') },
       { find: '@casehubio/blocks-ui-approval-gate', replacement: resolve(__dirname, '../components/approval-gate/src') },
-      { find: '@casehubio/pages-table', replacement: resolve(__dirname, '../../pages/packages/pages-table/src') },
-      { find: '@casehubio/pages-primitives', replacement: resolve(__dirname, '../../pages/packages/pages-primitives/src') },
+      { find: '@casehubio/pages-table', replacement: resolve(__dirname, '../.casehub-packages/packages/pages-table/src') },
+      { find: '@casehubio/pages-primitives', replacement: resolve(__dirname, '../.casehub-packages/packages/pages-primitives/src') },
       { find: '@casehubio/blocks-ui-notification-inbox', replacement: resolve(__dirname, '../components/notification-inbox/src') },
       { find: '@casehubio/blocks-ui-audit-trail-viewer', replacement: resolve(__dirname, '../components/audit-trail-viewer/src') },
       { find: '@casehubio/blocks-ui-trust-score-panel', replacement: resolve(__dirname, '../components/trust-score-panel/src') },
@@ -33,13 +33,14 @@ export default defineConfig({
       { find: '@casehubio/blocks-ui-session-list', replacement: resolve(__dirname, '../components/session-list/src') },
       { find: '@casehubio/blocks-ui-session-detail', replacement: resolve(__dirname, '../components/session-detail/src') },
       { find: '@casehubio/blocks-ui-session-workbench', replacement: resolve(__dirname, '../components/session-workbench/src') },
-      { find: '@casehubio/pages-viz', replacement: resolve(__dirname, '../../pages/packages/pages-viz/src') },
-      { find: /^@casehubio\/pages-ui-tokens\/dist\/(.*)/, replacement: resolve(__dirname, '../../pages/packages/pages-ui-tokens/src/$1') },
-      { find: '@casehubio/pages-ui-tokens', replacement: resolve(__dirname, '../../pages/packages/pages-ui-tokens/src') },
-      // pages-component: use dist (not source) — source has refactored SourceConnector API
-      // incompatible with DataSourceAdapter's connect()/disconnect() calls
-      { find: /^@casehubio\/pages-data\/dist\/(.*)/, replacement: resolve(__dirname, '../../pages/packages/pages-data/src/$1') },
-      { find: '@casehubio/pages-data', replacement: resolve(__dirname, '../../pages/packages/pages-data/src') },
+      { find: /^@casehubio\/pages-viz\/(.*)/, replacement: resolve(__dirname, '../.casehub-packages/packages/pages-viz/src/$1') },
+      { find: '@casehubio/pages-viz', replacement: resolve(__dirname, '../.casehub-packages/packages/pages-viz/src') },
+      { find: /^@casehubio\/pages-ui-tokens\/dist\/(.*)/, replacement: resolve(__dirname, '../.casehub-packages/packages/pages-ui-tokens/src/$1') },
+      { find: '@casehubio/pages-ui-tokens', replacement: resolve(__dirname, '../.casehub-packages/packages/pages-ui-tokens/src') },
+      { find: /^@casehubio\/pages-component\/dist\/(.*)/, replacement: resolve(__dirname, '../.casehub-packages/packages/pages-component/dist/$1') },
+      { find: '@casehubio/pages-component', replacement: resolve(__dirname, '../.casehub-packages/packages/pages-component/dist') },
+      { find: /^@casehubio\/pages-data\/dist\/(.*)/, replacement: resolve(__dirname, '../.casehub-packages/packages/pages-data/src/$1') },
+      { find: '@casehubio/pages-data', replacement: resolve(__dirname, '../.casehub-packages/packages/pages-data/src') },
       { find: 'lit', replacement: resolve(__dirname, '../node_modules/lit') },
       { find: 'lit/decorators.js', replacement: resolve(__dirname, '../node_modules/lit/decorators.js') },
       { find: '@lit/reactive-element', replacement: resolve(__dirname, '../node_modules/@lit/reactive-element') },
@@ -47,18 +48,18 @@ export default defineConfig({
   },
   esbuild: {
     target: 'es2022',
-    tsconfigRaw: {
+    tsconfigRaw: JSON.stringify({
       compilerOptions: {
         experimentalDecorators: true,
         useDefineForClassFields: false,
       },
-    },
+    }),
   },
   server: {
     port: 3000,
     open: true,
     fs: {
-      allow: ['..', '../../pages'],
+      allow: ['..'],
     },
   },
 });
