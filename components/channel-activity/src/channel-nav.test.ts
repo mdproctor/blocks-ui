@@ -58,62 +58,113 @@ describe('blocks-channel-nav', () => {
     expect(listener.mock.calls[0]![0]!.detail.payload).toEqual({ channelId: 'ch1' });
   });
 
-  it('emits channel:create with name from prompt', async () => {
-    el = document.createElement('blocks-channel-nav');
-    document.body.appendChild(el);
-    await (el as any).updateComplete;
-
-    vi.spyOn(window, 'prompt').mockReturnValue('New Channel');
-    const listener = vi.fn();
-    el.addEventListener('pages-event', listener);
-
-    (el.shadowRoot!.querySelector('.create-channel-btn') as HTMLElement).click();
-    expect(listener).toHaveBeenCalledOnce();
-    expect(listener.mock.calls[0]![0]!.detail.topic).toBe(ChannelEventTopics.CREATE_CHANNEL);
-    expect(listener.mock.calls[0]![0]!.detail.payload).toEqual({ name: 'New Channel' });
-  });
-
-  it('does not emit create when prompt cancelled', async () => {
-    el = document.createElement('blocks-channel-nav');
-    document.body.appendChild(el);
-    await (el as any).updateComplete;
-
-    vi.spyOn(window, 'prompt').mockReturnValue(null);
-    const listener = vi.fn();
-    el.addEventListener('pages-event', listener);
-
-    (el.shadowRoot!.querySelector('.create-channel-btn') as HTMLElement).click();
-    expect(listener).not.toHaveBeenCalled();
-  });
-
-  it('emits channel:delete after confirm', async () => {
+  it('opens delete dialog on delete click', async () => {
     el = document.createElement('blocks-channel-nav');
     (el as any).channels = [{ id: 'ch1', name: 'General', semantic: 'APPEND', paused: false }];
     document.body.appendChild(el);
     await (el as any).updateComplete;
 
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    (el.shadowRoot!.querySelector('.delete-btn') as HTMLElement).click();
+    await (el as any).updateComplete;
+
+    const dialog = el.shadowRoot!.querySelector('.delete-dialog') as any;
+    expect(dialog).toBeTruthy();
+    expect(dialog.open).toBe(true);
+    expect(dialog.heading).toBe('Delete Channel');
+    expect(dialog.message).toContain('General');
+  });
+
+  it('emits channel:delete on dialog confirm', async () => {
+    el = document.createElement('blocks-channel-nav');
+    (el as any).channels = [{ id: 'ch1', name: 'General', semantic: 'APPEND', paused: false }];
+    document.body.appendChild(el);
+    await (el as any).updateComplete;
+
+    (el.shadowRoot!.querySelector('.delete-btn') as HTMLElement).click();
+    await (el as any).updateComplete;
+
     const listener = vi.fn();
     el.addEventListener('pages-event', listener);
 
-    (el.shadowRoot!.querySelector('.delete-btn') as HTMLElement).click();
+    const dialog = el.shadowRoot!.querySelector('.delete-dialog') as HTMLElement;
+    dialog.dispatchEvent(new CustomEvent('confirm', { bubbles: true, composed: true }));
+
     expect(listener).toHaveBeenCalledOnce();
     expect(listener.mock.calls[0]![0]!.detail.topic).toBe(ChannelEventTopics.DELETE_CHANNEL);
     expect(listener.mock.calls[0]![0]!.detail.payload).toEqual({ channelId: 'ch1' });
   });
 
-  it('does not emit delete when confirm cancelled', async () => {
+  it('closes delete dialog on cancel without emitting', async () => {
     el = document.createElement('blocks-channel-nav');
     (el as any).channels = [{ id: 'ch1', name: 'General', semantic: 'APPEND', paused: false }];
     document.body.appendChild(el);
     await (el as any).updateComplete;
 
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    (el.shadowRoot!.querySelector('.delete-btn') as HTMLElement).click();
+    await (el as any).updateComplete;
+
     const listener = vi.fn();
     el.addEventListener('pages-event', listener);
 
-    (el.shadowRoot!.querySelector('.delete-btn') as HTMLElement).click();
+    const dialog = el.shadowRoot!.querySelector('.delete-dialog') as HTMLElement;
+    dialog.dispatchEvent(new CustomEvent('cancel', { bubbles: true, composed: true }));
+    await (el as any).updateComplete;
+
     expect(listener).not.toHaveBeenCalled();
+    expect((el.shadowRoot!.querySelector('.delete-dialog') as any).open).toBe(false);
+  });
+
+  it('opens create dialog on create click', async () => {
+    el = document.createElement('blocks-channel-nav');
+    document.body.appendChild(el);
+    await (el as any).updateComplete;
+
+    (el.shadowRoot!.querySelector('.create-channel-btn') as HTMLElement).click();
+    await (el as any).updateComplete;
+
+    const dialog = el.shadowRoot!.querySelector('.create-dialog') as any;
+    expect(dialog).toBeTruthy();
+    expect(dialog.open).toBe(true);
+    expect(dialog.heading).toBe('Create Channel');
+    expect(dialog.showReason).toBe(true);
+  });
+
+  it('emits channel:create with name from dialog confirm', async () => {
+    el = document.createElement('blocks-channel-nav');
+    document.body.appendChild(el);
+    await (el as any).updateComplete;
+
+    (el.shadowRoot!.querySelector('.create-channel-btn') as HTMLElement).click();
+    await (el as any).updateComplete;
+
+    const listener = vi.fn();
+    el.addEventListener('pages-event', listener);
+
+    const dialog = el.shadowRoot!.querySelector('.create-dialog') as HTMLElement;
+    dialog.dispatchEvent(new CustomEvent('confirm', { bubbles: true, composed: true, detail: { reason: 'New Channel' } }));
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener.mock.calls[0]![0]!.detail.topic).toBe(ChannelEventTopics.CREATE_CHANNEL);
+    expect(listener.mock.calls[0]![0]!.detail.payload).toEqual({ name: 'New Channel' });
+  });
+
+  it('does not emit create when dialog cancelled', async () => {
+    el = document.createElement('blocks-channel-nav');
+    document.body.appendChild(el);
+    await (el as any).updateComplete;
+
+    (el.shadowRoot!.querySelector('.create-channel-btn') as HTMLElement).click();
+    await (el as any).updateComplete;
+
+    const listener = vi.fn();
+    el.addEventListener('pages-event', listener);
+
+    const dialog = el.shadowRoot!.querySelector('.create-dialog') as HTMLElement;
+    dialog.dispatchEvent(new CustomEvent('cancel', { bubbles: true, composed: true }));
+    await (el as any).updateComplete;
+
+    expect(listener).not.toHaveBeenCalled();
+    expect((el.shadowRoot!.querySelector('.create-dialog') as any).open).toBe(false);
   });
 
   it('navigates channels with arrow keys and Enter', async () => {

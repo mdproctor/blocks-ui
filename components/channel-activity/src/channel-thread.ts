@@ -35,6 +35,10 @@ export class ChannelThreadElement extends LitElement {
       font-size: var(--pages-font-size-xs, 11px);
       color: var(--pages-accent-9, #6366f1);
     }
+    .thread-age {
+      font-size: var(--pages-font-size-xs, 11px);
+      color: var(--pages-neutral-8, #888);
+    }
 
     .reply { padding-left: var(--pages-space-4, 16px); }
     .root-message.selected,
@@ -62,6 +66,19 @@ export class ChannelThreadElement extends LitElement {
     return `${count} ${count === 1 ? 'reply' : 'replies'}`;
   }
 
+  private _lastActivityAge(): string | null {
+    if (this.replies.length === 0) return null;
+    const latest = this.replies[this.replies.length - 1]!;
+    const ms = Date.now() - new Date(latest.createdAt).getTime();
+    if (ms < 60_000) return 'just now';
+    const minutes = Math.floor(ms / 60_000);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }
+
   override render() {
     if (!this.rootMessage) return nothing;
 
@@ -81,6 +98,7 @@ export class ChannelThreadElement extends LitElement {
                   aria-expanded=${!this.collapsed}>
             ${this.collapsed ? '▶' : '▼'} ${this._summary()}
           </pages-button>
+          ${this._lastActivityAge() ? html`<span class="thread-age">${this._lastActivityAge()}</span>` : nothing}
           ${this.commitmentState ? html`
             <commitment-state-pill .state=${this.commitmentState}></commitment-state-pill>
           ` : nothing}

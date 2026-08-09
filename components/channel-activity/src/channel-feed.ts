@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import type { QhorusMessage, QhorusTopic, Reaction, ActorType } from './types.js';
 import { isTerminalMessageType } from './types.js';
 import { emitPagesEvent } from '@casehubio/blocks-ui-core';
+import { LiveRegionMixin, KeyboardShortcutMixin, RovingTabindexMixin, FocusTrapMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
 import { ChannelEventTopics } from './events.js';
 import './channel-message.js';
 import './channel-thread.js';
@@ -16,8 +17,13 @@ interface MessageGroup {
 
 const CURSOR_STORAGE_KEY = 'channel-activity.cursors';
 
+const ChannelFeedBase = RovingTabindexMixin(KeyboardShortcutMixin(LiveRegionMixin(FocusTrapMixin(LitElement))));
+
 @customElement('blocks-channel-feed')
-export class ChannelFeedElement extends LitElement {
+export class ChannelFeedElement extends ChannelFeedBase {
+  rovingSelector = '.message-item, blocks-channel-thread';
+  rovingDirection: RovingDirection = 'vertical';
+
   @property({ type: Array }) messages: QhorusMessage[] = [];
   @property({ type: Array }) reactions: Reaction[] = [];
   @property({ type: String }) channelId = '';
@@ -34,10 +40,13 @@ export class ChannelFeedElement extends LitElement {
   @property({ attribute: false }) formatSender?: (sender: string, actorType: ActorType) => string;
 
   @property({ type: String }) currentActorId?: string;
+  @property({ attribute: false }) messageHighlights: Record<string, string> = {};
 
   @state() private _prevMessageCount = 0;
   @state() private _showStalePrompt = false;
   @state() private _staleCursorId?: string;
+  @state() _scrolledUp = false;
+  @state() _unreadCount = 0;
 
   static override readonly styles = css`
     :host {
@@ -122,6 +131,25 @@ export class ChannelFeedElement extends LitElement {
     }
     .topic-section.resolved .topic-section-header { opacity: 0.6; }
     .topic-section.archived .topic-section-header { opacity: 0.5; font-style: italic; }
+    .new-messages-pill {
+      position: sticky;
+      bottom: var(--pages-space-3, 12px);
+      align-self: center;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--pages-space-1, 4px);
+      padding: var(--pages-space-1, 4px) var(--pages-space-3, 12px);
+      background: var(--pages-accent-9, #6366f1);
+      color: #fff;
+      border: none;
+      border-radius: var(--pages-radius-full, 9999px);
+      font-size: var(--pages-font-size-xs, 11px);
+      font-weight: var(--pages-font-weight-semibold, 600);
+      cursor: pointer;
+      box-shadow: var(--pages-shadow-2, 0 2px 8px rgba(0,0,0,0.15));
+      z-index: 5;
+    }
+    .new-messages-pill:hover { background: var(--pages-accent-10, #4f46e5); }
   `;
 
   private _loadCursors(): Record<string, { id: string; ts: number }> {
@@ -222,6 +250,11 @@ export class ChannelFeedElement extends LitElement {
     return result;
   }
 
+  private _highlightStyle(msg: QhorusMessage): string {
+    const bg = this.messageHighlights[msg.id];
+    return bg ? `background: ${bg}` : '';
+  }
+
   private _messageItemClasses(msg: QhorusMessage): string {
     const classes = ['message-item'];
     if (this.terminalDimming && isTerminalMessageType(msg.messageType)) {
@@ -243,10 +276,20 @@ export class ChannelFeedElement extends LitElement {
     if (changed.has('messages') && this.messages.length > 0) {
       this._showStalePrompt = false;
     }
+    if (changed.has('messages') && this.messages.length > this._prevMessageCount) {
+      const newCount = this.messages.length - this._prevMessageCount;
+      if (this._prevMessageCount > 0 && newCount > 0 && this._scrolledUp) {
+        this._unreadCount += newCount;
+      }
+    }
   }
 
   override updated(changed: Map<string, unknown>) {
     if (changed.has('messages') && this.autoScroll && this.messages.length > this._prevMessageCount) {
+      const newCount = this.messages.length - this._prevMessageCount;
+      if (this._prevMessageCount > 0 && newCount > 0) {
+        this.announce(newCount === 1 ? '1 new message' : `${newCount} new messages`);
+      }
       const feed = this.renderRoot.querySelector('.feed');
       if (feed) {
         const wasAtBottom = feed.scrollHeight - feed.scrollTop <= feed.clientHeight + 4;
@@ -281,6 +324,42 @@ export class ChannelFeedElement extends LitElement {
     if (this.channelId) this._checkStaleCursor();
   }
 
+  override firstUpdated() {
+    const feed = this.renderRoot.querySelector('.feed');
+    if (feed) {
+      feed.addEventListener('scroll', this._onFeedScroll);
+    }
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    const feed = this.renderRoot.querySelector('.feed');
+    if (feed) {
+      feed.removeEventListener('scroll', this._onFeedScroll);
+    }
+  }
+
+  private _onFeedScroll = () => {
+    const feed = this.renderRoot.querySelector('.feed');
+    if (!feed) return;
+    const atBottom = feed.scrollHeight - feed.scrollTop <= feed.clientHeight + 4;
+    if (atBottom && this._scrolledUp) {
+      this._scrolledUp = false;
+      this._unreadCount = 0;
+    } else if (!atBottom && !this._scrolledUp) {
+      this._scrolledUp = true;
+    }
+  };
+
+  private _scrollToBottom() {
+    const feed = this.renderRoot.querySelector('.feed');
+    if (feed) {
+      feed.scrollTop = feed.scrollHeight;
+    }
+    this._scrolledUp = false;
+    this._unreadCount = 0;
+  }
+
   override render() {
     return html`
       ${this.renderContextHeader?.() ?? nothing}
@@ -295,6 +374,11 @@ export class ChannelFeedElement extends LitElement {
         ${this.messages.length === 0 ? html`
           <div class="empty">No messages yet</div>
         ` : this._renderFeed()}
+        ${this._scrolledUp && this._unreadCount > 0 ? html`
+          <button class="new-messages-pill" @click=${this._scrollToBottom}>
+            ↓ ${this._unreadCount} new ${this._unreadCount === 1 ? 'message' : 'messages'}
+          </button>
+        ` : nothing}
       </div>
     `;
   }
@@ -332,7 +416,7 @@ export class ChannelFeedElement extends LitElement {
                 <span class="group-sender">${group.sender}</span>
               </div>
               ${group.messages.map(msg => html`
-                <div class="${this._messageItemClasses(msg)}" data-message-id=${msg.id}>
+                <div class="${this._messageItemClasses(msg)}" data-message-id=${msg.id} tabindex="-1" style=${this._highlightStyle(msg)}>
                   <blocks-channel-message .message=${msg}
                                   .reactions=${reactionIndex.get(msg.id) ?? []}
                                   .showActorBadge=${group.messages.indexOf(msg) === 0}
@@ -359,7 +443,7 @@ export class ChannelFeedElement extends LitElement {
           <span class="group-sender">${group.sender}</span>
         </div>
         ${group.messages.map(msg => repliesByParent.has(msg.id) ? html`
-          <blocks-channel-thread class=${this.selectedMessageId === msg.id || repliesByParent.get(msg.id)!.some(r => r.id === this.selectedMessageId) ? 'selected' : ''}
+          <blocks-channel-thread tabindex="-1" class=${this.selectedMessageId === msg.id || repliesByParent.get(msg.id)!.some(r => r.id === this.selectedMessageId) ? 'selected' : ''}
                          .rootMessage=${msg}
                          .replies=${repliesByParent.get(msg.id)!}
                          .reactions=${this._threadReactions(msg.id, repliesByParent.get(msg.id)!, reactionIndex)}
@@ -371,7 +455,7 @@ export class ChannelFeedElement extends LitElement {
                          data-contains=${repliesByParent.get(msg.id)!.map(r => r.id).join(' ')}>
           </blocks-channel-thread>
         ` : html`
-          <div class="${this._messageItemClasses(msg)}" data-message-id=${msg.id}>
+          <div class="${this._messageItemClasses(msg)}" data-message-id=${msg.id} tabindex="-1" style=${this._highlightStyle(msg)}>
             <blocks-channel-message .message=${msg}
                             .reactions=${reactionIndex.get(msg.id) ?? []}
                             .showActorBadge=${group.messages.indexOf(msg) === 0}

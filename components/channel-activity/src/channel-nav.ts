@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { QhorusChannel, ChannelSemantic } from './types.js';
-import { emitPagesEvent } from '@casehubio/blocks-ui-core';
+import { emitPagesEvent, BlocksConfirmDialog } from '@casehubio/blocks-ui-core';
 import { ChannelEventTopics } from './events.js';
 import '@casehubio/pages-ui-components';
 
@@ -15,6 +15,8 @@ export class ChannelNavElement extends LitElement {
   @property({ type: Object }) messageCounts: Record<string, number> = {};
   @state() private _focusedIndex = 0;
   @state() private _dropdownOpen = false;
+  @state() private _deleteTarget: QhorusChannel | null = null;
+  @state() private _showCreateDialog = false;
 
   static override readonly styles = css`
     :host {
@@ -168,17 +170,34 @@ export class ChannelNavElement extends LitElement {
 
   private handleDeleteClick(event: MouseEvent, channel: QhorusChannel): void {
     event.stopPropagation();
-    const confirmed = window.confirm(`Delete channel "${channel.name}"?`);
-    if (confirmed) {
-      emitPagesEvent(this, ChannelEventTopics.DELETE_CHANNEL, { channelId: channel.id });
+    this._deleteTarget = channel;
+  }
+
+  private _onDeleteConfirm(): void {
+    if (this._deleteTarget) {
+      emitPagesEvent(this, ChannelEventTopics.DELETE_CHANNEL, { channelId: this._deleteTarget.id });
     }
+    this._deleteTarget = null;
+  }
+
+  private _onDeleteCancel(): void {
+    this._deleteTarget = null;
   }
 
   private handleCreateChannel(): void {
-    const name = window.prompt('Enter channel name:');
-    if (name && name.trim()) {
-      emitPagesEvent(this, ChannelEventTopics.CREATE_CHANNEL, { name: name.trim() });
+    this._showCreateDialog = true;
+  }
+
+  private _onCreateConfirm(e: CustomEvent<{ reason?: string }>): void {
+    const name = e.detail?.reason?.trim();
+    if (name) {
+      emitPagesEvent(this, ChannelEventTopics.CREATE_CHANNEL, { name });
     }
+    this._showCreateDialog = false;
+  }
+
+  private _onCreateCancel(): void {
+    this._showCreateDialog = false;
   }
 
   private _toggleDropdown(): void {
@@ -331,6 +350,25 @@ export class ChannelNavElement extends LitElement {
           Create Channel
         </pages-button>
       ` : nothing}
+      <blocks-confirm-dialog class="delete-dialog"
+        .open=${!!this._deleteTarget}
+        heading="Delete Channel"
+        message=${this._deleteTarget ? `Delete channel "${this._deleteTarget.name}"? This cannot be undone.` : ''}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        @confirm=${this._onDeleteConfirm}
+        @cancel=${this._onDeleteCancel}
+      ></blocks-confirm-dialog>
+      <blocks-confirm-dialog class="create-dialog"
+        .open=${this._showCreateDialog}
+        heading="Create Channel"
+        message="Enter a name for the new channel."
+        confirmLabel="Create"
+        confirmVariant="success"
+        .showReason=${true}
+        @confirm=${this._onCreateConfirm}
+        @cancel=${this._onCreateCancel}
+      ></blocks-confirm-dialog>
     `;
   }
 }

@@ -24,7 +24,9 @@ function mockMessages(channelId: string): QhorusMessage[] {
     return [
       { id: `m${nextId++}`, channelId, sender: 'user-1', messageType: 'HUMAN', actorType: 'HUMAN', content: 'Can someone review case AML-4521?', topic: 'case-review', replyCount: 0, artefactRefs: [], createdAt: '2026-07-13T09:00:00Z' },
       { id: `m${nextId++}`, channelId, sender: 'agent-1', messageType: 'INFORM', actorType: 'AGENT', content: 'Case AML-4521: 3 transactions flagged, total $125,000. Risk score 0.87.', topic: 'case-review', replyCount: 0, artefactRefs: [], createdAt: '2026-07-13T09:00:05Z' },
-      { id: `m${nextId++}`, channelId, sender: 'user-2', messageType: 'HUMAN', actorType: 'HUMAN', content: 'The third transaction looks like a false positive.', topic: 'case-review', replyCount: 0, artefactRefs: [], createdAt: '2026-07-13T09:01:00Z' },
+      { id: `m${nextId++}`, channelId, sender: 'user-2', messageType: 'HUMAN', actorType: 'HUMAN', content: 'The third transaction looks like a false positive.', topic: 'case-review', replyCount: 2, artefactRefs: [], createdAt: '2026-07-13T09:01:00Z' },
+      { id: `m${nextId++}`, channelId, sender: 'agent-1', messageType: 'INFORM', actorType: 'AGENT', content: 'Confirmed — pattern matches known false positive: same-day payroll deposits from verified employer.', topic: 'case-review', inReplyTo: `m${nextId - 2}`, replyCount: 0, artefactRefs: [], createdAt: '2026-07-13T09:01:30Z' },
+      { id: `m${nextId++}`, channelId, sender: 'user-1', messageType: 'HUMAN', actorType: 'HUMAN', content: 'Good catch. Marking as cleared.', topic: 'case-review', inReplyTo: `m${nextId - 3}`, replyCount: 0, artefactRefs: [], createdAt: '2026-07-13T09:02:00Z' },
     ];
   }
   if (channelId === 'ch-2') {
@@ -154,8 +156,8 @@ export class ChannelActivityPage extends LitElement {
       <h2>Channel Activity</h2>
       <p>Qhorus channel messaging — nav, feed, input, member panel.</p>
 
-      <h3>Standard (sidebar nav, message counts, renderContent, formatSender)</h3>
-      <p>INFORM messages get structured rendering via renderContent. Sender names are prefixed by actor type via formatSender. Message counts shown as badges.</p>
+      <h3>Standard (sidebar nav, message counts, renderContent, formatSender, range highlighting)</h3>
+      <p>INFORM messages get structured rendering via renderContent. Sender names are prefixed by actor type via formatSender. Message counts shown as badges. Delete/create use styled confirm dialogs instead of browser-native modals. Feed supports keyboard navigation (arrow keys) and screen reader announcements.</p>
       <div class="demo-container">
         <blocks-channel-nav
           .channels=${CHANNELS}
@@ -169,6 +171,7 @@ export class ChannelActivityPage extends LitElement {
             .reactions=${REACTIONS}
             .renderContent=${renderContent}
             .formatSender=${formatSender}
+            .messageHighlights=${{ [channelMessages[0]?.id ?? '']: 'var(--pages-accent-3, #e0e7ff)', [channelMessages[1]?.id ?? '']: 'var(--pages-accent-3, #e0e7ff)' }}
           ></blocks-channel-feed>
           <blocks-channel-input
             .channelId=${this._selectedChannelId}
@@ -261,13 +264,13 @@ export class ChannelActivityPage extends LitElement {
         </div>
       </div>
 
-      <h3>Correlation Panel (message chain visualization)</h3>
-      <p>Shows the correlation chain for a selected message — connected by correlationId or inReplyTo. Duration between nodes displayed.</p>
+      <h3>Correlation Panel (message chain, commitment transition badges)</h3>
+      <p>Shows the correlation chain for a selected message — connected by correlationId or inReplyTo. Duration between nodes displayed. Commitment transition badges (OPEN → ACKNOWLEDGED → FULFILLED) shown on connectors where state changes occurred.</p>
       <div class="panel-row" style="grid-template-columns:1fr;">
         <div class="panel-slot">
           <blocks-channel-correlation-panel
             .messages=${CORRELATION_MESSAGES}
-            .commitments=${new Map([['corr-demo', { state: 'FULFILLED', createdAt: '2026-07-20T10:00:00Z', updatedAt: '2026-07-20T10:15:00Z' }]])}
+            .commitments=${new Map([['corr-demo', { state: 'FULFILLED', createdAt: '2026-07-20T10:00:00Z', acknowledgedAt: '2026-07-20T10:02:00Z', resolvedAt: '2026-07-20T10:15:00Z', updatedAt: '2026-07-20T10:15:00Z' }]])}
             .selectedMessageId=${this._correlationSelectedId}
             @pages-event=${(e: CustomEvent) => {
               if (e.detail?.topic === 'channel:message-selected') {

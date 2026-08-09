@@ -522,4 +522,217 @@ describe('blocks-channel-feed', () => {
     const headers = el.shadowRoot!.querySelectorAll('.topic-section-header');
     expect(headers.length).toBe(1);
   });
+
+  // --- Accessibility mixins (#12) ---
+
+  it('exposes announce() from LiveRegionMixin', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(typeof el.announce).toBe('function');
+  });
+
+  it('announces new message count when messages arrive', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('1')];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const spy = vi.spyOn(el, 'announce');
+    el.messages = [msg('1'), msg('2'), msg('3', { sender: 'bob' })];
+    await el.updateComplete;
+
+    expect(spy).toHaveBeenCalledWith('2 new messages');
+  });
+
+  it('announces singular form for one new message', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('1')];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const spy = vi.spyOn(el, 'announce');
+    el.messages = [msg('1'), msg('2')];
+    await el.updateComplete;
+
+    expect(spy).toHaveBeenCalledWith('1 new message');
+  });
+
+  it('does not announce when message count stays the same', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('1')];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const spy = vi.spyOn(el, 'announce');
+    el.messages = [msg('1')];
+    await el.updateComplete;
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('navigates message items with arrow keys via RovingTabindexMixin', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [
+      msg('m1', { sender: 'alice', createdAt: '2026-07-07T12:00:00Z' }),
+      msg('m2', { sender: 'bob', createdAt: '2026-07-07T12:01:00Z' }),
+      msg('m3', { sender: 'carol', createdAt: '2026-07-07T12:02:00Z' }),
+    ];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(typeof el.navigateRoving).toBe('function');
+
+    const items = el.shadowRoot!.querySelectorAll('.message-item');
+    expect(items.length).toBe(3);
+    items.forEach((item: Element) => expect(item.getAttribute('tabindex')).toBe('-1'));
+  });
+
+  it('exposes trapFocus and releaseFocus from FocusTrapMixin', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(typeof el.trapFocus).toBe('function');
+    expect(typeof el.releaseFocus).toBe('function');
+  });
+
+  it('exposes registerShortcut from KeyboardShortcutMixin', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(typeof el.registerShortcut).toBe('function');
+    expect(typeof el.getShortcuts).toBe('function');
+  });
+
+  // --- Scroll-to-new-messages pill (#16) ---
+
+  it('does not show pill when at bottom of feed', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('1'), msg('2')];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(el.shadowRoot!.querySelector('.new-messages-pill')).toBeNull();
+  });
+
+  it('shows pill with unread count when scrolled up and new messages arrive', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('1'), msg('2')];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el._scrolledUp = true;
+    el.messages = [msg('1'), msg('2'), msg('3')];
+    await el.updateComplete;
+
+    const pill = el.shadowRoot!.querySelector('.new-messages-pill');
+    expect(pill).toBeTruthy();
+    expect(pill!.textContent).toContain('1');
+  });
+
+  it('accumulates unread count across multiple updates while scrolled up', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('1')];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el._scrolledUp = true;
+    el.messages = [msg('1'), msg('2')];
+    await el.updateComplete;
+
+    el.messages = [msg('1'), msg('2'), msg('3'), msg('4')];
+    await el.updateComplete;
+
+    const pill = el.shadowRoot!.querySelector('.new-messages-pill');
+    expect(pill).toBeTruthy();
+    expect(pill!.textContent).toContain('3');
+  });
+
+  it('scrolls to bottom and hides pill on pill click', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('1')];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el._scrolledUp = true;
+    el.messages = [msg('1'), msg('2')];
+    await el.updateComplete;
+
+    const pill = el.shadowRoot!.querySelector('.new-messages-pill') as HTMLElement;
+    expect(pill).toBeTruthy();
+    pill.click();
+    await el.updateComplete;
+
+    expect(el.shadowRoot!.querySelector('.new-messages-pill')).toBeNull();
+    expect(el._scrolledUp).toBe(false);
+  });
+
+  it('resets unread count when user scrolls to bottom', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('1')];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el._scrolledUp = true;
+    el._unreadCount = 5;
+    el.messages = [msg('1'), msg('2')];
+    await el.updateComplete;
+
+    expect(el.shadowRoot!.querySelector('.new-messages-pill')).toBeTruthy();
+
+    el._scrolledUp = false;
+    el._unreadCount = 0;
+    await el.updateComplete;
+
+    expect(el.shadowRoot!.querySelector('.new-messages-pill')).toBeNull();
+  });
+
+  // --- Range highlighting (#26) ---
+
+  it('applies background highlight to messages with entries in messageHighlights', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [
+      msg('m1', { sender: 'alice', createdAt: '2026-07-07T12:00:00Z' }),
+      msg('m2', { sender: 'bob', createdAt: '2026-07-07T12:01:00Z' }),
+      msg('m3', { sender: 'carol', createdAt: '2026-07-07T12:02:00Z' }),
+    ];
+    el.messageHighlights = { m1: 'var(--pages-accent-3)', m2: 'var(--pages-accent-3)' };
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const items = el.shadowRoot!.querySelectorAll('.message-item');
+    expect(items[0].style.background).toBe('var(--pages-accent-3)');
+    expect(items[1].style.background).toBe('var(--pages-accent-3)');
+    expect(items[2].style.background).toBe('');
+  });
+
+  it('does not apply highlight when messageHighlights is empty', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('m1', { sender: 'alice' })];
+    el.messageHighlights = {};
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const item = el.shadowRoot!.querySelector('.message-item') as HTMLElement;
+    expect(item.style.background).toBe('');
+  });
+
+  it('applies highlight in topics mode', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.viewMode = 'topics';
+    el.topics = [{ id: 't1', channelId: 'ch-1', name: 'General', state: 'ACTIVE', messageCount: 1, createdAt: '2026-01-01T00:00:00Z' }];
+    el.messages = [msg('m1', { topicId: 't1', topic: 'General' })];
+    el.messageHighlights = { m1: 'var(--pages-success-3)' };
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const item = el.shadowRoot!.querySelector('.message-item') as HTMLElement;
+    expect(item.style.background).toBe('var(--pages-success-3)');
+  });
 });

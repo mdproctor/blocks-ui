@@ -237,4 +237,97 @@ describe('blocks-channel-thread', () => {
     expect((messages[0] as any).formatSender('alice', 'AGENT')).toBe('alice');
     expect((messages[1] as any).formatSender('bob', 'HUMAN')).toBe('bob');
   });
+
+  // --- Thread age/activity indicator (#17) ---
+
+  it('shows last activity time in thread header', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-07T12:05:00Z'));
+
+    const el = document.createElement('blocks-channel-thread') as any;
+    el.rootMessage = msg('1', 'COMMAND', 'Task');
+    el.replies = [
+      { ...msg('2', 'STATUS', 'Working'), createdAt: '2026-07-07T12:03:00Z' },
+      { ...msg('3', 'DONE', 'Done'), createdAt: '2026-07-07T12:04:00Z' },
+    ];
+    el.collapsed = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const age = el.shadowRoot!.querySelector('.thread-age');
+    expect(age).toBeTruthy();
+    expect(age!.textContent!.trim()).toBe('1m ago');
+
+    vi.useRealTimers();
+  });
+
+  it('shows hours for older threads', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-07T15:00:00Z'));
+
+    const el = document.createElement('blocks-channel-thread') as any;
+    el.rootMessage = { ...msg('1', 'COMMAND', 'Task'), createdAt: '2026-07-07T12:00:00Z' };
+    el.replies = [
+      { ...msg('2', 'DONE', 'Done'), createdAt: '2026-07-07T13:00:00Z' },
+    ];
+    el.collapsed = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const age = el.shadowRoot!.querySelector('.thread-age');
+    expect(age!.textContent!.trim()).toBe('2h ago');
+
+    vi.useRealTimers();
+  });
+
+  it('shows days for threads older than 24h', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-10T12:00:00Z'));
+
+    const el = document.createElement('blocks-channel-thread') as any;
+    el.rootMessage = { ...msg('1', 'COMMAND', 'Task'), createdAt: '2026-07-07T12:00:00Z' };
+    el.replies = [
+      { ...msg('2', 'DONE', 'Done'), createdAt: '2026-07-08T12:00:00Z' },
+    ];
+    el.collapsed = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const age = el.shadowRoot!.querySelector('.thread-age');
+    expect(age!.textContent!.trim()).toBe('2d ago');
+
+    vi.useRealTimers();
+  });
+
+  it('uses root message time when no replies exist', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-07T12:10:00Z'));
+
+    const el = document.createElement('blocks-channel-thread') as any;
+    el.rootMessage = { ...msg('1', 'COMMAND', 'Task'), createdAt: '2026-07-07T12:00:00Z' };
+    el.replies = [];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(el.shadowRoot!.querySelector('.thread-age')).toBeNull();
+  });
+
+  it('shows "just now" for very recent activity', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-07T12:00:30Z'));
+
+    const el = document.createElement('blocks-channel-thread') as any;
+    el.rootMessage = msg('1', 'COMMAND', 'Task');
+    el.replies = [
+      { ...msg('2', 'DONE', 'Done'), createdAt: '2026-07-07T12:00:00Z' },
+    ];
+    el.collapsed = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const age = el.shadowRoot!.querySelector('.thread-age');
+    expect(age!.textContent!.trim()).toBe('just now');
+
+    vi.useRealTimers();
+  });
 });
