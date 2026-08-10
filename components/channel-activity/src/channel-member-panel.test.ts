@@ -27,7 +27,7 @@ describe('blocks-channel-member-panel', () => {
     expect(names).toEqual(['Bob', 'Charlie', 'Alice']);
   });
 
-  it('shows presence dots with correct classes', async () => {
+  it('shows pages-status-dot with correct variants', async () => {
     element = document.createElement('blocks-channel-member-panel') as any;
     (element as any).members = [
       { channelId: 'c1', memberId: 'm1', displayName: 'Online', role: 'PARTICIPANT' },
@@ -42,10 +42,10 @@ describe('blocks-channel-member-panel', () => {
     document.body.appendChild(element);
     await (element as any).updateComplete;
 
-    const dots = element.shadowRoot!.querySelectorAll('.presence-dot');
-    expect(dots[0]!.classList.contains('dot-online')).toBe(true);
-    expect(dots[1]!.classList.contains('dot-away')).toBe(true);
-    expect(dots[2]!.classList.contains('dot-offline')).toBe(true);
+    const dots = element.shadowRoot!.querySelectorAll('pages-status-dot');
+    expect(dots[0]!.getAttribute('variant')).toBe('success');
+    expect(dots[1]!.getAttribute('variant')).toBe('warning');
+    expect(dots[2]!.getAttribute('variant')).toBe('neutral');
   });
 
   it('shows role badges for MODERATOR and OBSERVER', async () => {
@@ -116,9 +116,9 @@ describe('blocks-channel-member-panel', () => {
       .map(i => i.querySelector('.member-name')?.textContent?.trim());
     expect(names).toEqual(['Alice', 'Bob']);
 
-    const dots = element.shadowRoot!.querySelectorAll('.presence-dot');
-    expect(dots[0]!.classList.contains('dot-online')).toBe(true);
-    expect(dots[1]!.classList.contains('dot-offline')).toBe(true);
+    const dots = element.shadowRoot!.querySelectorAll('pages-status-dot');
+    expect(dots[0]!.getAttribute('variant')).toBe('success');
+    expect(dots[1]!.getAttribute('variant')).toBe('neutral');
   });
 
   it('shows status message when present', async () => {

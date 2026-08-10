@@ -256,9 +256,9 @@ describe('blocks-channel-nav', () => {
     document.body.appendChild(el);
     await (el as any).updateComplete;
 
-    const badges = el.shadowRoot!.querySelectorAll('.message-count');
+    const badges = el.shadowRoot!.querySelectorAll('pages-badge');
     expect(badges.length).toBe(1);
-    expect(badges[0]!.textContent!.trim()).toBe('42');
+    expect(badges[0]!.getAttribute('label')).toBe('42');
   });
 
   it('does not display count badge when count is zero or absent', async () => {
@@ -270,7 +270,7 @@ describe('blocks-channel-nav', () => {
     document.body.appendChild(el);
     await (el as any).updateComplete;
 
-    expect(el.shadowRoot!.querySelector('.message-count')).toBeNull();
+    expect(el.shadowRoot!.querySelector('pages-badge')).toBeNull();
   });
 
   // --- layout: dropdown (#64) ---

@@ -96,17 +96,7 @@ export class ChannelNavElement extends LitElement {
       transition: background 0.2s;
     }
     .create-channel-btn:hover { background: var(--pages-accent-10, #0284c7); }
-    .message-count {
-      flex-shrink: 0;
-      font-size: var(--pages-font-size-xs, 11px);
-      background: var(--pages-neutral-4, #d4d4d4);
-      color: var(--pages-neutral-11, #333);
-      padding: 0 6px;
-      border-radius: 9999px;
-      min-width: 18px;
-      text-align: center;
-      line-height: 18px;
-    }
+    pages-badge { flex-shrink: 0; }
     .dropdown-wrapper { position: relative; }
     .dropdown-trigger {
       width: 100%;
@@ -330,7 +320,7 @@ export class ChannelNavElement extends LitElement {
               >
                 <span class="channel-icon">${this.getChannelIcon(channel.semantic)}</span>
                 <span class="channel-name">${channel.name}</span>
-                ${count ? html`<span class="message-count">${count}</span>` : nothing}
+                ${count ? html`<pages-badge variant="neutral" size="sm" label="${count}"></pages-badge>` : nothing}
                 ${this.showDelete ? html`
                   <pages-button variant="ghost" size="sm"
                     class="delete-btn"

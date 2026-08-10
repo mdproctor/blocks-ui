@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { ChannelMember, PresenceState } from './types.js';
+import '@casehubio/pages-ui-components';
 
 interface MemberWithPresence {
   member: ChannelMember;
@@ -39,13 +40,9 @@ export class ChannelMemberPanelElement extends LitElement {
       border-bottom: 1px solid var(--pages-neutral-3);
     }
     .member-item:hover { background: var(--pages-neutral-2); }
-    .presence-dot {
-      font-size: var(--pages-font-size-xs);
-      line-height: 1;
+    pages-status-dot {
+      margin-top: 1px;
     }
-    .dot-online { color: var(--pages-success-9); }
-    .dot-away { color: var(--pages-warning-9); }
-    .dot-offline { color: var(--pages-neutral-7); }
     .role-badge {
       font-size: var(--pages-font-size-sm);
       line-height: 1;
@@ -113,10 +110,11 @@ export class ChannelMemberPanelElement extends LitElement {
     return groups;
   }
 
-  private getPresenceDotClass(status: PresenceState['status']): string {
-    if (status === 'ONLINE' || status === 'AVAILABLE' || status === 'BUSY') return 'dot-online';
-    if (status === 'AWAY') return 'dot-away';
-    return 'dot-offline';
+  private getPresenceVariant(status: PresenceState['status']): 'success' | 'warning' | 'danger' | 'neutral' {
+    if (status === 'ONLINE' || status === 'AVAILABLE') return 'success';
+    if (status === 'BUSY') return 'danger';
+    if (status === 'AWAY') return 'warning';
+    return 'neutral';
   }
 
   private getRoleBadge(role: ChannelMember['role']): string {
@@ -144,7 +142,7 @@ export class ChannelMemberPanelElement extends LitElement {
                 ${groupMembers.map(
                   ({ member, presence }) => html`
                     <div class="member-item">
-                      <span class="presence-dot ${this.getPresenceDotClass(presence.status)}">●</span>
+                      <pages-status-dot variant="${this.getPresenceVariant(presence.status)}"></pages-status-dot>
                       <span class="role-badge">${this.getRoleBadge(member.role)}</span>
                       <div class="member-info">
                         <div class="member-name">${member.displayName}</div>
