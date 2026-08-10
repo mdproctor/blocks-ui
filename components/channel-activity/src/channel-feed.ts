@@ -21,8 +21,8 @@ const ChannelFeedBase = RovingTabindexMixin(KeyboardShortcutMixin(LiveRegionMixi
 
 @customElement('blocks-channel-feed')
 export class ChannelFeedElement extends ChannelFeedBase {
-  rovingSelector = '.message-item, blocks-channel-thread';
-  rovingDirection: RovingDirection = 'vertical';
+  override rovingSelector = '.message-item, blocks-channel-thread';
+  override rovingDirection: RovingDirection = 'vertical';
 
   @property({ type: Array }) messages: QhorusMessage[] = [];
   @property({ type: Array }) reactions: Reaction[] = [];
