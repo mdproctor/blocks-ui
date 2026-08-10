@@ -58,7 +58,7 @@ The file path determines the repo: if the file lives under `Workspace`, use the 
 | Artifact   | Destination | Notes |
 |------------|-------------|-------|
 | adr        | project     | lands in `docs/adr/` |
-| blog       | project     | lands in docs/blog/ — promoted at work end |
+| blog       | project     | lands in `docs/blog/` — promoted at work end |
 | design     | project     | journal file lives in workspace design/; DESIGN.md merge target is project docs/DESIGN.md |
 | snapshots  | workspace   | |
 | specs      | project     | lands in docs/specs/ |
