@@ -22,7 +22,7 @@ Domain-aware but app-agnostic — components know about trust scores, case timel
 | Package | npm name | Purpose | Maturity |
 |---------|----------|---------|----------|
 | `packages/blocks-ui-core` | `@casehubio/blocks-ui-core` | Tokens, DataSourceMixin, TrendSourceMixin, renderSparkline, EventStreamController, event helpers, domain types, SharedTimerController, blocks-confirm-dialog, renderPropertyTree, pulseAnimation CSS, CommitmentStatePill, StatusBadge (generic status pills), status registry (`lookupStatus`/`registerStatus`) | Beta |
-| `packages/graph-stencil-case` | `@casehubio/graph-stencil-case` | Case domain adapter, structural stencils (binding, worker, milestone, goal, subcase), YAML editor (add/remove/edit/switchTarget), RuntimeAdapter (`toDecorations`), persistence SPI (`GitHubBackend`). | Beta |
+| `packages/graph-stencil-case` | `@casehubio/graph-stencil-case` | Case domain adapter, structural stencils (binding, worker with function type badge, milestone, goal, subcase), YAML editor (add/remove/edit/switchTarget/switchFunctionType/switchMcpTransport/switchModelProvider), worker-function module (type detection, config interfaces, form renderers), RuntimeAdapter (`toDecorations`), persistence SPI (`GitHubBackend`). | Beta |
 | `packages/diagram-core` | `@casehubio/diagram-core` | Shared diagram orchestration — DiagramBaseMixin (undo/redo, render pipeline, persistence, keyboard shortcuts, error/degraded/readonly modes), DiagramToolbar, DiagramProperties, form utilities. | Beta |
 | `packages/graph-stencil-swf` | `@casehubio/graph-stencil-swf` | SWF domain adapter (`toSwfGraph` — dual YAML walk with SDK `buildFlatGraph`, type prefixing, degraded mode), 10 typed stencils + generic fallback, edge types (flow, switch-case), `applySwfPropertyEdit`, `swfTaskSchema`, `createSwfThumbnailRenderer`. Uses `@openworkflowspec/sdk`. | Beta |
 
@@ -62,7 +62,7 @@ Domain-aware but app-agnostic — components know about trust scores, case timel
 | `trust-workbench` | Composite trust visibility — score panel, routing history, feedback display | Beta |
 | `document-workbench` | Document review workbench — 9 panels for AI-assisted document review: debate feed, document diff, timeline, review tracker, brainstorm options/picker, context gauge, doc picker, workspace status | Beta |
 | `conversation-viewer` | Conversation protocol viewer — convergence indicator, common ground panel, point list, point detail, conversation workbench. Structured deliberation UI with property-based data delivery. | Beta |
-| `casehub-diagram` | Visual diagram editor for CaseDefinition YAML — extends DiagramBaseMixin, case-specific palette, property panel with binding target selector, structural editing, runtime overlay with status badges, worker inline expand | Beta |
+| `casehub-diagram` | Visual diagram editor for CaseDefinition YAML — extends DiagramBaseMixin, case-specific palette, property panel with binding target selector + worker function type editor (agent/a2a/mcp/sequence/flow sub-forms, pop-out prompt dialog), structural editing, runtime overlay with status badges, worker inline expand | Beta |
 | `swf-diagram` | Standalone SWF workflow diagram — extends DiagramBaseMixin, schema-driven property editing, degraded mode banner. Read-only + property editing (no structural editing). | Beta |
 | `work-item-row` | Single work item row (legacy — inbox now uses pages-table) | Deprecated |
 
@@ -250,6 +250,8 @@ registerThumbnailRenderer('swf', createSwfThumbnailRenderer());
 ```
 
 **Drill-down:** Worker nodes emit `diagram:worker-drill-down` pages-event with `workerId`, `workerName`, `doYaml`. The hosting app handles navigation to `swf-diagram`.
+
+**Worker function types:** Worker stencils display a coloured badge indicating the function type (agent, flow, a2a, mcp, seq, ext). The property panel shows a function type selector and type-specific configuration forms when a worker node is selected. Supported types: Agent (prompt, model provider config), A2A (endpoint, skill, auth), MCP (stdio/HTTP transport, auth), Sequence (ordered worker list with drag-reorder), Flow (drill-down to SWF diagram). Unknown function keys render as read-only JSON. The `casehub-diagram-properties` component accepts `selectedType` and `workerNames` properties to enable the function section.
 
 ---
 

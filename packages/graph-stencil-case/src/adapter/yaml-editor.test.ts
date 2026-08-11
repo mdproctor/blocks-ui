@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse as parseYaml } from 'yaml';
-import { applyPropertyEdit, addElement, removeElement, switchBindingTarget } from './yaml-editor.js';
+import { applyPropertyEdit, addElement, removeElement, switchBindingTarget, switchFunctionType, switchMcpTransport, switchModelProvider } from './yaml-editor.js';
 import { toGraph } from './case-adapter.js';
 import type { CaseDefinition } from '../types/case-definition.js';
 
@@ -244,5 +244,137 @@ describe('switchBindingTarget', () => {
     expect(subcaseNodes.length).toBeGreaterThan(0);
     const capEdges = model.edges.filter(e => e.type === 'capability-dispatch' && e.source === 'binding:scan');
     expect(capEdges).toHaveLength(0);
+  });
+});
+
+const AGENT_WORKER_YAML = `dsl: "1.0.0"
+namespace: test
+name: sample
+version: "1.0.0"
+spec:
+  bindings: []
+  workers:
+    - name: my-worker
+      capabilities:
+        - analyze
+      agent:
+        systemPrompt: "You are helpful"
+        inputProjection: "."
+        outputProjection: "."
+        model:
+          openai:
+            modelName: gpt-4
+`;
+
+describe('switchFunctionType', () => {
+  it('switches agent to a2a', () => {
+    const result = switchFunctionType(AGENT_WORKER_YAML, ['spec', 'workers', 0], 'a2a');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const worker = parsed.spec.workers![0] as Record<string, unknown>;
+    expect(worker.agent).toBeUndefined();
+    expect(worker.a2a).toEqual({ endpoint: '' });
+    expect(worker.name).toBe('my-worker');
+    expect(worker.capabilities).toEqual(['analyze']);
+  });
+
+  it('switches agent to flow using do key', () => {
+    const result = switchFunctionType(AGENT_WORKER_YAML, ['spec', 'workers', 0], 'flow');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const worker = parsed.spec.workers![0] as Record<string, unknown>;
+    expect(worker.agent).toBeUndefined();
+    expect(worker.do).toEqual([]);
+  });
+
+  it('switches to external removes all function keys', () => {
+    const result = switchFunctionType(AGENT_WORKER_YAML, ['spec', 'workers', 0], 'external');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const worker = parsed.spec.workers![0] as Record<string, unknown>;
+    expect(worker.agent).toBeUndefined();
+    expect(worker.do).toBeUndefined();
+    expect(worker.a2a).toBeUndefined();
+    expect(worker.mcp).toBeUndefined();
+    expect(worker.sequence).toBeUndefined();
+    expect(worker.name).toBe('my-worker');
+  });
+
+  it('switches to mcp with stdio defaults', () => {
+    const result = switchFunctionType(AGENT_WORKER_YAML, ['spec', 'workers', 0], 'mcp');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const worker = parsed.spec.workers![0] as Record<string, unknown>;
+    expect(worker.agent).toBeUndefined();
+    expect(worker.mcp).toEqual({ command: [] });
+  });
+
+  it('switches to sequence with empty array', () => {
+    const result = switchFunctionType(AGENT_WORKER_YAML, ['spec', 'workers', 0], 'sequence');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const worker = parsed.spec.workers![0] as Record<string, unknown>;
+    expect(worker.agent).toBeUndefined();
+    expect(worker.sequence).toEqual([]);
+  });
+
+  it('switches to agent with full defaults', () => {
+    const externalYaml = switchFunctionType(AGENT_WORKER_YAML, ['spec', 'workers', 0], 'external');
+    const result = switchFunctionType(externalYaml, ['spec', 'workers', 0], 'agent');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const worker = parsed.spec.workers![0] as Record<string, unknown>;
+    const agent = worker.agent as Record<string, unknown>;
+    expect(agent.systemPrompt).toBe('');
+    expect(agent.inputProjection).toBe('.');
+    expect(agent.model).toEqual({ openai: { modelName: '' } });
+  });
+});
+
+describe('switchMcpTransport', () => {
+  const MCP_YAML = `dsl: "1.0.0"
+namespace: test
+name: sample
+version: "1.0.0"
+spec:
+  bindings: []
+  workers:
+    - name: tool-worker
+      capabilities: []
+      mcp:
+        command:
+          - /bin/tool
+        env:
+          KEY: val
+`;
+
+  it('switches stdio to http', () => {
+    const result = switchMcpTransport(MCP_YAML, ['spec', 'workers', 0], 'http');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const mcp = (parsed.spec.workers![0] as Record<string, unknown>).mcp as Record<string, unknown>;
+    expect(mcp.command).toBeUndefined();
+    expect(mcp.env).toBeUndefined();
+    expect(mcp.url).toBe('');
+  });
+
+  it('switches http to stdio', () => {
+    const httpYaml = switchMcpTransport(MCP_YAML, ['spec', 'workers', 0], 'http');
+    const result = switchMcpTransport(httpYaml, ['spec', 'workers', 0], 'stdio');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const mcp = (parsed.spec.workers![0] as Record<string, unknown>).mcp as Record<string, unknown>;
+    expect(mcp.url).toBeUndefined();
+    expect(mcp.command).toEqual([]);
+  });
+});
+
+describe('switchModelProvider', () => {
+  it('switches openai to anthropic', () => {
+    const result = switchModelProvider(AGENT_WORKER_YAML, ['spec', 'workers', 0], 'anthropic');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const model = ((parsed.spec.workers![0] as Record<string, unknown>).agent as Record<string, unknown>).model as Record<string, unknown>;
+    expect(model.openai).toBeUndefined();
+    expect(model.anthropic).toEqual({ modelName: '' });
+  });
+
+  it('switches to ollama', () => {
+    const result = switchModelProvider(AGENT_WORKER_YAML, ['spec', 'workers', 0], 'ollama');
+    const parsed = parseYaml(result) as CaseDefinition;
+    const model = ((parsed.spec.workers![0] as Record<string, unknown>).agent as Record<string, unknown>).model as Record<string, unknown>;
+    expect(model.openai).toBeUndefined();
+    expect(model.ollama).toEqual({ modelName: '' });
   });
 });

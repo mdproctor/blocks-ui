@@ -76,3 +76,59 @@ describe('stencil render functions', () => {
     expect(renderSubCase(node('subcase', { name: 'sc1' }))).toBeDefined();
   });
 });
+
+describe('worker function type badge', () => {
+  function flatValues(result: { values: unknown[] }): unknown[] {
+    const out: unknown[] = [];
+    for (const v of result.values) {
+      if (v && typeof v === 'object' && 'values' in v) {
+        out.push(...flatValues(v as { values: unknown[] }));
+      } else {
+        out.push(v);
+      }
+    }
+    return out;
+  }
+
+  it('renders agent badge for agent worker', () => {
+    const result = renderWorker(node('worker', {
+      name: 'analyzer', capabilities: ['analyze'], agent: { systemPrompt: '' },
+    }));
+    expect(flatValues(result)).toContain('agent');
+  });
+
+  it('renders flow badge for do-block worker', () => {
+    const result = renderWorker(node('worker', {
+      name: 'processor', capabilities: [], do: [],
+    }));
+    expect(flatValues(result)).toContain('flow');
+  });
+
+  it('renders a2a badge', () => {
+    const result = renderWorker(node('worker', {
+      name: 'remote', capabilities: [], a2a: { endpoint: '' },
+    }));
+    expect(flatValues(result)).toContain('a2a');
+  });
+
+  it('renders mcp badge', () => {
+    const result = renderWorker(node('worker', {
+      name: 'tools', capabilities: [], mcp: { command: [] },
+    }));
+    expect(flatValues(result)).toContain('mcp');
+  });
+
+  it('renders seq badge for sequence worker', () => {
+    const result = renderWorker(node('worker', {
+      name: 'pipeline', capabilities: [], sequence: ['a', 'b'],
+    }));
+    expect(flatValues(result)).toContain('seq');
+  });
+
+  it('renders ext badge for external worker', () => {
+    const result = renderWorker(node('worker', {
+      name: 'external', capabilities: [],
+    }));
+    expect(flatValues(result)).toContain('ext');
+  });
+});

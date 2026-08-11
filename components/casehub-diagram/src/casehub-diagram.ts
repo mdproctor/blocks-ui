@@ -7,8 +7,11 @@ import {
   addElement,
   removeElement,
   switchBindingTarget,
+  switchFunctionType,
+  switchMcpTransport,
+  switchModelProvider,
 } from '@casehubio/graph-stencil-case';
-import type { CaseRuntimeState } from '@casehubio/graph-stencil-case';
+import type { CaseRuntimeState, WorkerFunctionType, McpTransportType, ModelProviderKey } from '@casehubio/graph-stencil-case';
 import { toDecorations } from '@casehubio/graph-stencil-case';
 import { toReactFlowGraph } from '@casehubio/graph-renderer';
 import type { ElkLayoutOptions } from '@casehubio/graph-renderer';
@@ -48,6 +51,9 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
 
   private _expandedWorkers = new Set<string>();
   private _expandDebounce: ReturnType<typeof setTimeout> | null = null;
+  @state() private _promptEditorOpen = false;
+  @state() private _promptEditorValue = '';
+  private _promptEditorField: (string | number)[] = [];
 
   protected _adaptYaml(yaml: string): AdapterResult {
     return toGraph(yaml);
@@ -136,6 +142,10 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
         }
       }
     }
+    if (this._promptEditorOpen) {
+      const dialog = this.renderRoot.querySelector('#prompt-editor-dialog') as HTMLDialogElement | null;
+      if (dialog && !dialog.open) dialog.showModal();
+    }
   }
 
   private _updateStaleness(): void {
@@ -181,6 +191,83 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
     await this._fullRender(this._currentYaml);
     this._updateSelectedNode();
   };
+
+  private _handleFunctionTypeChange = async (e: Event): Promise<void> => {
+    const detail = (e as CustomEvent<{ newType: WorkerFunctionType }>).detail;
+    if (!this._selectedNodeId || !this._adapterResult) return;
+    const nodePath = this._adapterResult.yamlPaths.get(this._selectedNodeId);
+    if (!nodePath) return;
+    this._pushUndo();
+    this._currentYaml = switchFunctionType(this._currentYaml, nodePath, detail.newType);
+    await this._fullRender(this._currentYaml);
+    this._updateSelectedNode();
+  };
+
+  private _handleMcpTransportChange = async (e: Event): Promise<void> => {
+    const detail = (e as CustomEvent<{ transport: McpTransportType }>).detail;
+    if (!this._selectedNodeId || !this._adapterResult) return;
+    const nodePath = this._adapterResult.yamlPaths.get(this._selectedNodeId);
+    if (!nodePath) return;
+    this._pushUndo();
+    this._currentYaml = switchMcpTransport(this._currentYaml, nodePath, detail.transport);
+    await this._fullRender(this._currentYaml);
+    this._updateSelectedNode();
+  };
+
+  private _handleModelProviderChange = async (e: Event): Promise<void> => {
+    const detail = (e as CustomEvent<{ provider: ModelProviderKey }>).detail;
+    if (!this._selectedNodeId || !this._adapterResult) return;
+    const nodePath = this._adapterResult.yamlPaths.get(this._selectedNodeId);
+    if (!nodePath) return;
+    this._pushUndo();
+    this._currentYaml = switchModelProvider(this._currentYaml, nodePath, detail.provider);
+    await this._fullRender(this._currentYaml);
+    this._updateSelectedNode();
+  };
+
+  private _handlePromptEditorOpen = (e: Event): void => {
+    const detail = (e as CustomEvent<{ value: string }>).detail;
+    this._promptEditorValue = detail.value;
+    this._promptEditorField = ['agent', 'systemPrompt'];
+    this._promptEditorOpen = true;
+  };
+
+  private _handlePromptEditorSave = (): void => {
+    const dialog = this.renderRoot.querySelector('#prompt-editor-dialog') as HTMLDialogElement | null;
+    const textarea = dialog?.querySelector('textarea');
+    if (textarea) {
+      this._promptEditorValue = textarea.value;
+      this.dispatchEvent(new CustomEvent('property-change', {
+        bubbles: false, composed: false,
+        detail: { field: this._promptEditorField, value: this._promptEditorValue },
+      }));
+      this._handlePropertyChange(new CustomEvent('property-change', {
+        detail: { field: this._promptEditorField, value: this._promptEditorValue },
+      }));
+    }
+    this._promptEditorOpen = false;
+    dialog?.close();
+  };
+
+  private _handlePromptEditorCancel = (): void => {
+    this._promptEditorOpen = false;
+    const dialog = this.renderRoot.querySelector('#prompt-editor-dialog') as HTMLDialogElement | null;
+    dialog?.close();
+  };
+
+  private _selectedNodeType(): string {
+    if (!this._selectedNodeId || !this._adapterResult) return '';
+    const node = this._adapterResult.model.nodes.find(n => n.id === this._selectedNodeId);
+    return node?.type ?? '';
+  }
+
+  private _allWorkerNames(): string[] {
+    if (!this._adapterResult) return [];
+    return this._adapterResult.model.nodes
+      .filter(n => n.type === 'worker')
+      .map(n => String(n.properties['name'] ?? ''))
+      .filter(Boolean);
+  }
 
   protected async _onDelete(): Promise<void> {
     if (!this._selectedNodeId || !this._adapterResult) return;
@@ -257,16 +344,37 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
               <casehub-diagram-properties
                 .schema=${this._selectedSchema}
                 .data=${this._selectedData}
+                .selectedType=${this._selectedNodeType()}
+                .workerNames=${this._allWorkerNames()}
                 ?readonly=${isExternal ?? false}
                 @property-change=${this._handlePropertyChange}
                 @target-type-change=${this._handleTargetTypeChange}
+                @function-type-change=${this._handleFunctionTypeChange}
+                @mcp-transport-change=${this._handleMcpTransportChange}
+                @model-provider-change=${this._handleModelProviderChange}
+                @prompt-editor-open=${this._handlePromptEditorOpen}
               ></casehub-diagram-properties>
             </div>
           ` : nothing}
         </div>
         ${this._showConflict ? this._renderConflictDialog() : nothing}
         ${this._confirmMessage ? this._renderDeleteConfirm() : nothing}
+        ${this._promptEditorOpen ? html`
+          <dialog id="prompt-editor-dialog" style="width: 80%; max-width: 800px; padding: 16px; border: 1px solid var(--pages-border-color, #ddd); border-radius: 8px; font-family: var(--pages-font-family, system-ui, sans-serif);"
+            @cancel=${this._handlePromptEditorCancel}>
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--pages-text-color, #333);">System Prompt</div>
+            <textarea rows="20" style="width: 100%; font-family: monospace; font-size: 13px; padding: 8px; box-sizing: border-box; resize: vertical; border: 1px solid var(--pages-border-color, #ddd); border-radius: 4px;"
+              .value=${this._promptEditorValue}></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+              <button type="button" style="padding: 6px 16px; font-size: 13px; border: 1px solid var(--pages-border-color, #ddd); background: var(--pages-surface-color, #fff); border-radius: 4px; cursor: pointer;"
+                @click=${this._handlePromptEditorCancel}>Cancel</button>
+              <button type="button" style="padding: 6px 16px; font-size: 13px; border: none; background: var(--pages-accent-color, #1a73e8); color: #fff; border-radius: 4px; cursor: pointer;"
+                @click=${this._handlePromptEditorSave}>Save</button>
+            </div>
+          </dialog>
+        ` : nothing}
       </div>
     `;
   }
+
 }

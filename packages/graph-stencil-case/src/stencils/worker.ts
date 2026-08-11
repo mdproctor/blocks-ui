@@ -4,6 +4,18 @@ import type { StencilGrammar, GraphNode, NodeDecoration } from '@casehubio/graph
 import type { StencilTemplate } from '@casehubio/graph-renderer';
 import { emitPagesEvent } from '@casehubio/graph-renderer';
 import { getThumbnailRenderer } from '../thumbnail-registry.js';
+import { detectFunctionType } from '../worker-function/detect.js';
+import type { WorkerFunctionType } from '../worker-function/types.js';
+
+const BADGE_CONFIG: Record<WorkerFunctionType, { label: string; bg: string; fg: string }> = {
+  agent:    { label: 'agent', bg: '#7c3aed', fg: '#fff' },
+  flow:     { label: 'flow',  bg: '#2563eb', fg: '#fff' },
+  a2a:      { label: 'a2a',   bg: '#0d9488', fg: '#fff' },
+  mcp:      { label: 'mcp',   bg: '#ea580c', fg: '#fff' },
+  sequence: { label: 'seq',   bg: '#6b7280', fg: '#fff' },
+  external: { label: 'ext',   bg: '#d1d5db', fg: '#374151' },
+  unknown:  { label: '?',     bg: '#fbbf24', fg: '#374151' },
+};
 
 export const workerGrammar: StencilGrammar = {
   type: 'worker',
@@ -20,11 +32,14 @@ export function renderWorker(node: GraphNode, _decoration?: NodeDecoration): Ste
   const desc = data['description'] ? String(data['description']).slice(0, 60) : '';
   const doBlock = data['do'];
   const hasThumbnail = doBlock && getThumbnailRenderer('swf');
+  const fnType = detectFunctionType(data as Record<string, unknown>);
+  const badge = BADGE_CONFIG[fnType];
 
   return html`
     <div style="padding: 10px 14px; border: 2px solid var(--pages-border-strong, #888); background: var(--pages-surface-raised, #f8f8f8); min-width: 200px; font-family: var(--pages-font-family, sans-serif); font-size: 13px;">
       <div style="display: flex; align-items: center; gap: 4px;">
         <div style="font-weight: 700; color: var(--pages-text-color, #333); flex: 1;">${name}</div>
+        <span style="font-size: 9px; padding: 1px 5px; border-radius: 3px; background: ${badge.bg}; color: ${badge.fg}; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;">${badge.label}</span>
         ${doBlock ? html`
           <button
             style="border: none; background: none; cursor: pointer; font-size: 11px; color: var(--pages-accent-color, #1a73e8); padding: 0 2px;"

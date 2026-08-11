@@ -1,4 +1,7 @@
-import { parseDocument, parse as parseYaml } from 'yaml';
+import { parseDocument, parse as parseYaml, type YAMLMap } from 'yaml';
+import type { WorkerFunctionType, McpTransportType, ModelProviderKey } from '../worker-function/types.js';
+import { FUNCTION_TYPE_KEYS, FUNCTION_TYPE_TO_YAML_KEY, MODEL_PROVIDERS } from '../worker-function/types.js';
+import { FUNCTION_TYPE_DEFAULTS, MCP_TRANSPORT_DEFAULTS, PROVIDER_DEFAULT } from '../worker-function/defaults.js';
 
 export function applyPropertyEdit(
   yaml: string,
@@ -85,5 +88,56 @@ export function switchBindingTarget(
     doc.deleteIn([...bindingPath, key]);
   }
   doc.setIn([...bindingPath, targetType], TARGET_DEFAULTS[targetType]);
+  return doc.toString();
+}
+
+export function switchFunctionType(
+  yaml: string,
+  nodePath: readonly (string | number)[],
+  newType: WorkerFunctionType,
+): string {
+  const doc = parseDocument(yaml);
+  const node = doc.getIn(nodePath) as YAMLMap;
+  for (const key of FUNCTION_TYPE_KEYS) {
+    if (node.has(key)) node.delete(key);
+  }
+  const yamlKey = FUNCTION_TYPE_TO_YAML_KEY[newType];
+  if (yamlKey != null) {
+    const defaultValue = FUNCTION_TYPE_DEFAULTS[newType];
+    node.set(yamlKey, doc.createNode(defaultValue));
+  }
+  return doc.toString();
+}
+
+export function switchMcpTransport(
+  yaml: string,
+  nodePath: readonly (string | number)[],
+  newTransport: McpTransportType,
+): string {
+  const doc = parseDocument(yaml);
+  const mcpPath = [...nodePath, 'mcp'];
+  const mcp = doc.getIn(mcpPath) as YAMLMap;
+  for (const key of ['command', 'env', 'url', 'auth']) {
+    if (mcp.has(key)) mcp.delete(key);
+  }
+  const defaults = MCP_TRANSPORT_DEFAULTS[newTransport];
+  for (const [k, v] of Object.entries(defaults)) {
+    mcp.set(k, doc.createNode(v));
+  }
+  return doc.toString();
+}
+
+export function switchModelProvider(
+  yaml: string,
+  nodePath: readonly (string | number)[],
+  newProvider: ModelProviderKey,
+): string {
+  const doc = parseDocument(yaml);
+  const modelPath = [...nodePath, 'agent', 'model'];
+  const model = doc.getIn(modelPath) as YAMLMap;
+  for (const key of MODEL_PROVIDERS) {
+    if (model.has(key)) model.delete(key);
+  }
+  model.set(newProvider, doc.createNode(PROVIDER_DEFAULT));
   return doc.toString();
 }
