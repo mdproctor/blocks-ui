@@ -21,8 +21,8 @@ describe('ChannelEventTopics', () => {
     expect(ChannelEventTopics.CURSOR_RELOAD).toBe('channel:cursor-reload');
   });
 
-  it('has exactly 17 topics', () => {
-    expect(Object.keys(ChannelEventTopics).length).toBe(17);
+  it('has exactly 18 topics', () => {
+    expect(Object.keys(ChannelEventTopics).length).toBe(18);
   });
 
   it('topic event constants have channel: prefix', () => {

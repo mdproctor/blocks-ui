@@ -292,13 +292,28 @@ export class ChannelMessageElement extends LitElement {
       ${m.artefactRefs.length > 0 ? html`
         <div class="artefact-chips">
           ${m.artefactRefs.map(ref => html`
-            <span class="artefact-chip" data-type=${ref.type}>${ref.label}</span>
+            <span class="artefact-chip" data-type=${ref.type}
+              @click=${(e: Event) => { e.stopPropagation(); emitPagesEvent(this, ChannelEventTopics.ARTEFACT_SELECTED, { artefactRef: ref }); }}
+            >${this._artefactIcon(ref.type)} ${ref.label}</span>
           `)}
         </div>
       ` : nothing}
       ${this._expanded ? this._renderExpanded() : nothing}
       <blocks-channel-reaction-bar .reactions=${this.reactions} .messageId=${m.id} .currentActorId=${this.currentActorId}></blocks-channel-reaction-bar>
     `;
+  }
+
+  private _artefactIcon(type: string): string {
+    switch (type) {
+      case 'DOCUMENT': return '📄';
+      case 'CODE': return '🔧';
+      case 'CASE': return '📋';
+      case 'WORK_ITEM': return '✅';
+      case 'CHANNEL': case 'MESSAGE': return '💬';
+      case 'DEBATE': return '🗣️';
+      case 'EXTERNAL': return '🔗';
+      default: return '📎';
+    }
   }
 }
 

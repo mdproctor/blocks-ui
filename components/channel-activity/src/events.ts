@@ -18,6 +18,7 @@ export const ChannelEventTopics = {
   ARCHIVE_TOPIC: 'channel:archive-topic',
   RENAME_TOPIC: 'channel:rename-topic',
   MERGE_TOPIC: 'channel:merge-topic',
+  ARTEFACT_SELECTED: 'channel:artefact-selected',
 } as const;
 
 export interface SendMessagePayload {

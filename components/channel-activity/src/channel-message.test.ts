@@ -239,4 +239,37 @@ describe('blocks-channel-message', () => {
     const custom = el.shadowRoot!.querySelector('.custom');
     expect(custom!.textContent).toBe('agent-alpha-ch-1');
   });
+
+  it('clicking artefact chip dispatches artefact-selected event', async () => {
+    const el = await renderMessage({
+      message: makeMessage({
+        artefactRefs: [{ uri: 'doc://spec', type: 'DOCUMENT', label: 'Spec' }],
+      }),
+    });
+
+    let receivedRef: any = null;
+    el.addEventListener('pages-event', ((e: CustomEvent) => {
+      if (e.detail.topic === ChannelEventTopics.ARTEFACT_SELECTED) {
+        receivedRef = e.detail.payload.artefactRef;
+      }
+    }) as EventListener);
+
+    const chip = el.shadowRoot!.querySelector('.artefact-chip') as HTMLElement;
+    chip.click();
+    expect(receivedRef).toBeTruthy();
+    expect(receivedRef.uri).toBe('doc://spec');
+    expect(receivedRef.type).toBe('DOCUMENT');
+  });
+
+  it('artefact chip shows type icon', async () => {
+    const el = await renderMessage({
+      message: makeMessage({
+        artefactRefs: [{ uri: 'code://file.ts', type: 'CODE', label: 'file.ts' }],
+      }),
+    });
+
+    const chip = el.shadowRoot!.querySelector('.artefact-chip');
+    expect(chip?.textContent).toContain('🔧');
+    expect(chip?.textContent).toContain('file.ts');
+  });
 });
