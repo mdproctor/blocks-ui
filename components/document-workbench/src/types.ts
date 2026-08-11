@@ -113,3 +113,39 @@ export interface ThreadInfo {
   entries: ThreadStreamEntry[];
   createdBy: string;
 }
+
+export interface PipelineProgressPayload {
+  pipelineId: string;
+  phase: string;
+  checkpointStatus: string;
+  ordered: boolean;
+  dimensions: PipelineDimension[];
+}
+
+export interface PipelineDimension {
+  name: string;
+  status: string;
+  currentRound: number;
+  totalRounds: number;
+  degree: string;
+  issuesByPriority: Record<string, number>;
+  cost: number;
+  elapsed: number;
+  findingsCount: number;
+}
+
+export interface PipelineDecisionPayload {
+  pipelineId: string;
+  decisions: PipelineDecisionData[];
+}
+
+export interface PipelineDecisionData {
+  id: string;
+  title: string;
+  choice: string;
+  alternatives: string[];
+  rationale: string;
+  tradeoffs: string;
+  status: string;
+  exploration: string;
+}

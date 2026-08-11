@@ -8,6 +8,7 @@ export { BrainstormOptions } from './brainstorm-options.js';
 export { BrainstormPicker } from './brainstorm-picker.js';
 export { WorkspaceStatus } from './workspace-status.js';
 export { SelectionThreads } from './selection-threads.js';
+export { ReviewPipeline } from './review-pipeline.js';
 
 export type {
   DiffSummary,
@@ -25,4 +26,8 @@ export type {
   ThreadStreamEntry,
   ThreadAnchor,
   ThreadInfo,
+  PipelineProgressPayload,
+  PipelineDimension,
+  PipelineDecisionPayload,
+  PipelineDecisionData,
 } from './types.js';
