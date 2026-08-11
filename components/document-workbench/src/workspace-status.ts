@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { onPagesEvent } from '@casehubio/pages-component';
-import type { WorkspaceProgressPayload } from './types.js';
+import type { WorkspaceProgressPayload, PipelineProgressPayload } from './types.js';
 
 @customElement('workspace-status')
 export class WorkspaceStatus extends LitElement {
@@ -21,6 +21,9 @@ export class WorkspaceStatus extends LitElement {
     this._cleanups.push(
       onPagesEvent<WorkspaceProgressPayload>(document, 'workspace-progress', (p) => {
         this._handleProgress(p);
+      }),
+      onPagesEvent<PipelineProgressPayload>(document, 'pipeline-progress', (p) => {
+        this._handlePipelineProgress(p);
       }),
       onPagesEvent(document, 'reconnected', () => {
         this._reset();
@@ -76,6 +79,21 @@ export class WorkspaceStatus extends LitElement {
 
   private _stopTimer(): void {
     if (this._timer !== null) { clearInterval(this._timer); this._timer = null; }
+  }
+
+  private _handlePipelineProgress(p: PipelineProgressPayload): void {
+    this._visible = true;
+    this._terminal = p.phase === 'COMPLETE';
+    const running = p.dimensions.filter(d => d.status === 'RUNNING').length;
+    const total = p.dimensions.length;
+    if (p.checkpointStatus === 'PENDING') {
+      this._text = 'Pipeline: checkpoint pending';
+    } else if (this._terminal) {
+      this._text = 'Pipeline: complete';
+    } else {
+      this._text = `Pipeline: ${running}/${total} dimensions running`;
+    }
+    this._stopTimer();
   }
 
   private _reset(): void {
