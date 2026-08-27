@@ -944,6 +944,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/graph-stencil-swf@workspace:packages/graph-stencil-swf"
   dependencies:
+    "@casehubio/diagram-core": "workspace:*"
     "@casehubio/graph-core": "npm:*"
     "@open-wc/testing": "npm:^4.0.0"
     "@openworkflowspec/sdk": "npm:*"

@@ -1,24 +1,12 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { toSwfGraph, applySwfPropertyEdit, registerSwfStencils, swfTaskSchema } from '@casehubio/graph-stencil-swf';
+import { toSwfGraph, applySwfPropertyEdit, registerSwfStencils } from '@casehubio/graph-stencil-swf';
 import { DiagramBaseMixin } from '@casehubio/diagram-core';
 import type { AdapterResult } from '@casehubio/diagram-core';
 import '@casehubio/graph-renderer';
 
-const SWF_SCHEMA_TYPE_MAP: Record<string, string> = {
-  'swf-call': 'CallTask',
-  'swf-set': 'SetTask',
-  'swf-switch': 'SwitchTask',
-  'swf-raise': 'RaiseTask',
-  'swf-try': 'TryTask',
-  'swf-try-catch': 'TryCatchTask',
-};
-
 @customElement('swf-diagram')
 export class SwfDiagram extends DiagramBaseMixin(LitElement) {
-  @property({ attribute: false })
-  override schema: Record<string, unknown> = swfTaskSchema;
-
   @property({ attribute: 'layout-direction' })
   layoutDirection: 'DOWN' | 'RIGHT' = 'DOWN';
 
@@ -38,10 +26,6 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
     value: unknown,
   ): string {
     return applySwfPropertyEdit(yaml, nodePath, field, value);
-  }
-
-  protected _schemaTypeMap(): Record<string, string> {
-    return SWF_SCHEMA_TYPE_MAP;
   }
 
   protected override _layoutOptions() {

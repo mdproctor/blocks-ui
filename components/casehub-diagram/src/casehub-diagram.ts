@@ -24,14 +24,6 @@ import './casehub-diagram-palette.js';
 import './casehub-diagram-toolbar.js';
 import './casehub-diagram-properties.js';
 
-const SCHEMA_TYPE_MAP: Record<string, string> = {
-  binding: 'Binding',
-  worker: 'Worker',
-  milestone: 'Milestone',
-  goal: 'Goal',
-  subcase: 'SubCase',
-};
-
 const PALETTE_TYPES = ['binding', 'worker', 'milestone', 'goal'];
 
 const EMPTY_CASE_YAML = `dsl: "1.0.0"
@@ -68,10 +60,6 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
     value: unknown,
   ): string {
     return applyPropertyEdit(yaml, nodePath, field, value);
-  }
-
-  protected _schemaTypeMap(): Record<string, string> {
-    return SCHEMA_TYPE_MAP;
   }
 
   protected _paletteTypes(): string[] {

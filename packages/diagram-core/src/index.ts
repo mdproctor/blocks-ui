@@ -11,3 +11,4 @@ export type { FieldSchema } from './form/validation.js';
 export { renderTriggerEditor, detectTriggerType } from './form/trigger-editor.js';
 export type { TriggerType } from './form/trigger-editor.js';
 export { renderNestedGroup } from './form/nested-group.js';
+export { registerPropertySchema, getPropertySchema } from './schema-registry.js';

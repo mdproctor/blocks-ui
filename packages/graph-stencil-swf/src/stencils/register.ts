@@ -1,5 +1,7 @@
 import { html } from 'lit-html';
 import { registerStencil, registerEdgeType } from '@casehubio/graph-renderer';
+import { registerPropertySchema } from '@casehubio/diagram-core';
+import { swfTaskSchema } from '../schema/swf-task-schema.js';
 import { callGrammar, renderCall } from './call.js';
 import { setGrammar, renderSet } from './set.js';
 import { switchGrammar, renderSwitch } from './switch.js';
@@ -38,4 +40,15 @@ export function registerSwfStencils(): void {
 
   registerEdgeType({ type: 'flow', label: 'Flow' });
   registerEdgeType({ type: 'switch-case', label: 'Case', defaultStyle: '.switch-case-edge { stroke-dasharray: 4; }' });
+
+  const defs = (swfTaskSchema as any).$defs as Record<string, Record<string, unknown>> | undefined;
+  if (defs) {
+    const typeMap: Record<string, string> = {
+      CallTask: 'swf-call', SetTask: 'swf-set', SwitchTask: 'swf-switch',
+      RaiseTask: 'swf-raise', TryTask: 'swf-try', TryCatchTask: 'swf-try-catch',
+    };
+    for (const [defName, nodeType] of Object.entries(typeMap)) {
+      if (defs[defName]) registerPropertySchema(nodeType, defs[defName]);
+    }
+  }
 }

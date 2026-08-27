@@ -6,6 +6,7 @@ import type { PersistenceBackend, GraphModel, NodeDecoration } from '@casehubio/
 import type { Node, Edge } from '@xyflow/react';
 import { exportDiagram } from './diagram-export.js';
 import type { ExportFormat } from './diagram-export.js';
+import { getPropertySchema } from './schema-registry.js';
 
 export interface AdapterResult {
   readonly model: GraphModel;
@@ -20,7 +21,6 @@ type Constructor<T = {}> = new (...args: any[]) => T;
 export declare class DiagramBaseInterface {
   yaml: string;
   src: string;
-  schema: Record<string, unknown>;
   backend: PersistenceBackend | null;
   uri: string;
   readonly: boolean;
@@ -70,7 +70,6 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
   abstract class DiagramBase extends Base {
     @property() yaml = '';
     @property() src = '';
-    @property({ attribute: false }) schema: Record<string, unknown> = {};
     @property({ attribute: false }) backend: PersistenceBackend | null = null;
     @property() uri = '';
     @property({ type: Boolean }) readonly = false;
@@ -107,8 +106,6 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
       field: (string | number)[],
       value: unknown,
     ): string;
-
-    protected abstract _schemaTypeMap(): Record<string, string>;
 
     protected abstract _paletteTypes(): string[];
 
@@ -236,10 +233,7 @@ export function DiagramBaseMixin<T extends Constructor<LitElement>>(Base: T) {
         return;
       }
       this._selectedData = { ...node.properties };
-      const defKey = this._schemaTypeMap()[node.type];
-      if (defKey && this.schema.$defs) {
-        this._selectedSchema = (this.schema.$defs as Record<string, Record<string, unknown>>)[defKey] ?? {};
-      }
+      this._selectedSchema = getPropertySchema(node.type) ?? {};
     }
 
     protected _pushUndo(): void {
