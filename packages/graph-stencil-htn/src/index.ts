@@ -8,3 +8,5 @@ export { renderDagNode, dagNodeGrammar } from './stencils/dag-node.js';
 export { registerHtnStencils } from './stencils/register.js';
 
 export { dagToDecorations, nodeStatesToTaskStates } from './runtime/dag-runtime.js';
+
+export { dagNodeSchema, primitivePlanItemSchema, compoundPlanItemSchema } from './schemas/index.js';
