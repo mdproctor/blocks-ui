@@ -1,7 +1,7 @@
 import { html } from 'lit-html';
 import { registerStencil, registerEdgeType } from '@casehubio/graph-renderer';
 import { registerPropertySchema } from '@casehubio/diagram-core';
-import { swfTaskSchema } from '../schema/swf-task-schema.js';
+import { swfTaskSchema } from '../schemas/swf-task-schema';
 import { callGrammar, renderCall } from './call.js';
 import { setGrammar, renderSet } from './set.js';
 import { switchGrammar, renderSwitch } from './switch.js';
