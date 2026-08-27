@@ -1,9 +1,11 @@
 import { registerStencil } from '@casehubio/graph-renderer';
+import { registerPropertySchema } from '@casehubio/diagram-core';
 import { bindingGrammar, renderBinding } from './binding.js';
 import { workerGrammar, renderWorker } from './worker.js';
 import { milestoneGrammar, renderMilestone } from './milestone.js';
 import { goalGrammar, renderGoal } from './goal.js';
 import { subcaseGrammar, renderSubCase } from './subcase.js';
+import { milestoneSchema, goalSchema, subcaseSchema, bindingSchema, workerSchema } from '../schemas/index.js';
 
 const CURSOR_OVERRIDES = `
 .react-flow__pane { cursor: default !important; }
@@ -23,4 +25,10 @@ export function registerCaseStencils(): void {
   registerStencil({ type: 'milestone', label: 'Milestone', icon: 'flag', grammar: milestoneGrammar, render: renderMilestone });
   registerStencil({ type: 'goal', label: 'Goal', icon: 'target', grammar: goalGrammar, render: renderGoal });
   registerStencil({ type: 'subcase', label: 'SubCase', icon: 'layers', grammar: subcaseGrammar, render: renderSubCase });
+
+  registerPropertySchema('milestone', milestoneSchema);
+  registerPropertySchema('goal', goalSchema);
+  registerPropertySchema('subcase', subcaseSchema);
+  registerPropertySchema('binding', bindingSchema);
+  registerPropertySchema('worker', workerSchema);
 }

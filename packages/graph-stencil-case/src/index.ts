@@ -43,3 +43,4 @@ export {
   renderSequenceForm, renderUnknownForm, renderAuthConfig,
 } from './worker-function/forms/index.js';
 export type { OnChange } from './worker-function/forms/index.js';
+export { milestoneSchema, goalSchema, subcaseSchema, bindingSchema, workerSchema } from './schemas/index.js';
