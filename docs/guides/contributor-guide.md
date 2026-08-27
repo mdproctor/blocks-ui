@@ -89,7 +89,7 @@ Case domain adapter for the visual diagram editor (epic #103). Exports:
 - `addElement(yaml, elementType, defaults?)` → new YAML string — adds binding/worker/milestone/goal with generated defaults
 - `removeElement(yaml, nodePath)` → new YAML string — removes element by YAML path
 - `switchBindingTarget(yaml, bindingPath, targetType)` → new YAML string — switches binding target (capability/subCase/humanTask)
-- `registerCaseStencils()` — registers 5 stencil descriptors via pages `registerStencil()` (StencilDescriptor API with grammar, properties schema, render function)
+- `registerCaseStencils()` — registers 5 stencil descriptors via pages `registerStencil()` (StencilDescriptor API with grammar, properties schema, render function) and 5 property schemas via `registerPropertySchema` (milestone, goal, subcase, binding, worker)
 - `registerThumbnailRenderer(type, renderer)` / `getThumbnailRenderer(type)` — ThumbnailRenderer SPI for worker node previews (SWF thumbnails registered by the hosting app)
 - `GitHubBackend` — `PersistenceBackend` implementation using GitHub Contents API
 - `toDecorations(state: CaseRuntimeState)` → `ReadonlyMap<string, NodeDecoration>` — pure function mapping runtime state to visual decorations. PlanItem aggregation uses active-worst-first priority per binding; milestones map 1:1.
@@ -102,9 +102,11 @@ Each stencil's render function accepts `(node: GraphNode, decoration?: NodeDecor
 ### diagram-core (`packages/diagram-core`)
 
 Shared diagram orchestration extracted from casehub-diagram (#106). Exports:
-- `DiagramBaseMixin(LitElement)` — Lit mixin owning undo/redo, render pipeline (`_fullRender`/`_updateWithoutLayout`), dirty tracking, persistence (`_load`/`_save`), keyboard shortcuts, selected node state, mode toggle, `src` fetch with AbortController, error/degraded/readonly modes. Subclasses implement 5 abstract methods: `_adaptYaml`, `_applyPropertyEdit`, `_schemaTypeMap`, `_paletteTypes`, `_emptyTemplate`.
+- `DiagramBaseMixin(LitElement)` — Lit mixin owning undo/redo, render pipeline (`_fullRender`/`_updateWithoutLayout`), dirty tracking, persistence (`_load`/`_save`), keyboard shortcuts, selected node state, mode toggle, `src` fetch with AbortController, error/degraded/readonly modes. Subclasses implement 4 abstract methods: `_adaptYaml`, `_applyPropertyEdit`, `_paletteTypes`, `_emptyTemplate`.
+- `registerPropertySchema(nodeType, schema)` / `getPropertySchema(nodeType)` — schema registry (Map-based). `_updateSelectedNode()` uses registry lookup. Each stencil package registers schemas in its `register*Stencils()` function.
 - `DiagramToolbar` — base toolbar (save/dirty indicator)
 - `DiagramProperties` — generic schema-driven property panel with `renderPropertyForm`
+- Custom editor stubs: `BlocksPromptEditorElement` (textarea), `BlocksJsonEditorElement` (readonly JSON display) — for `x-editor-component` fields
 - Form utilities: `fieldTypeFor`, `validateField`, `renderNestedGroup`, `renderTriggerEditor`
 
 ### graph-stencil-swf (`packages/graph-stencil-swf`)
@@ -113,7 +115,7 @@ SWF domain adapter for the visual diagram editor (#106). Uses `@openworkflowspec
 - `toSwfGraph(yaml)` → `AdapterResult { model, yamlPaths, degraded? }` — dual YAML walk (SDK `buildFlatGraph` + YAML CST path walker), type prefixing (`swf-*`), integrity assertion
 - `applySwfPropertyEdit(yaml, nodePath, field, value)` → new YAML string — CST-preserving via `yaml` library
 - `registerSwfStencils()` — registers 10 typed stencils (call with sub-type icons, set, switch, raise, try, try-catch, start, end, entry, exit) + generic fallback, 2 edge types (flow, switch-case)
-- `swfTaskSchema` — static JSON Schema for SWF task types (CallTask, SetTask, SwitchTask, RaiseTask, TryTask, TryCatchTask)
+- `swfTaskSchema` — static JSON Schema for SWF task types with x-group/x-order/x-visibility annotations (CallTask, SetTask, SwitchTask, RaiseTask, TryTask, TryCatchTask). Registered per-$def via `registerPropertySchema` in `registerSwfStencils()`.
 - `createSwfThumbnailRenderer()` — SVG thumbnail renderer with layout caching
 - `wrapDoBlock(doBlock)` — wraps a `do:` array into a minimal SWF document envelope
 - `SWF_KNOWN_TYPES`, `SYNTHETIC_TYPES`, `SWF_TYPE_PREFIX` — type constants

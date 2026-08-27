@@ -44,3 +44,6 @@ export {
 } from './worker-function/forms/index.js';
 export type { OnChange } from './worker-function/forms/index.js';
 export { milestoneSchema, goalSchema, subcaseSchema, bindingSchema, workerSchema } from './schemas/index.js';
+export { BlocksEnvMapEditorElement } from './editors/blocks-env-map-editor.js';
+export { BlocksSequenceEditorElement } from './editors/blocks-sequence-editor.js';
+export { BlocksSwfLinkElement } from './editors/blocks-swf-link.js';

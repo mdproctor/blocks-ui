@@ -12,3 +12,5 @@ export { renderTriggerEditor, detectTriggerType } from './form/trigger-editor.js
 export type { TriggerType } from './form/trigger-editor.js';
 export { renderNestedGroup } from './form/nested-group.js';
 export { registerPropertySchema, getPropertySchema } from './schema-registry.js';
+export { BlocksPromptEditorElement } from './editors/blocks-prompt-editor.js';
+export { BlocksJsonEditorElement } from './editors/blocks-json-editor.js';
