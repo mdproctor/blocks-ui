@@ -192,7 +192,11 @@ public class SpeechProducers {
             @org.eclipse.microprofile.config.inject.ConfigProperty(
                     name = "casehub.speech.denoising.enabled",
                     defaultValue = "true")
-            jakarta.inject.Provider<Boolean> denoisingEnabled) {
+            jakarta.inject.Provider<Boolean> denoisingEnabled,
+            @org.eclipse.microprofile.config.inject.ConfigProperty(
+                    name = "casehub.speech.vad.enabled",
+                    defaultValue = "true")
+            jakarta.inject.Provider<Boolean> vadEnabled) {
         io.casehub.blocks.speech.StreamingSpeechDenoiserFactory denoiserFactory = null;
         try {
             denoiserFactory = io.casehub.blocks.speech.sherpa.SherpaOnnxStreamingSpeechDenoiser.withDefaults();
@@ -201,22 +205,30 @@ public class SpeechProducers {
             LOG.log(System.Logger.Level.WARNING, "Speech denoiser unavailable: " + e.getMessage());
         }
 
+        io.casehub.blocks.speech.VoiceActivityFilterFactory vadFactory = null;
+        try {
+            vadFactory = io.casehub.blocks.speech.sherpa.SherpaOnnxVoiceActivityFilter.withDefaults();
+            LOG.log(System.Logger.Level.INFO, "VAD loaded (Silero)");
+        } catch (Throwable e) {
+            LOG.log(System.Logger.Level.WARNING, "VAD unavailable: " + e.getMessage());
+        }
+
         try {
             io.casehub.blocks.speech.sherpa.WhisperLibrary.load();
             LOG.log(System.Logger.Level.INFO, "Using WhisperSpeechToText");
             whisperActive = true;
             var whisper = io.casehub.blocks.speech.sherpa.WhisperSpeechToText.withDefaults();
-            return denoiserFactory != null
-                    ? whisper.withStreamingDenoiser(denoiserFactory, denoisingEnabled::get)
-                    : whisper;
+            if (denoiserFactory != null) { whisper.withStreamingDenoiser(denoiserFactory, denoisingEnabled::get); }
+            if (vadFactory != null) { whisper.withVoiceActivityFilter(vadFactory, vadEnabled::get); }
+            return whisper;
         } catch (Throwable e) {
             LOG.log(System.Logger.Level.WARNING, "Whisper unavailable, falling back to Zipformer: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }
         LOG.log(System.Logger.Level.INFO, "Using Zipformer streaming STT");
         var zipformer = io.casehub.blocks.speech.sherpa.SherpaOnnxStreamingSpeechToText.withDefaults();
-        return denoiserFactory != null
-                ? zipformer.withStreamingDenoiser(denoiserFactory, denoisingEnabled::get)
-                : zipformer;}
+        if (denoiserFactory != null) { zipformer.withStreamingDenoiser(denoiserFactory, denoisingEnabled::get); }
+        if (vadFactory != null) { zipformer.withVoiceActivityFilter(vadFactory, vadEnabled::get); }
+        return zipformer;}
 
     void eagerNativeInit(@jakarta.enterprise.event.Observes io.quarkus.runtime.StartupEvent event,
                          io.casehub.blocks.speech.StreamingSpeechToTextService stt,
