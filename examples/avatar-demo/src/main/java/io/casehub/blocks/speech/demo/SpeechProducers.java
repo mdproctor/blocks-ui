@@ -188,17 +188,35 @@ public class SpeechProducers {
 
     @Produces
     @jakarta.inject.Singleton
-    io.casehub.blocks.speech.StreamingSpeechToTextService stt() {
+    io.casehub.blocks.speech.StreamingSpeechToTextService stt(
+            @org.eclipse.microprofile.config.inject.ConfigProperty(
+                    name = "casehub.speech.denoising.enabled",
+                    defaultValue = "true")
+            jakarta.inject.Provider<Boolean> denoisingEnabled) {
+        io.casehub.blocks.speech.StreamingSpeechDenoiserFactory denoiserFactory = null;
+        try {
+            denoiserFactory = io.casehub.blocks.speech.sherpa.SherpaOnnxStreamingSpeechDenoiser.withDefaults();
+            LOG.log(System.Logger.Level.INFO, "Speech denoiser loaded (GTCRN)");
+        } catch (Throwable e) {
+            LOG.log(System.Logger.Level.WARNING, "Speech denoiser unavailable: " + e.getMessage());
+        }
+
         try {
             io.casehub.blocks.speech.sherpa.WhisperLibrary.load();
             LOG.log(System.Logger.Level.INFO, "Using WhisperSpeechToText");
             whisperActive = true;
-            return io.casehub.blocks.speech.sherpa.WhisperSpeechToText.withDefaults();
+            var whisper = io.casehub.blocks.speech.sherpa.WhisperSpeechToText.withDefaults();
+            return denoiserFactory != null
+                    ? whisper.withStreamingDenoiser(denoiserFactory, denoisingEnabled::get)
+                    : whisper;
         } catch (Throwable e) {
             LOG.log(System.Logger.Level.WARNING, "Whisper unavailable, falling back to Zipformer: " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
         }
         LOG.log(System.Logger.Level.INFO, "Using Zipformer streaming STT");
-        return io.casehub.blocks.speech.sherpa.SherpaOnnxStreamingSpeechToText.withDefaults();}
+        var zipformer = io.casehub.blocks.speech.sherpa.SherpaOnnxStreamingSpeechToText.withDefaults();
+        return denoiserFactory != null
+                ? zipformer.withStreamingDenoiser(denoiserFactory, denoisingEnabled::get)
+                : zipformer;}
 
     void eagerNativeInit(@jakarta.enterprise.event.Observes io.quarkus.runtime.StartupEvent event,
                          io.casehub.blocks.speech.StreamingSpeechToTextService stt,
