@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { renderSparkline } from '@casehubio/pages-ui-components';
 import { LiveRegionMixin } from '@casehubio/pages-primitives';
-import { EventStreamController } from '@casehubio/pages-component';
+import { PushMixin } from '@casehubio/pages-component';
 
 export const KpiMetricRowTopics = {
   CARD_CLICKED: 'kpi.card-clicked',
@@ -22,20 +22,16 @@ export interface MetricDefinition {
 const TREND_ARROWS: Record<string, string> = { up: '▲', down: '▼', stable: '—' };
 
 @customElement('blocks-kpi-metric-row')
-export class KpiMetricRow extends LiveRegionMixin(LitElement) {
+export class KpiMetricRow extends PushMixin(LiveRegionMixin(LitElement)) {
   @property({ type: Array }) metrics: MetricDefinition[] = [];
   @property({ type: String }) endpoint: string | null = null;
   @property({ type: Number }) columns: number | null = null;
   @property({ type: String, reflect: true }) density: 'comfortable' | 'compact' | 'dense' = 'comfortable';
   @property({ type: Number, attribute: 'refresh-interval' }) refreshInterval: number | null = null;
-  @property({ attribute: 'push-url' }) pushUrl = '';
-  @property({ attribute: false }) pushTopics: string[] = [];
 
   @state() private _loading = false;
   @state() private _error: string | null = null;
   private _refreshTimer: ReturnType<typeof setInterval> | null = null;
-  private _pushStream: EventStreamController<MetricDefinition> | null = null;
-  private _lastPushEvent: MetricDefinition | undefined = undefined;
 
   static override styles = css`
     :host { display: block; font-family: var(--pages-font-family, system-ui); }
@@ -158,15 +154,11 @@ export class KpiMetricRow extends LiveRegionMixin(LitElement) {
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this._stopRefreshTimer();
-    this._pushStream = null;
   }
 
-  private _setupPush(): void {
-    this._pushStream = null;
-    if (this.pushUrl && this.pushTopics.length) {
-      this._pushStream = new EventStreamController<MetricDefinition>(this, this.pushUrl, this.pushTopics);
-      this._stopRefreshTimer();
-    }
+  protected override onPushEvent(event: unknown): void {
+    this._applyMetricUpdate(event as MetricDefinition);
+    this._stopRefreshTimer();
   }
 
   private _startRefreshTimer(): void {
@@ -204,19 +196,12 @@ export class KpiMetricRow extends LiveRegionMixin(LitElement) {
   }
 
   override willUpdate(changed: PropertyValues): void {
+    super.willUpdate(changed);
     if (changed.has('endpoint') && this.endpoint) {
       this._fetchMetrics();
     }
-    if (changed.has('pushUrl') || changed.has('pushTopics')) {
-      this._setupPush();
-    }
     if (changed.has('refreshInterval') || changed.has('endpoint')) {
       this._startRefreshTimer();
-    }
-    const latest = this._pushStream?.latest;
-    if (latest !== undefined && latest !== this._lastPushEvent) {
-      this._lastPushEvent = latest;
-      this._applyMetricUpdate(latest);
     }
   }
 
