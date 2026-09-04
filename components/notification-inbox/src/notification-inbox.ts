@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import type { WorkIdentity } from '@casehubio/blocks-ui-core';
 import { PagesConfirmDialog } from '@casehubio/pages-ui-components';
 import { KeyboardShortcutMixin, LiveRegionMixin } from '@casehubio/pages-primitives/a11y';
-import { EventStream } from '@casehubio/pages-data';
+import { PushMixin } from '@casehubio/pages-component';
 import '@casehubio/pages-table';
 import type { TableColumnConfig, ColumnRenderer, SelectionChangeDetail, RowActivateDetail } from '@casehubio/pages-table';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
@@ -98,7 +98,7 @@ const NOTIFICATION_RENDERERS: ReadonlyMap<ColumnId, ColumnRenderer> = new Map<Co
 
 // --- Component ---
 
-const NotificationInboxBase = LiveRegionMixin(KeyboardShortcutMixin(LitElement));
+const NotificationInboxBase = PushMixin(LiveRegionMixin(KeyboardShortcutMixin(LitElement)));
 
 @customElement('blocks-notification-inbox')
 export class NotificationInbox extends NotificationInboxBase {
@@ -109,8 +109,7 @@ export class NotificationInbox extends NotificationInboxBase {
   /** Injectable fetch for testing */
   fetchFn: typeof fetch = fetch;
 
-  @property({ attribute: 'push-url' }) pushUrl = '';
-  @property({ attribute: false }) pushTopics: string[] = [];
+
 
   // Internal state
   @state() private activeTab: InboxTab = 'inbox';
@@ -137,7 +136,7 @@ export class NotificationInbox extends NotificationInboxBase {
 
   // API
   private api?: NotificationApi;
-  private _pushStream: EventStream<Notification> | null = null;
+
 
   // Column renderers for pages-table
   private _columnRenderers = NOTIFICATION_RENDERERS;
@@ -418,13 +417,12 @@ export class NotificationInbox extends NotificationInboxBase {
     } else if (this.endpoint != null) {
       this.api = new NotificationApi(this.endpoint, this.fetchFn);
       this.fetchItems();
-      if (this.pushUrl) this._setupPush();
+      if (!this.pushTopics.length) this.pushTopics = ['notifications:*'];
     }
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    this._teardownPush();
   }
 
   // --- Data fetching ---
@@ -486,22 +484,8 @@ export class NotificationInbox extends NotificationInboxBase {
 
   // --- Push ---
 
-  private _setupPush(): void {
-    this._teardownPush();
-    if (!this.pushUrl) return;
-    const topics = this.pushTopics.length ? this.pushTopics : ['notifications:*'];
-    this._pushStream = new EventStream<Notification>(this.pushUrl, topics, {
-      onChange: () => {
-        const event = this._pushStream?.latest;
-        if (event) this._handlePushEvent(event);
-      },
-    });
-    this._pushStream.connect();
-  }
-
-  private _teardownPush(): void {
-    this._pushStream?.disconnect();
-    this._pushStream = null;
+  protected override onPushEvent(event: unknown): void {
+    this._handlePushEvent(event as Notification);
   }
 
   private _handlePushEvent(notification: Notification): void {

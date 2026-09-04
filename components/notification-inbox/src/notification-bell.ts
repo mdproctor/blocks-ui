@@ -2,7 +2,7 @@ import { LitElement, html, css, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { WorkIdentity } from '@casehubio/blocks-ui-core';
 import { FocusTrapMixin, KeyboardShortcutMixin } from '@casehubio/pages-primitives/a11y';
-import { EventStreamController } from '@casehubio/pages-component';
+import { PushMixin } from '@casehubio/pages-component';
 import { NotificationApi } from './api.js';
 
 /**
@@ -11,7 +11,7 @@ import { NotificationApi } from './api.js';
  * Connects to platform SSE endpoint for real-time badge updates.
  */
 @customElement('blocks-notification-bell')
-export class NotificationBell extends KeyboardShortcutMixin(FocusTrapMixin(LitElement)) {
+export class NotificationBell extends PushMixin(KeyboardShortcutMixin(FocusTrapMixin(LitElement))) {
   @property({ type: String }) endpoint?: string;
   @property({ type: Object }) identity?: WorkIdentity;
   @property({ type: Boolean, reflect: true }) open = false;
@@ -19,14 +19,9 @@ export class NotificationBell extends KeyboardShortcutMixin(FocusTrapMixin(LitEl
   /** Injectable fetch for testing */
   fetchFn: typeof fetch = fetch;
 
-  @property({ attribute: 'push-url' }) pushUrl = '';
-  @property({ attribute: false }) pushTopics: string[] = [];
-
   @state() private unreadCount = 0;
 
   private api?: NotificationApi;
-  private _pushStream: EventStreamController<{ count: number }> | null = null;
-  private _lastPushEvent: { count: number } | undefined = undefined;
   private buttonRef?: HTMLButtonElement | undefined;
 
   static override styles = css`
@@ -107,27 +102,16 @@ export class NotificationBell extends KeyboardShortcutMixin(FocusTrapMixin(LitEl
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this.removeEventListener('keydown', this.handleKeydown);
-    this._pushStream = null;
   }
 
   override updated(changed: PropertyValues<this>): void {
     super.updated(changed);
 
-    if (changed.has('endpoint') || changed.has('pushUrl') || changed.has('pushTopics')) {
-      this._pushStream = null;
+    if (changed.has('endpoint')) {
       if (this.endpoint != null) {
         this.api = new NotificationApi(this.endpoint, this.fetchFn);
         this.loadUnreadCount();
-        this._setupPush();
-      }
-    }
-
-    // Detect push event for unread count
-    const latest = this._pushStream?.latest;
-    if (latest !== undefined && latest !== this._lastPushEvent) {
-      this._lastPushEvent = latest;
-      if (typeof latest.count === 'number') {
-        this.unreadCount = latest.count;
+        if (!this.pushTopics.length) this.pushTopics = ['notifications:unread-count'];
       }
     }
 
@@ -138,6 +122,13 @@ export class NotificationBell extends KeyboardShortcutMixin(FocusTrapMixin(LitEl
       }
     } else if (changed.has('open') && !this.open) {
       this.releaseFocus();
+    }
+  }
+
+  protected override onPushEvent(event: unknown): void {
+    const data = event as { count?: number };
+    if (typeof data.count === 'number') {
+      this.unreadCount = data.count;
     }
   }
 
@@ -152,12 +143,6 @@ export class NotificationBell extends KeyboardShortcutMixin(FocusTrapMixin(LitEl
     } catch (e) {
       console.error('Failed to load unread count:', e);
     }
-  }
-
-  private _setupPush(): void {
-    if (!this.pushUrl) return;
-    const topics = this.pushTopics.length ? this.pushTopics : ['notifications:unread-count'];
-    this._pushStream = new EventStreamController<{ count: number }>(this, this.pushUrl, topics);
   }
 
   private handleKeydown = (e: KeyboardEvent): void => {
