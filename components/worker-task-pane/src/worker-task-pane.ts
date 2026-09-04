@@ -155,7 +155,9 @@ export class BlocksWorkerTaskPane extends WorkerTaskPaneBase {
   }
 
   private _handleSelection(payload: any): void {
-    const taskId = payload?.taskId ?? payload?.id;
+    const taskId = typeof payload?.text === 'function'
+      ? payload.text(TASK_ID_COL)
+      : (payload?.taskId ?? payload?.id);
     if (!taskId) return;
     const item = this._items.find(i => i.taskId === taskId);
     if (!item) return;
