@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { onPagesEvent, EventStream } from '@casehubio/pages-data';
+import { onPagesEvent } from '@casehubio/pages-data';
+import { PushMixin } from '@casehubio/pages-component';
 import '@casehubio/pages-table';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
 import { columnId, ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
@@ -17,7 +18,7 @@ const HEALTH_COL_DEFS = [
 ] as const;
 
 @customElement('blocks-session-detail')
-export class SessionDetail extends LitElement {
+export class SessionDetail extends PushMixin(LitElement) {
   @property({ type: String }) endpoint = '';
   @property({ type: String }) sessionId: string | undefined;
 
@@ -29,12 +30,10 @@ export class SessionDetail extends LitElement {
   @state() private _loading = false;
   @state() private _error: string | null = null;
 
-  @property({ attribute: 'push-url' }) pushUrl = '';
-  @property({ attribute: false }) pushTopics: string[] = [];
+  @property({ attribute: 'events-push-url' }) eventsPushUrl = '';
 
   private _terminalTimer: ReturnType<typeof setInterval> | null = null;
   private _healthTimer: ReturnType<typeof setInterval> | null = null;
-  private _pushStream: EventStream | null = null;
   private _unsubs: Array<() => void> = [];
 
   override connectedCallback(): void {
@@ -72,7 +71,17 @@ export class SessionDetail extends LitElement {
   private _teardownAll(): void {
     if (this._terminalTimer) { clearInterval(this._terminalTimer); this._terminalTimer = null; }
     if (this._healthTimer) { clearInterval(this._healthTimer); this._healthTimer = null; }
-    if (this._pushStream) { this._pushStream.disconnect(); this._pushStream = null; }
+    this.pushUrl = '';
+    this.pushTopics = [];
+  }
+
+  protected override onPushEvent(event: unknown): void {
+    const payload = event as Record<string, unknown>;
+    this._events = [...this._events, {
+      timestamp: new Date().toISOString(),
+      type: String(payload['type'] ?? 'event'),
+      data: JSON.stringify(payload),
+    }];
   }
 
   private _activateTab(tab: TabId): void {
@@ -93,22 +102,9 @@ export class SessionDetail extends LitElement {
         this._healthTimer = setInterval(() => { this._fetchHealth(); }, 10000);
         break;
       case 'events':
-        if (this.pushUrl && this.sessionId) {
-          const topics = this.pushTopics.length ? this.pushTopics : [`session:${this.sessionId}:events:*`];
-          this._pushStream = new EventStream(this.pushUrl, topics, {
-            onChange: () => {
-              const latest = this._pushStream?.latest;
-              if (latest) {
-                const payload = latest as Record<string, unknown>;
-                this._events = [...this._events, {
-                  timestamp: new Date().toISOString(),
-                  type: String(payload['type'] ?? 'event'),
-                  data: JSON.stringify(payload),
-                }];
-              }
-            },
-          });
-          this._pushStream.connect();
+        if (this.eventsPushUrl && this.sessionId) {
+          this.pushUrl = this.eventsPushUrl;
+          this.pushTopics = [`session:${this.sessionId}:events:*`];
         }
         break;
     }
