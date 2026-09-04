@@ -1,7 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
-import { EventStreamController } from '@casehubio/pages-component';
+import { PushMixin } from '@casehubio/pages-component';
 import type { ReconciliationSnapshot, ClusterReconciliationStatus, NodeReconciliationStatus } from './types.js';
 
 export const ReconciliationStatusTopics = {
@@ -18,17 +18,12 @@ const NODE_STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
 };
 
 @customElement('blocks-reconciliation-status')
-export class ReconciliationStatus extends LitElement {
+export class ReconciliationStatus extends PushMixin(LitElement) {
   @property({ attribute: false }) data: ReconciliationSnapshot | null = null;
   @property() endpoint?: string;
-  @property({ attribute: 'push-url' }) pushUrl = '';
-  @property({ attribute: false }) pushTopics: string[] = [];
 
   @state() private _fetchedData: ReconciliationSnapshot | null = null;
   @state() private _loading = false;
-
-  private _pushStream: EventStreamController<ReconciliationSnapshot> | null = null;
-  private _lastPushEvent: ReconciliationSnapshot | undefined = undefined;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -121,26 +116,15 @@ export class ReconciliationStatus extends LitElement {
     }
   `;
 
-  override disconnectedCallback(): void {
-    this._pushStream = null;
-    super.disconnectedCallback();
-  }
-
   override willUpdate(changed: PropertyValues): void {
+    super.willUpdate(changed);
     if (changed.has('endpoint') && this.endpoint && !this.data) {
       this._fetchFromEndpoint();
     }
-    if (changed.has('pushUrl') || changed.has('pushTopics')) {
-      this._pushStream = null;
-      if (this.pushUrl && this.pushTopics.length) {
-        this._pushStream = new EventStreamController<ReconciliationSnapshot>(this, this.pushUrl, this.pushTopics);
-      }
-    }
-    const latest = this._pushStream?.latest;
-    if (latest !== undefined && latest !== this._lastPushEvent) {
-      this._lastPushEvent = latest;
-      this.data = latest;
-    }
+  }
+
+  protected override onPushEvent(event: unknown): void {
+    this.data = event as ReconciliationSnapshot;
   }
 
   private async _fetchFromEndpoint(): Promise<void> {
