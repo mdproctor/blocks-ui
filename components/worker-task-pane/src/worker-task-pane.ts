@@ -85,6 +85,9 @@ export class BlocksWorkerTaskPane extends WorkerTaskPaneBase {
     .response-container { min-height: var(--worker-task-response-min-height, auto); }
     .empty-detail { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--pages-neutral-9, #888); font-size: 14px; }
     .error-banner { padding: 8px 12px; background: var(--pages-error-3, #fee); color: var(--pages-error-11, #c00); border-radius: 4px; font-size: 13px; margin-top: 8px; }
+    button { padding: 6px 16px; border: 1px solid var(--pages-neutral-6, #555); border-radius: 4px; background: var(--pages-neutral-3, #333); color: var(--pages-neutral-12, #e5e5e5); font-size: 13px; cursor: pointer; }
+    button:hover:not(:disabled) { background: var(--pages-neutral-4, #444); }
+    button:disabled, button[aria-disabled="true"] { opacity: 0.35; cursor: not-allowed; }
   `;
 
   override connectedCallback(): void {
@@ -166,6 +169,17 @@ export class BlocksWorkerTaskPane extends WorkerTaskPaneBase {
     this._submitError = null;
     this._showDeclineForm = false;
     this._claimed = !this.claimEndpoint || item.assigneeId === this.identity.userId;
+  }
+
+  override updated(changed: Map<string, unknown>): void {
+    super.updated(changed);
+    if (changed.has('_selectedItem')) {
+      const detailPane = this.shadowRoot?.querySelector('blocks-detail-pane') as any;
+      if (detailPane && this._selectedItem) {
+        detailPane._item = this._selectedItem;
+        detailPane.requestUpdate();
+      }
+    }
   }
 
   private _buildTaskContext(task: WorkerTaskResponse): WorkerTaskContext {
