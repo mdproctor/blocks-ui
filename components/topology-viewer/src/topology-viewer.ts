@@ -1,7 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
-import { EventStreamController } from '@casehubio/pages-component';
+import { PushMixin } from '@casehubio/pages-component';
 import type { GraphModel } from '@casehubio/graph-core';
 import type { TopologySnapshot, TopologyNode, TopologyEdge, TopologyNodeStatus } from './types.js';
 
@@ -35,19 +35,14 @@ function toGraphModel(snapshot: TopologySnapshot): GraphModel {
 }
 
 @customElement('blocks-topology-viewer')
-export class TopologyViewer extends LitElement {
+export class TopologyViewer extends PushMixin(LitElement) {
   @property({ attribute: false }) data: TopologySnapshot | null = null;
   @property() endpoint?: string;
   @property({ attribute: 'selection-topic' }) selectionTopic = 'topology.node-selected';
-  @property({ attribute: 'push-url' }) pushUrl = '';
-  @property({ attribute: false }) pushTopics: string[] = [];
 
   @state() private _graphModel: GraphModel | null = null;
   @state() private _fetchedData: TopologySnapshot | null = null;
   @state() private _loading = false;
-
-  private _pushStream: EventStreamController<{ serviceId: string; status: TopologyNodeStatus }> | null = null;
-  private _lastPushEvent: unknown = undefined;
 
   static override styles = css`
     :host { display: flex; flex-direction: column; height: 100%; font-family: var(--pages-font-family, system-ui); }
@@ -110,35 +105,25 @@ export class TopologyViewer extends LitElement {
       height: 100%; color: var(--pages-text-tertiary, #999); font-style: italic; }
   `;
 
-  override disconnectedCallback(): void {
-    this._pushStream = null;
-    super.disconnectedCallback();
-  }
-
   override willUpdate(changed: PropertyValues): void {
+    super.willUpdate(changed);
     if (changed.has('data') && this.data) {
       this._graphModel = toGraphModel(this.data);
     }
     if (changed.has('endpoint') && this.endpoint && !this.data) {
       this._fetchFromEndpoint();
     }
-    if (changed.has('pushUrl') || changed.has('pushTopics')) {
-      this._pushStream = null;
-      if (this.pushUrl && this.pushTopics.length) {
-        this._pushStream = new EventStreamController(this, this.pushUrl, this.pushTopics);
-      }
-    }
-    const latest = this._pushStream?.latest;
-    if (latest !== undefined && latest !== this._lastPushEvent) {
-      this._lastPushEvent = latest;
-      if (this.data && latest.serviceId) {
-        this.data = {
-          ...this.data,
-          services: this.data.services.map(s =>
-            s.id === latest.serviceId ? { ...s, status: latest.status } : s
-          ),
-        };
-      }
+  }
+
+  protected override onPushEvent(event: unknown): void {
+    const update = event as { serviceId: string; status: TopologyNodeStatus };
+    if (this.data && update.serviceId) {
+      this.data = {
+        ...this.data,
+        services: this.data.services.map(s =>
+          s.id === update.serviceId ? { ...s, status: update.status } : s
+        ),
+      };
     }
   }
 
