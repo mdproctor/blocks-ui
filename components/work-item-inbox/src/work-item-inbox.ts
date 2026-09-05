@@ -24,6 +24,7 @@ import {
 } from '@casehubio/blocks-ui-core';
 import { KeyboardShortcutMixin, LiveRegionMixin } from '@casehubio/pages-primitives';
 import { EventStream } from '@casehubio/pages-data';
+import { PushMixin } from '@casehubio/pages-component';
 import '@casehubio/pages-table';
 import '@casehubio/pages-ui-components';
 import type { TableColumnConfig, ColumnRenderer, SelectionChangeDetail, RowActivateDetail } from '@casehubio/pages-table';
@@ -77,7 +78,7 @@ const INBOX_COL_CONFIG: readonly TableColumnConfig[] = [
   { id: LABELS_COL, sortable: true, width: '1fr', visible: false },
 ];
 
-const WorkItemInboxBase = LiveRegionMixin(KeyboardShortcutMixin(LitElement));
+const WorkItemInboxBase = PushMixin(LiveRegionMixin(KeyboardShortcutMixin(LitElement)));
 
 @customElement('blocks-work-item-inbox')
 export class WorkItemInbox extends WorkItemInboxBase {
@@ -113,9 +114,6 @@ export class WorkItemInbox extends WorkItemInboxBase {
   private _unsubscribeQueueScope?: () => void;
   private _queuePushCleanup: (() => void) | null = null;
 
-  @property({ attribute: 'push-url' }) pushUrl = '';
-  @property({ attribute: false }) pushTopics: string[] = [];
-  private _pushStream: EventStream | null = null;
   private _queuePushStream: EventStream | null = null;
 
   private static _priorityColors: Record<string, string> = {
@@ -443,7 +441,9 @@ export class WorkItemInbox extends WorkItemInboxBase {
       this.items = this.data;
     } else if (this.endpoint != null) {
       this.fetchItems();
-      this._setupPush();
+      if (!this.pushTopics.length) {
+        this.pushTopics = ['work-items:lifecycle:*'];
+      }
     }
 
     this._unsubscribeQueueScope = onPagesEvent<QueueScopeChangedPayload>(
@@ -455,7 +455,6 @@ export class WorkItemInbox extends WorkItemInboxBase {
 
   override disconnectedCallback() {
     super.disconnectedCallback();
-    this._teardownPush();
     this._unsubscribeQueueScope?.();
     this._teardownQueuePush();
     this._queueFetchController?.abort();
@@ -469,23 +468,8 @@ export class WorkItemInbox extends WorkItemInboxBase {
     if (props.mode) this.mode = props.mode;
   }
 
-  private _setupPush(): void {
-    this._teardownPush();
-    if (!this.pushUrl) return;
-    const topics = this.pushTopics.length ? this.pushTopics : ['work-items:lifecycle:*'];
-    this._pushStream = new EventStream(this.pushUrl, topics, {
-      onChange: () => {
-        const event = this._pushStream?.latest;
-        if (event) this._handlePushEvent(event as WorkItemLifecycleEvent);
-      },
-    });
-    this._pushStream.connect();
-    this.announce('Live updates connected');
-  }
-
-  private _teardownPush(): void {
-    this._pushStream?.disconnect();
-    this._pushStream = null;
+  protected override onPushEvent(event: unknown): void {
+    this._handlePushEvent(event as WorkItemLifecycleEvent);
   }
 
   private _handlePushEvent(data: WorkItemLifecycleEvent): void {

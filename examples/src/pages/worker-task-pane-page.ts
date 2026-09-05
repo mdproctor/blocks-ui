@@ -1,5 +1,5 @@
 import { LitElement, html, css, type TemplateResult } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import '../../../components/worker-task-pane/src/worker-task-pane.js';
 import type { WorkerTaskResponse, WorkspaceDefinition } from '../../../components/worker-task-pane/src/types.js';
 import type { TabDefinition } from '../../../components/detail-pane/src/types.js';
@@ -40,10 +40,10 @@ const SEED_TASKS: WorkerTaskResponse[] = [
 class StubEntityWorkspace extends LitElement {
   static override styles = css`
     :host { display: block; padding: 16px; }
-    .fields { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
-    .label { font-weight: 600; color: var(--pages-neutral-11, #555); }
-    button { margin-top: 12px; padding: 6px 16px; cursor: pointer; border: 1px solid var(--pages-neutral-6, #ccc); border-radius: 4px; background: var(--pages-neutral-1, #fff); }
-    button:hover { background: var(--pages-neutral-3, #eee); }
+    .fields { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 13px; color: var(--pages-neutral-12, #e5e5e5); }
+    .label { font-weight: 600; color: var(--pages-neutral-9, #888); }
+    button { margin-top: 12px; padding: 6px 16px; cursor: pointer; border: 1px solid var(--pages-neutral-6, #555); border-radius: 4px; background: var(--pages-accent-3, #1e3a5f); color: var(--pages-neutral-12, #e5e5e5); font-size: 13px; }
+    button:hover { background: var(--pages-accent-4, #264d73); }
   `;
   @state() private _ctx: any = null;
   set taskContext(ctx: any) { this._ctx = ctx; }
@@ -65,13 +65,13 @@ class StubEntityWorkspace extends LitElement {
     `;
   }
 }
-customElements.define('stub-workspace-entity', StubEntityWorkspace);
+if (!customElements.get('stub-workspace-entity')) customElements.define('stub-workspace-entity', StubEntityWorkspace);
 
 class StubPatternWorkspace extends LitElement {
   static override styles = css`
     :host { display: block; padding: 16px; }
-    button { margin-top: 12px; padding: 6px 16px; cursor: pointer; border: 1px solid var(--pages-neutral-6, #ccc); border-radius: 4px; background: var(--pages-neutral-1, #fff); }
-    button:hover { background: var(--pages-neutral-3, #eee); }
+    button { margin-top: 12px; padding: 6px 16px; cursor: pointer; border: 1px solid var(--pages-neutral-6, #555); border-radius: 4px; background: var(--pages-accent-3, #1e3a5f); color: var(--pages-neutral-12, #e5e5e5); font-size: 13px; }
+    button:hover { background: var(--pages-accent-4, #264d73); }
   `;
   @state() private _ctx: any = null;
   set taskContext(ctx: any) { this._ctx = ctx; }
@@ -89,13 +89,13 @@ class StubPatternWorkspace extends LitElement {
     `;
   }
 }
-customElements.define('stub-workspace-pattern', StubPatternWorkspace);
+if (!customElements.get('stub-workspace-pattern')) customElements.define('stub-workspace-pattern', StubPatternWorkspace);
 
 class StubOsintWorkspace extends LitElement {
   static override styles = css`
     :host { display: block; padding: 16px; }
-    button { margin-top: 12px; padding: 6px 16px; cursor: pointer; border: 1px solid var(--pages-neutral-6, #ccc); border-radius: 4px; background: var(--pages-neutral-1, #fff); }
-    button:hover { background: var(--pages-neutral-3, #eee); }
+    button { margin-top: 12px; padding: 6px 16px; cursor: pointer; border: 1px solid var(--pages-neutral-6, #555); border-radius: 4px; background: var(--pages-accent-3, #1e3a5f); color: var(--pages-neutral-12, #e5e5e5); font-size: 13px; }
+    button:hover { background: var(--pages-accent-4, #264d73); }
   `;
   @state() private _ctx: any = null;
   set taskContext(ctx: any) { this._ctx = ctx; }
@@ -113,31 +113,47 @@ class StubOsintWorkspace extends LitElement {
     `;
   }
 }
-customElements.define('stub-workspace-osint', StubOsintWorkspace);
+if (!customElements.get('stub-workspace-osint')) customElements.define('stub-workspace-osint', StubOsintWorkspace);
 
 class StubContextSummary extends LitElement {
   static override styles = css`
     :host { display: block; padding: 12px; font-size: 13px; }
-    .row { display: flex; gap: 8px; margin-bottom: 4px; }
-    .key { font-weight: 600; min-width: 100px; color: var(--pages-neutral-11, #555); }
+    .row { display: flex; gap: 8px; margin-bottom: 6px; }
+    .key { font-weight: 600; min-width: 120px; color: var(--pages-neutral-9, #888); }
+    .value { color: var(--pages-neutral-12, #e5e5e5); }
   `;
-  @state() item: any = null;
+  @property({ attribute: false }) item: any = null;
   override render(): TemplateResult {
     if (!this.item) return html`<p style="color: var(--pages-neutral-9, #888)">No item selected</p>`;
     const summary = this.item.investigationSummary ?? {};
-    return html`${Object.entries(summary).map(([k, v]) => html`<div class="row"><span class="key">${k}:</span><span>${String(v)}</span></div>`)}`;
+    return html`${Object.entries(summary).map(([k, v]) => html`<div class="row"><span class="key">${k}:</span><span class="value">${String(v)}</span></div>`)}`;
   }
 }
-customElements.define('stub-context-summary', StubContextSummary);
+if (!customElements.get('stub-context-summary')) customElements.define('stub-context-summary', StubContextSummary);
 
 class StubContextHistory extends LitElement {
-  static override styles = css`:host { display: block; padding: 12px; font-size: 13px; color: var(--pages-neutral-9, #888); }`;
-  @state() item: any = null;
+  static override styles = css`
+    :host { display: block; padding: 12px; font-size: 13px; }
+    .entry { padding: 8px 0; border-bottom: 1px solid var(--pages-neutral-4, #333); }
+    .entry-time { font-size: 11px; color: var(--pages-neutral-9, #888); }
+    .entry-text { color: var(--pages-neutral-12, #e5e5e5); margin-top: 2px; }
+  `;
+  @property({ attribute: false }) item: any = null;
   override render(): TemplateResult {
-    return html`<p>History for case ${this.item?.caseId ?? '—'} would appear here.</p>`;
+    if (!this.item) return html`<p style="color: var(--pages-neutral-9, #888)">No item</p>`;
+    return html`
+      <div class="entry">
+        <div class="entry-time">${this.item.dispatchedAt ?? 'Unknown date'}</div>
+        <div class="entry-text">Task dispatched — ${this.item.capabilityTag} investigation for case ${this.item.caseId}</div>
+      </div>
+      <div class="entry">
+        <div class="entry-time">Auto-generated</div>
+        <div class="entry-text">Risk score: ${this.item.investigationSummary?.riskScore ?? '—'} — ${this.item.investigationSummary?.flagReason ?? 'No flag reason'}</div>
+      </div>
+    `;
   }
 }
-customElements.define('stub-context-history', StubContextHistory);
+if (!customElements.get('stub-context-history')) customElements.define('stub-context-history', StubContextHistory);
 
 const WORKSPACES: WorkspaceDefinition[] = [
   { capabilityTag: 'entity-resolution', tagName: 'stub-workspace-entity', label: 'Entity Resolution' },
