@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { TransitionRecord } from './types.js';
 import '@casehubio/pages-ui-components';
+import { formatTimestamp } from '@casehubio/blocks-ui-core';
 
 @customElement('commitment-transition-badge')
 export class CommitmentTransitionBadge extends LitElement {
@@ -15,15 +16,7 @@ export class CommitmentTransitionBadge extends LitElement {
     .actor { font-weight: 500; color: var(--pages-neutral-11, #333); }
   `;
 
-  private _formatRelativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-  }
+
 
   override render() {
     if (!this.transition) return nothing;
@@ -38,7 +31,7 @@ export class CommitmentTransitionBadge extends LitElement {
       ${!this.compact ? html`
         <span class="meta">
           ${actor ? html`<span class="actor">${actor}</span> · ` : nothing}
-          ${this._formatRelativeTime(timestamp)}
+          ${formatTimestamp(timestamp)}
         </span>
       ` : nothing}
     `;

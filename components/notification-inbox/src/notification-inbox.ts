@@ -13,28 +13,7 @@ import type { Notification, NotificationPage } from './types.js';
 import { NotificationApi } from './api.js';
 import { emitNotificationEvent, NotificationEventTopics } from './events.js';
 
-// --- Relative time helper ---
-
-export function relativeTime(isoDate: string): string {
-  const date = new Date(isoDate);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'now';
-  if (diffMins < 60) return `${diffMins}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays < 7) return `${diffDays}d`;
-  const weeks = Math.floor(diffDays / 7);
-  const remainDays = diffDays % 7;
-  if (diffDays < 30) return remainDays > 0 ? `${weeks}w${remainDays}d` : `${weeks}w`;
-  const months = Math.floor(diffDays / 30);
-  if (diffDays < 365) return `${months}mo`;
-  const years = Math.floor(diffDays / 365);
-  return `${years}y`;
-}
+import { formatTimestamp } from '@casehubio/blocks-ui-core';
 
 // --- Tab type ---
 
@@ -92,7 +71,7 @@ const NOTIFICATION_RENDERERS: ReadonlyMap<ColumnId, ColumnRenderer> = new Map<Co
   }],
   [N_CREATED_COL, (cell: CellValue) => {
     if (cell.type === 'NULL') return html``;
-    return html`${relativeTime((cell as { value: string }).value)}`;
+    return html`${formatTimestamp((cell as { value: string }).value, { style: 'compact' })}`;
   }],
 ]);
 

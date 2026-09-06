@@ -1,23 +1,20 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '@casehubio/pages-ui-components';
+import { formatTimestamp, statusBorderColour, entryCardStyles, badgeStyles } from '@casehubio/blocks-ui-core';
+import type { EntryCategory } from '@casehubio/blocks-ui-core';
 import type { ConversationPoint, ConversationEntry, SubTaskFinding, FlagEntry, ObligationChain } from './types.js';
 import '@casehubio/blocks-ui-core';
 
-const ENTRY_BORDER_COLOURS: Record<string, string> = {
-  RAISE: 'var(--pages-neutral-12, #111)',
-  AGREE: 'var(--pages-success-9, #16a34a)',
-  COUNTER: 'var(--pages-warning-9, #d97706)',
-  DISPUTE: 'var(--pages-error-9, #dc2626)',
-  QUALIFY: 'var(--pages-accent-9, #6366f1)',
-  FLAG_HUMAN: 'var(--pages-warning-9, #d97706)',
-  DECLINED: 'var(--pages-neutral-8, #9ca3af)',
-  VERIFIED: 'var(--pages-success-9, #16a34a)',
-  DEFERRED: 'var(--pages-neutral-8, #9ca3af)',
-  COMMENT: 'var(--pages-neutral-5, #d4d4d4)',
-  HUMAN_OVERRIDE: 'var(--pages-warning-9, #d97706)',
-  MEMO: 'var(--pages-neutral-4, #e5e7eb)',
-};
+function entryTypeCategory(entryType: string): EntryCategory {
+  switch (entryType) {
+    case 'AGREE': case 'VERIFIED': return 'success';
+    case 'COUNTER': case 'FLAG_HUMAN': case 'HUMAN_OVERRIDE': return 'warning';
+    case 'DISPUTE': return 'error';
+    case 'QUALIFY': return 'accent';
+    default: return 'neutral';
+  }
+}
 
 @customElement('blocks-point-detail')
 export class PointDetail extends LitElement {
@@ -33,34 +30,15 @@ export class PointDetail extends LitElement {
     this.setAttribute('aria-label', 'Conversation point detail');
   }
 
-  static override styles = css`
+  static override styles = [entryCardStyles, badgeStyles, css`
     :host { display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
     .detail-container { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
     .detail-header { display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--pages-neutral-4, #e5e7eb); }
     .detail-topic-row { display: flex; align-items: center; gap: 8px; }
     .detail-topic { font-size: 16px; font-weight: 600; color: var(--pages-neutral-12, #111); flex: 1; }
     .detail-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-    .badge {
-      display: inline-block; padding: 1px 5px; border-radius: 2px;
-      font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
-    }
-    .badge-priority { background: var(--pages-neutral-8, #9ca3af); color: white; }
-    .badge-scope { background: var(--pages-accent-2, #e0e7ff); color: var(--pages-accent-9, #6366f1); border: 1px solid var(--pages-accent-9, #6366f1); }
-    .badge-location { background: var(--pages-neutral-2, #f5f5f5); color: var(--pages-neutral-11, #6b7280); border: 1px solid var(--pages-neutral-5, #d4d4d4); font-family: 'SFMono-Regular', Consolas, monospace; }
     .thread { display: flex; flex-direction: column; gap: 8px; }
-    .entry-card {
-      padding: 8px 10px; border: 1px solid var(--pages-neutral-4, #e5e7eb);
-      border-radius: var(--pages-radius-sm, 4px);
-      background: var(--pages-neutral-1, #fafafa); border-left: 3px solid var(--pages-neutral-8, #9ca3af);
-    }
-    .entry-header {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
-      font-size: 11px; color: var(--pages-neutral-8, #9ca3af);
-    }
-    .entry-agent { font-weight: 600; color: var(--pages-neutral-11, #6b7280); }
     .entry-type { text-transform: lowercase; }
-    .entry-timestamp { margin-left: auto; font-size: 10px; }
-    .entry-content { color: var(--pages-neutral-12, #111); line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; font-size: 13px; }
     .section-header {
       font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
       color: var(--pages-neutral-8, #9ca3af); padding: 8px 0 4px;
@@ -90,30 +68,18 @@ export class PointDetail extends LitElement {
     }
     .obligation-header { font-size: 11px; color: var(--pages-neutral-8, #9ca3af); }
     .empty { color: var(--pages-neutral-8, #9ca3af); font-size: 12px; font-style: italic; text-align: center; padding: 24px; }
-  `;
-
-  private _formatTimestamp(timestamp: string): string {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
+  `];
 
   private _renderEntryCard(entry: ConversationEntry): TemplateResult {
     const custom = this.renderEntry?.(entry);
     if (custom) return custom;
-    const borderColour = ENTRY_BORDER_COLOURS[entry.entryType] ?? 'var(--pages-neutral-8, #9ca3af)';
+    const borderColour = statusBorderColour(entryTypeCategory(entry.entryType));
     return html`
       <div class="entry-card" style="border-left-color: ${borderColour}">
         <div class="entry-header">
           <span class="entry-agent">${entry.agentRole}</span>
           <span class="entry-type">${entry.entryType}</span>
-          ${entry.timestamp ? html`<span class="entry-timestamp">${this._formatTimestamp(entry.timestamp)}</span>` : nothing}
+          ${entry.timestamp ? html`<span class="entry-timestamp">${formatTimestamp(entry.timestamp)}</span>` : nothing}
         </div>
         <div class="entry-content">${entry.content}</div>
       </div>

@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { onPagesEvent } from '@casehubio/pages-data';
+import { formatTimestamp } from '@casehubio/blocks-ui-core';
 import type { ThreadStreamEntry, ThreadAnchor, ThreadInfo } from './types.js';
 
 const AGENT_LABELS: Record<string, string> = {
@@ -153,18 +154,7 @@ export class SelectionThreads extends LitElement {
     }
   }
 
-  private _formatTimestamp(timestamp?: string): string {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString();
-  }
+
 
   static override styles = css`
     :host {
@@ -377,7 +367,7 @@ export class SelectionThreads extends LitElement {
               <span class="entry-agent ${e.agentRole === 'HUMAN' ? 'human' : ''}">
                 ${e.agentRole === 'HUMAN' ? '\u{1F464} ' : ''}${AGENT_LABELS[e.agentRole] || e.agentRole}
               </span>
-              ${e.timestamp ? html` · ${this._formatTimestamp(e.timestamp)}` : nothing}
+              ${e.timestamp ? html` · ${formatTimestamp(e.timestamp)}` : nothing}
             </div>
             <div class="entry-content">${e.content}</div>
           </div>

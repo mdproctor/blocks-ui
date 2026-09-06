@@ -95,7 +95,7 @@ describe('debate-feed', () => {
     let selectedDetail: any = null;
     el.addEventListener('point-selected', (e: CustomEvent) => { selectedDetail = e.detail; });
 
-    const entryEl = el.shadowRoot!.querySelector('.entry');
+    const entryEl = el.shadowRoot!.querySelector('.entry-card');
     entryEl!.click();
 
     expect(selectedDetail).toBeTruthy();

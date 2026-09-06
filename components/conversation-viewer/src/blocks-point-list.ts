@@ -2,16 +2,13 @@ import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { lookupStatus, stateCategoryStyles } from '@casehubio/pages-ui-components/status-badge';
+import { statusBorderColour, badgeStyles, roundDividerStyles, selectedHighlightStyles } from '@casehubio/blocks-ui-core';
+import type { EntryCategory } from '@casehubio/blocks-ui-core';
 import type { ConversationPoint } from './types.js';
 
-const BORDER_COLOURS: Record<string, string> = {
-  active: 'var(--pages-accent-9, #6366f1)',
-  info: 'var(--pages-accent-9, #6366f1)',
-  success: 'var(--pages-success-9, #16a34a)',
-  danger: 'var(--pages-error-9, #dc2626)',
-  neutral: 'var(--pages-neutral-8, #9ca3af)',
-  warning: 'var(--pages-warning-9, #d97706)',
-  transfer: 'var(--pages-accent-9, #6366f1)',
+const CATEGORY_MAP: Record<string, EntryCategory> = {
+  active: 'accent', info: 'accent', success: 'success',
+  danger: 'error', neutral: 'neutral', warning: 'warning', transfer: 'accent',
 };
 
 @customElement('blocks-point-list')
@@ -23,16 +20,9 @@ export class PointList extends LitElement {
 
   @state() private _selectedPointId: string | null = null;
 
-  static override styles = css`
+  static override styles = [badgeStyles, roundDividerStyles, selectedHighlightStyles, css`
     :host { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
     .list-container { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-    .round-divider {
-      margin: 12px 0 4px; padding: 4px 10px;
-      border-bottom: 1px solid var(--pages-neutral-5, #d4d4d4);
-      color: var(--pages-neutral-8, #9ca3af); font-size: 11px;
-      font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .round-divider:first-child { margin-top: 0; }
     .point-item {
       padding: 8px 10px; border: 1px solid var(--pages-neutral-4, #e5e7eb);
       border-radius: var(--pages-radius-sm, 4px);
@@ -43,10 +33,6 @@ export class PointList extends LitElement {
     .point-item:hover:not(.selected) {
       border-color: var(--pages-accent-9, #6366f1);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-    .point-item.selected {
-      outline: 2px solid var(--pages-accent-9, #6366f1);
-      outline-offset: -2px; background: rgba(99, 102, 241, 0.08);
     }
     .point-header { display: flex; align-items: center; gap: 6px; }
     .point-icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
@@ -59,21 +45,9 @@ export class PointList extends LitElement {
       display: flex; gap: 6px; flex-wrap: wrap;
       font-size: 11px; color: var(--pages-neutral-8, #9ca3af);
     }
-    .badge {
-      display: inline-block; padding: 1px 5px; border-radius: 2px;
-      font-size: 9px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .badge-priority { background: var(--pages-neutral-8, #9ca3af); color: white; }
-    .badge-scope { background: var(--pages-accent-2, #e0e7ff); color: var(--pages-accent-9, #6366f1); border: 1px solid var(--pages-accent-9, #6366f1); }
-    .badge-location {
-      background: var(--pages-neutral-2, #f5f5f5); color: var(--pages-neutral-11, #6b7280);
-      border: 1px solid var(--pages-neutral-5, #d4d4d4);
-      font-family: 'SFMono-Regular', Consolas, monospace;
-    }
     .point-secondary { font-size: 11px; color: var(--pages-neutral-8, #9ca3af); }
     .empty { padding: 24px; text-align: center; color: var(--pages-neutral-8, #9ca3af); font-size: 12px; font-style: italic; }
-  `;
+  `];
 
   private _onPointClick(point: ConversationPoint): void {
     if (this._selectedPointId === point.id) {
@@ -93,7 +67,7 @@ export class PointList extends LitElement {
     if (custom) return custom;
 
     const descriptor = lookupStatus('conversation', point.status);
-    const borderColour = BORDER_COLOURS[descriptor.category] ?? BORDER_COLOURS.neutral;
+    const borderColour = statusBorderColour(CATEGORY_MAP[descriptor.category] ?? 'neutral');
     const isSelected = this._selectedPointId === point.id;
 
     return html`

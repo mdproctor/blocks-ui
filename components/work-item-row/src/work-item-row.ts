@@ -1,16 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { WorkItemResponse } from '@casehubio/blocks-ui-core';
-
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  return `${days}d`;
-}
+import { formatTimestamp } from '@casehubio/blocks-ui-core';
 
 @customElement('blocks-work-item-row')
 export class WorkItemRow extends LitElement {
@@ -62,7 +53,7 @@ export class WorkItemRow extends LitElement {
         <span class="title" title="${this.item.title}">${this.item.title}</span>
         <span class="status-pill">${this.item.status}</span>
         <span class="category">${this.item.category ?? ''}</span>
-        <span class="age">${relativeTime(this.item.createdAt)}</span>
+        <span class="age">${formatTimestamp(this.item.createdAt, { style: 'compact' })}</span>
       </div>
     `;
   }

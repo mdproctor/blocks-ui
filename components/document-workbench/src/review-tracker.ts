@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { onPagesEvent } from '@casehubio/pages-data';
+import { selectedHighlightStyles } from '@casehubio/blocks-ui-core';
 import type { DebateStreamEntry } from './types.js';
 
 interface DerivedPoint {
@@ -152,7 +153,7 @@ export class ReviewTracker extends LitElement {
     this._hideResolved = (e.target as HTMLInputElement).checked;
   }
 
-  static override styles = css`
+  static override styles = [selectedHighlightStyles, css`
     :host { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
     .tracker-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
     .placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--pages-neutral-8, #9ca3af); font-size: 13px; text-align: center; padding: 40px; }
@@ -180,7 +181,7 @@ export class ReviewTracker extends LitElement {
     .point-item.status-declined .point-summary { text-decoration: line-through; }
     .point-item.status-disputed { border-left: 3px solid var(--pages-error-9, #dc2626); }
     .point-item.qualify-active { border-left: 3px solid var(--pages-accent-9, #6366f1); }
-    .point-item.selected { outline: 2px solid var(--pages-accent-9, #6366f1); outline-offset: -2px; background: rgba(99, 102, 241, 0.08); }
+    .point-item.selected { }
     .point-item.status-human_override { border-left: 3px solid var(--human-badge, #e67e22); opacity: 0.6; }
     .point-actions { display: flex; gap: 4px; margin-top: 4px; }
     .action-btn { background: var(--pages-neutral-2, #f5f5f5); border: 1px solid var(--pages-neutral-5, #d4d4d4); color: var(--pages-neutral-8, #9ca3af); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 3px; }
@@ -191,7 +192,7 @@ export class ReviewTracker extends LitElement {
     .inline-input { display: flex; gap: 4px; margin-top: 4px; }
     .comment-input, .override-input { flex: 1; padding: 4px; background: var(--pages-neutral-1, #fafafa); border: 1px solid var(--pages-neutral-5, #d4d4d4); color: var(--pages-neutral-12, #111); font-size: 12px; border-radius: 3px; }
     .submit-btn { background: var(--pages-accent-9, #6366f1); color: #fff; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; }
-  `;
+  `];
 
   override render() {
     if (!this._configured) {

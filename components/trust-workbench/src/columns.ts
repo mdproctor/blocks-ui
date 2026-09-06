@@ -3,6 +3,7 @@ import { columnId, ColumnType } from '@casehubio/pages-data/dist/dataset/types.j
 import type { CellValue, ColumnId } from '@casehubio/pages-data/dist/dataset/types.js';
 import type { TableColumnConfig, ColumnRenderer } from '@casehubio/pages-table';
 import { PHASE_STYLES } from '@casehubio/blocks-ui-routing-rationale';
+import { formatTimestamp } from '@casehubio/blocks-ui-core';
 import type { RoutingDecisionSummary } from './types.js';
 
 export const ID_COL = columnId('id');
@@ -29,16 +30,7 @@ export const ROUTING_HISTORY_TABLE_CONFIG: readonly TableColumnConfig[] = [
   { id: PHASE_COL, sortable: true },
 ];
 
-function formatTimestamp(iso: string): string {
-  const d = new Date(iso);
-  const now = Date.now();
-  const diffMs = now - d.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
+
 
 export const DEFAULT_ROUTING_RENDERERS: ReadonlyMap<ColumnId, ColumnRenderer> = new Map([
   [TIMESTAMP_COL, (cell: CellValue) => {

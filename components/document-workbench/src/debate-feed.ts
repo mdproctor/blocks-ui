@@ -1,6 +1,8 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { onPagesEvent } from '@casehubio/pages-data';
+import { formatTimestamp, statusBorderColour, entryCardStyles, badgeStyles, roundDividerStyles } from '@casehubio/blocks-ui-core';
+import type { EntryCategory } from '@casehubio/blocks-ui-core';
 import type { DebateStreamEntry } from './types.js';
 
 const AGENT_LABELS: Record<string, string> = {
@@ -97,25 +99,18 @@ export class DebateFeed extends LitElement {
     }
   }
 
-  private _formatTimestamp(timestamp: string): string {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  private _entryCategory(entryType: string): EntryCategory {
+    switch (entryType) {
+      case 'AGREE': return 'success';
+      case 'COUNTER': return 'warning';
+      case 'DISPUTE': return 'error';
+      case 'QUALIFY': return 'accent';
+      case 'FLAG_HUMAN': return 'warning';
+      default: return 'neutral';
+    }
   }
 
-  static override styles = css`
+  static override styles = [entryCardStyles, badgeStyles, roundDividerStyles, css`
     :host {
       display: flex;
       flex-direction: column;
@@ -143,58 +138,18 @@ export class DebateFeed extends LitElement {
       padding: 40px;
     }
 
-    .round-divider {
-      margin: 20px 0 12px;
-      padding: 4px 10px;
-      border-bottom: 1px solid var(--pages-neutral-5, #d4d4d4);
-      color: var(--pages-neutral-8, #9ca3af);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .entry {
-      padding: 10px 12px;
-      border: 1px solid var(--pages-neutral-4, #e5e7eb);
-      border-radius: 3px;
-      background: var(--pages-neutral-1, #fafafa);
+    .entry-card {
       cursor: pointer;
       transition: all 0.15s;
     }
 
-    .entry:hover {
+    .entry-card:hover {
       border-color: var(--pages-accent-9, #6366f1);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
-    .entry-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-      font-size: 11px;
-      color: var(--pages-neutral-8, #9ca3af);
-    }
-
-    .entry-agent {
-      font-weight: 600;
-      color: var(--sepia, var(--pages-neutral-11, #6b7280));
-    }
     .entry-agent.human {
       color: var(--human-badge, #e67e22);
-    }
-
-    .entry-timestamp {
-      margin-left: auto;
-      font-size: 10px;
-    }
-
-    .entry-content {
-      color: var(--pages-neutral-12, #111);
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-wrap: break-word;
     }
 
     .entry-meta {
@@ -203,28 +158,6 @@ export class DebateFeed extends LitElement {
       gap: 6px;
       flex-wrap: wrap;
     }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 2px;
-      font-size: 9px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .badge-priority-high { background: var(--pages-error-9, #dc2626); color: white; }
-    .badge-priority-medium { background: var(--pages-warning-9, #d97706); color: white; }
-    .badge-priority-low { background: var(--pages-neutral-8, #9ca3af); color: white; }
-    .badge-scope { background: var(--pages-accent-2, #e0e7ff); color: var(--pages-accent-9, #6366f1); border: 1px solid var(--pages-accent-9, #6366f1); }
-    .badge-location { background: var(--chrome, var(--pages-neutral-2, #f5f5f5)); color: var(--sepia, var(--pages-neutral-11, #6b7280)); border: 1px solid var(--pages-neutral-5, #d4d4d4); font-family: 'SFMono-Regular', Consolas, monospace; }
-
-    .entry-raise { border-left: 3px solid var(--pages-neutral-12, #111); }
-    .entry-agree { border-left: 3px solid var(--pages-success-9, #16a34a); }
-    .entry-counter { border-left: 3px solid var(--pages-warning-9, #d97706); }
-    .entry-dispute { border-left: 3px solid var(--pages-error-9, #dc2626); }
-    .entry-qualify { border-left: 3px solid var(--pages-accent-9, #6366f1); }
 
     .entry-flag_human {
       border: 2px solid var(--pages-warning-9, #d97706);
@@ -295,13 +228,13 @@ export class DebateFeed extends LitElement {
       border-top: 1px dashed var(--pages-neutral-5, #d4d4d4);
       margin-top: 4px;
     }
-  `;
+  `];
 
   private _renderEntry(entry: DebateStreamEntry) {
     const typeClass = entry.entryType.toLowerCase();
 
     if (entry.entryType === 'RESTART_CONTEXT') {
-      return html`<div class="entry entry-restart_context"><span>── session branched ──</span></div>`;
+      return html`<div class="entry-card entry-restart_context"><span>── session branched ──</span></div>`;
     }
 
     const hasMeta = entry.priority || entry.scope || entry.location ||
@@ -310,11 +243,11 @@ export class DebateFeed extends LitElement {
         entry.entryType === 'SUB_TASK_ERROR'));
 
     return html`
-      <div class="entry entry-${typeClass}" @click=${() => this._onEntryClick(entry)}>
+      <div class="entry-card entry-${typeClass}" style="border-left-color: ${statusBorderColour(this._entryCategory(entry.entryType))}" @click=${() => this._onEntryClick(entry)}>
         <div class="entry-header">
           <span class="entry-agent ${entry.agentRole === 'HUMAN' ? 'human' : ''}">${entry.agentRole === 'HUMAN' ? '👤 ' : ''}${AGENT_LABELS[entry.agentRole] || entry.agentRole}</span>
           <span>${ENTRY_TYPE_LABELS[entry.entryType] || entry.entryType}</span>
-          ${entry.timestamp ? html`<span class="entry-timestamp">${this._formatTimestamp(entry.timestamp)}</span>` : nothing}
+          ${entry.timestamp ? html`<span class="entry-timestamp">${formatTimestamp(entry.timestamp)}</span>` : nothing}
         </div>
         <div class="entry-content">${entry.content}</div>
         ${hasMeta ? html`

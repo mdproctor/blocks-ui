@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { WorkItemResponse } from '@casehubio/blocks-ui-core';
+import { formatTimestamp } from '@casehubio/blocks-ui-core';
 import type { TableColumnConfig, ColumnRenderer, SelectionChangeDetail, RowActivateDetail } from '@casehubio/pages-table';
 import '@casehubio/pages-table';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
@@ -15,14 +16,7 @@ interface WorkItemRootResponse {
   groupStatus: string | null;
 }
 
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
-}
+
 
 @customElement('blocks-example-data-table')
 export class DataTablePage extends LitElement {
@@ -61,7 +55,7 @@ export class DataTablePage extends LitElement {
     }],
     [columnId('created'), (cell: CellValue) => {
       if (cell.type === 'NULL') return '';
-      return relativeTime((cell as { value: string }).value);
+      return formatTimestamp((cell as { value: string }).value, { style: 'compact' });
     }],
   ]);
 
