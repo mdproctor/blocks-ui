@@ -195,6 +195,16 @@ export class ChannelMessageElement extends LitElement {
     }
   };
 
+  private get _hasExpandableContent(): boolean {
+    const m = this.message;
+    if (!m) return false;
+    return !!(
+      (m.artefactRefs && m.artefactRefs.length > 0) ||
+      m.commitmentId ||
+      m.correlationId
+    );
+  }
+
   private _toggle() {
     this._expanded = !this._expanded;
   }
@@ -257,9 +267,7 @@ export class ChannelMessageElement extends LitElement {
             <span class="meta-item"><span class="meta-label">Channel:</span> ${this.channelName}</span>
           ` : nothing}
         </div>
-        <div class="action-bar">
-          <pages-button class="reply-btn" variant="ghost" size="sm" @click=${this._onReply}>↩ Reply</pages-button>
-        </div>
+
       </div>
     `;
   }
@@ -280,9 +288,11 @@ export class ChannelMessageElement extends LitElement {
           ` : nothing}
           <span class="sender">${displaySender}</span>
           <time datetime=${m.createdAt}>${this._formatTime(m.createdAt)}</time>
-          <pages-button class="expand-toggle" variant="ghost" size="sm" @click=${this._toggle} aria-expanded=${this._expanded}>
-            ${this._expanded ? '▼' : '▶'}
-          </pages-button>
+          ${this._hasExpandableContent ? html`
+            <pages-button class="expand-toggle" variant="ghost" size="sm" @click=${this._toggle} aria-expanded=${this._expanded}>
+              ${this._expanded ? '▼' : '▶'}
+            </pages-button>
+          ` : nothing}
         </div>
         <div class="content">${this.renderContent?.(m) ?? unsafeHTML(renderMarkdown(m.content))}</div>
       ${m.messageType === 'HANDOFF' && m.target ? html`

@@ -147,8 +147,40 @@ describe('blocks-channel-message', () => {
     expect(time!.getAttribute('datetime')).toBe('2026-07-07T12:00:00Z');
   });
 
-  it('expand toggle works', async () => {
+  it('hides expand toggle on message with no expandable content', async () => {
     const el = await renderMessage();
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeNull();
+  });
+
+  it('shows expand toggle when artefactRefs present', async () => {
+    const el = await renderMessage({
+      message: { artefactRefs: [{ uri: 'doc:spec.md', type: 'DOCUMENT', label: 'Spec' }] },
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeTruthy();
+  });
+
+  it('shows expand toggle when commitmentId present', async () => {
+    const el = await renderMessage({
+      message: { messageType: 'COMMAND', commitmentId: 'c-123' },
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeTruthy();
+  });
+
+  it('shows expand toggle when correlationId present', async () => {
+    const el = await renderMessage({
+      message: { correlationId: 'corr-1' },
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeTruthy();
+  });
+
+  it('expand toggle works when expandable', async () => {
+    const el = await renderMessage({
+      message: { commitmentId: 'c-1', messageType: 'COMMAND' },
+    });
     const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     toggle.click();
@@ -157,24 +189,22 @@ describe('blocks-channel-message', () => {
     expect(el.shadowRoot!.querySelector('.expanded-section')).toBeTruthy();
   });
 
-  it('reply button emits channel:message-selected event', async () => {
-    const el = await renderMessage();
+  it('expanded section has no action bar (reply moved to hover toolbar)', async () => {
+    const el = await renderMessage({
+      message: { commitmentId: 'c-1', messageType: 'COMMAND' },
+    });
     const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
     toggle.click();
     await (el as any).updateComplete;
 
-    const handler = vi.fn();
-    el.addEventListener('pages-event', handler);
-    const replyBtn = el.shadowRoot!.querySelector('.reply-btn') as HTMLButtonElement;
-    replyBtn.click();
-
-    expect(handler).toHaveBeenCalledOnce();
-    expect(handler.mock.calls[0]![0]!.detail.topic).toBe(ChannelEventTopics.MESSAGE_SELECTED);
-    expect(handler.mock.calls[0]![0]!.detail.payload.message.id).toBe('msg-1');
+    const actionBar = el.shadowRoot!.querySelector('.action-bar');
+    expect(actionBar).toBeNull();
   });
 
   it('collapses on Escape key', async () => {
-    const el = await renderMessage();
+    const el = await renderMessage({
+      message: { commitmentId: 'c-1', messageType: 'COMMAND' },
+    });
     const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
     toggle.click();
     await (el as any).updateComplete;
@@ -203,7 +233,7 @@ describe('blocks-channel-message', () => {
     const parent = makeMessage({ id: 'parent-1', sender: 'claudony-worker-bob', actorType: 'AGENT', content: 'Original question' });
     const formatSender = (s: string) => s.replace('claudony-worker-', '');
     const el = await renderMessage({
-      message: { inReplyTo: 'parent-1' },
+      message: { inReplyTo: 'parent-1', correlationId: 'corr-1' },
       parentMessage: parent,
       formatSender,
     });
