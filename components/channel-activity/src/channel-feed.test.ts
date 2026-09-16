@@ -735,4 +735,53 @@ describe('blocks-channel-feed', () => {
     const item = el.shadowRoot!.querySelector('.message-item') as HTMLElement;
     expect(item.style.background).toBe('var(--pages-success-3)');
   });
+
+  it('renders hover toolbar when message is hovered', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('m1', { sender: 'alice' })];
+    el.currentActorId = 'alice';
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgItem = el.shadowRoot!.querySelector('.message-item') as HTMLElement;
+    msgItem.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    await el.updateComplete;
+
+    const toolbar = el.shadowRoot!.querySelector('blocks-channel-hover-toolbar');
+    expect(toolbar).toBeTruthy();
+  });
+
+  it('hides hover toolbar when mouse leaves message', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('m1', { sender: 'alice' })];
+    el.currentActorId = 'alice';
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgItem = el.shadowRoot!.querySelector('.message-item') as HTMLElement;
+    msgItem.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector('blocks-channel-hover-toolbar')).toBeTruthy();
+
+    msgItem.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    await new Promise(r => setTimeout(r, 150));
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector('blocks-channel-hover-toolbar')).toBeNull();
+  });
+
+  it('passes currentActorId to hover toolbar', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('m1', { sender: 'alice' })];
+    el.currentActorId = 'alice';
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgItem = el.shadowRoot!.querySelector('.message-item') as HTMLElement;
+    msgItem.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    await el.updateComplete;
+
+    const toolbar = el.shadowRoot!.querySelector('blocks-channel-hover-toolbar') as any;
+    expect(toolbar.currentActorId).toBe('alice');
+    expect(toolbar.message.id).toBe('m1');
+  });
 });
