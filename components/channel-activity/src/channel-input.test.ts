@@ -395,6 +395,89 @@ describe('blocks-channel-input', () => {
     expect(btn.disabled).toBe(false);
   });
 
+  // --- Correction editor mode (#34 Batch 4) ---
+
+  it('shows correction banner when correctionTarget is set', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    el.correctionTarget = { id: 'msg-1', content: 'Old text', sender: 'alice', createdAt: '2026-09-15T14:23:00Z' };
+    document.body.appendChild(el);
+    await el.updateComplete;
+    const banner = el.shadowRoot!.querySelector('.correction-banner');
+    expect(banner).toBeTruthy();
+    expect(banner!.textContent).toContain('Correcting');
+    expect(banner!.textContent).toContain('alice');
+  });
+
+  it('pre-fills textarea with original content in correction mode', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    el.correctionTarget = { id: 'msg-1', content: 'Old text', sender: 'alice', createdAt: '2026-09-15T14:23:00Z' };
+    document.body.appendChild(el);
+    await el.updateComplete;
+    const textarea = el.shadowRoot!.querySelector('textarea') as HTMLTextAreaElement;
+    expect(textarea.value).toBe('Old text');
+  });
+
+  it('shows checkmark icon on send button in correction mode', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    el.correctionTarget = { id: 'msg-1', content: 'Old text', sender: 'alice', createdAt: '2026-09-15T14:23:00Z' };
+    document.body.appendChild(el);
+    await el.updateComplete;
+    const btn = el.shadowRoot!.querySelector('.send-btn');
+    expect(btn?.getAttribute('aria-label')).toBe('Confirm correction');
+  });
+
+  it('emits CORRECT_MESSAGE on send in correction mode', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    el.correctionTarget = { id: 'msg-1', content: 'Old text', sender: 'alice', createdAt: '2026-09-15T14:23:00Z' };
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const handler = vi.fn();
+    el.addEventListener('pages-event', handler);
+    const textarea = el.shadowRoot!.querySelector('textarea')!;
+    textarea.value = 'New text';
+    textarea.dispatchEvent(new Event('input'));
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+    expect(handler).toHaveBeenCalledOnce();
+    const detail = handler.mock.calls[0]![0]!.detail;
+    expect(detail.topic).toBe(ChannelEventTopics.CORRECT_MESSAGE);
+    expect(detail.payload.messageId).toBe('msg-1');
+    expect(detail.payload.correctedContent).toBe('New text');
+  });
+
+  it('cancels correction mode when cancel button clicked', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    el.correctionTarget = { id: 'msg-1', content: 'Old text', sender: 'alice', createdAt: '2026-09-15T14:23:00Z' };
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    el.shadowRoot!.querySelector('.correction-cancel')!.click();
+    await el.updateComplete;
+
+    expect(el.correctionTarget).toBeUndefined();
+    expect(el.shadowRoot!.querySelector('.correction-banner')).toBeNull();
+  });
+
+  it('cancels correction mode on Escape key', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    el.correctionTarget = { id: 'msg-1', content: 'Old text', sender: 'alice', createdAt: '2026-09-15T14:23:00Z' };
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const textarea = el.shadowRoot!.querySelector('textarea')!;
+    textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await el.updateComplete;
+
+    expect(el.correctionTarget).toBeUndefined();
+  });
+
   it('clicking send button sends the message', async () => {
     const el = document.createElement('blocks-channel-input') as any;
     el.channelId = 'ch-1';

@@ -2,7 +2,7 @@ import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { ChannelEventTopics } from './events.js';
-import { MESSAGE_TYPES, type MessageType, type QhorusTopic } from './types.js';
+import { MESSAGE_TYPES, type MessageType, type QhorusTopic, type QhorusMessage } from './types.js';
 import '@casehubio/pages-ui-components';
 
 @customElement('blocks-channel-input')
@@ -18,6 +18,7 @@ export class ChannelInputElement extends LitElement {
   @property({ type: String }) topicId = '';
   @property({ type: Array }) topics: QhorusTopic[] = [];
   @property({ type: Boolean }) showTopicSelector = false;
+  @property({ attribute: false }) correctionTarget?: Pick<QhorusMessage, 'id' | 'content' | 'sender' | 'createdAt'>;
 
   @state() private _text = '';
   @state() private _error = '';
@@ -138,6 +139,25 @@ export class ChannelInputElement extends LitElement {
       color: var(--pages-neutral-8, #999);
       cursor: default;
     }
+    .correction-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      background: var(--pages-warning-2, #fefce8);
+      border: 1px solid var(--pages-warning-6, #facc15);
+      border-radius: var(--pages-radius-sm, 4px);
+      margin-bottom: var(--pages-space-2, 8px);
+      font-size: var(--pages-font-size-xs, 11px);
+      color: var(--pages-warning-11, #854d0e);
+    }
+    .correction-cancel {
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: var(--pages-neutral-8, #888);
+      font-size: 14px;
+    }
   `;
 
   computeAvailableTypes(): MessageType[] {
@@ -156,6 +176,10 @@ export class ChannelInputElement extends LitElement {
   }
 
   private _handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && this.correctionTarget) {
+      this._cancelCorrection();
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       this._send();
@@ -178,22 +202,38 @@ export class ChannelInputElement extends LitElement {
     if (!content || !this.channelId) return;
 
     this._error = '';
-    emitPagesEvent(this, ChannelEventTopics.SEND_MESSAGE, {
-      channelId: this.channelId,
-      content,
-      ...(this.replyTo ? { inReplyTo: this.replyTo.messageId } : {}),
-      ...(this.showTypeSelector ? { speechAct: this._selectedType } : {}),
-      ...(this.showTopicSelector && this.topicId ? { topicId: this.topicId } : {}),
-    });
+
+    if (this.correctionTarget) {
+      emitPagesEvent(this, ChannelEventTopics.CORRECT_MESSAGE, {
+        messageId: this.correctionTarget.id,
+        correctedContent: content,
+      });
+      this.correctionTarget = undefined;
+    } else {
+      emitPagesEvent(this, ChannelEventTopics.SEND_MESSAGE, {
+        channelId: this.channelId,
+        content,
+        ...(this.replyTo ? { inReplyTo: this.replyTo.messageId } : {}),
+        ...(this.showTypeSelector ? { speechAct: this._selectedType } : {}),
+        ...(this.showTopicSelector && this.topicId ? { topicId: this.topicId } : {}),
+      });
+      this.replyTo = undefined;
+    }
 
     this._text = '';
     this._textarea.value = '';
     this._textarea.style.height = 'auto';
-    this.replyTo = undefined;
   }
 
   private _cancelReply() {
     this.replyTo = undefined;
+  }
+
+  private _cancelCorrection() {
+    this.correctionTarget = undefined;
+    this._text = '';
+    this._textarea.value = '';
+    this._textarea.style.height = 'auto';
   }
 
   private _onTypeChange(e: Event) {
@@ -204,11 +244,28 @@ export class ChannelInputElement extends LitElement {
     this._error = error;
   }
 
+  override updated(changed: Map<string, unknown>) {
+    if (changed.has('correctionTarget') && this.correctionTarget) {
+      this._text = this.correctionTarget.content;
+      if (this._textarea) {
+        this._textarea.value = this.correctionTarget.content;
+        this._autoResize();
+      }
+    }
+  }
+
   override render() {
     const availableTypes = this.computeAvailableTypes();
+    const inCorrectionMode = !!this.correctionTarget;
 
     return html`
-      ${this.replyTo ? html`
+      ${inCorrectionMode ? html`
+        <div class="correction-banner">
+          <span>Correcting message from <strong>${this.correctionTarget!.sender}</strong></span>
+          <pages-button class="correction-cancel" variant="ghost" size="sm" aria-label="Cancel correction" @click=${this._cancelCorrection}>✕</pages-button>
+        </div>
+      ` : nothing}
+      ${!inCorrectionMode && this.replyTo ? html`
         <div class="reply-banner">
           <span>Replying to <strong>${this.replyTo.senderName}</strong></span>
           <pages-button class="reply-cancel" variant="ghost" size="sm" aria-label="Cancel reply" @click=${this._cancelReply}>✕</pages-button>
@@ -236,12 +293,18 @@ export class ChannelInputElement extends LitElement {
         ></textarea>
         <button class="send-btn"
           ?disabled=${!this._hasContent}
-          title="Send message"
-          aria-label="Send message"
+          title=${inCorrectionMode ? 'Confirm correction' : 'Send message'}
+          aria-label=${inCorrectionMode ? 'Confirm correction' : 'Send message'}
           @click=${this._send}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-          </svg>
+          ${inCorrectionMode ? html`
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          ` : html`
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          `}
         </button>
       </div>
       ${this._error ? (this.renderError?.(this._error) ?? html`<div class="error">${this._error}</div>`) : nothing}
