@@ -142,7 +142,7 @@ describe('blocks-channel-input', () => {
 
     const select = el.shadowRoot!.querySelector('.type-selector select') as HTMLSelectElement;
     expect(select).toBeTruthy();
-    expect(select.options.length).toBe(9);
+    expect(select.options.length).toBe(11);
   });
 
   it('allowedTypes filters the type selector', async () => {
@@ -169,7 +169,7 @@ describe('blocks-channel-input', () => {
     const select = el.shadowRoot!.querySelector('.type-selector select') as HTMLSelectElement;
     const values = Array.from(select.options).map(o => o.value);
     expect(values).not.toContain('EVENT');
-    expect(values.length).toBe(8);
+    expect(values.length).toBe(10);
   });
 
   it('deniedTypes takes precedence over allowedTypes', async () => {
@@ -279,7 +279,7 @@ describe('blocks-channel-input', () => {
     await el.updateComplete;
 
     const select = el.shadowRoot!.querySelector('.type-selector select') as HTMLSelectElement;
-    expect(select.options.length).toBe(9);
+    expect(select.options.length).toBe(11);
   });
 
   // --- Topic Selector ---
