@@ -340,6 +340,7 @@ export class ChannelFeedElement extends ChannelFeedBase {
     const feed = this.renderRoot.querySelector('.feed');
     if (feed) {
       feed.addEventListener('scroll', this._onFeedScroll);
+      feed.addEventListener('keydown', this._onFeedKeydown);
     }
   }
 
@@ -348,8 +349,25 @@ export class ChannelFeedElement extends ChannelFeedBase {
     const feed = this.renderRoot.querySelector('.feed');
     if (feed) {
       feed.removeEventListener('scroll', this._onFeedScroll);
+      feed.removeEventListener('keydown', this._onFeedKeydown);
     }
   }
+
+  private _onFeedKeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && this._hoveredMessageId) {
+      this._hoveredMessageId = null;
+      this._isHoveringToolbar = false;
+      return;
+    }
+    if (e.key === 'Enter') {
+      const target = e.target as HTMLElement;
+      const msgItem = target.closest?.('[data-message-id]') as HTMLElement | null;
+      if (msgItem) {
+        const msgId = msgItem.getAttribute('data-message-id');
+        if (msgId) this._onMessageEnter(msgId);
+      }
+    }
+  };
 
   private _onFeedScroll = () => {
     const feed = this.renderRoot.querySelector('.feed');

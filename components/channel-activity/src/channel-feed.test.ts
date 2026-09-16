@@ -784,4 +784,37 @@ describe('blocks-channel-feed', () => {
     expect(toolbar.currentActorId).toBe('alice');
     expect(toolbar.message.id).toBe('m1');
   });
+
+  it('shows toolbar on Enter key when message is focused', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('m1', { sender: 'alice' })];
+    el.currentActorId = 'alice';
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgItem = el.shadowRoot!.querySelector('.message-item') as HTMLElement;
+    msgItem.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }));
+    await el.updateComplete;
+
+    const toolbar = el.shadowRoot!.querySelector('blocks-channel-hover-toolbar');
+    expect(toolbar).toBeTruthy();
+  });
+
+  it('dismisses toolbar on Escape key', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [msg('m1', { sender: 'alice' })];
+    el.currentActorId = 'alice';
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgItem = el.shadowRoot!.querySelector('.message-item') as HTMLElement;
+    msgItem.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }));
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector('blocks-channel-hover-toolbar')).toBeTruthy();
+
+    const feedDiv = el.shadowRoot!.querySelector('.feed') as HTMLElement;
+    feedDiv.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector('blocks-channel-hover-toolbar')).toBeNull();
+  });
 });
