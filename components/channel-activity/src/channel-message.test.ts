@@ -53,17 +53,26 @@ describe('blocks-channel-message', () => {
     expect(shadow.innerHTML).toContain('<strong>bold</strong>');
   });
 
-  it('renders speech act badge by default', async () => {
+  it('renders colored left border instead of speech act badge', async () => {
     const el = await renderMessage({ message: { messageType: 'COMMAND' } });
     const badge = el.shadowRoot!.querySelector('.speech-act-badge');
-    expect(badge).toBeTruthy();
-    expect(badge!.textContent!.trim()).toBe('COMMAND');
+    expect(badge).toBeNull();
+    const container = el.shadowRoot!.querySelector('.message-container');
+    expect(container).toBeTruthy();
+    const style = container!.getAttribute('style');
+    expect(style).toContain('border-left');
   });
 
-  it('hides speech act badge when showSpeechAct=false', async () => {
-    const el = await renderMessage({ showSpeechAct: false });
-    const badge = el.shadowRoot!.querySelector('.speech-act-badge');
-    expect(badge).toBeNull();
+  it('includes aria-label with speech act type', async () => {
+    const el = await renderMessage({ message: { messageType: 'COMMAND' } });
+    const container = el.shadowRoot!.querySelector('.message-container');
+    expect(container?.getAttribute('aria-label')).toContain('COMMAND');
+  });
+
+  it('includes title tooltip with speech act type', async () => {
+    const el = await renderMessage({ message: { messageType: 'COMMAND' } });
+    const container = el.shadowRoot!.querySelector('.message-container');
+    expect(container?.getAttribute('title')).toBe('COMMAND');
   });
 
   it('renders actor icon by default', async () => {
@@ -79,24 +88,25 @@ describe('blocks-channel-message', () => {
     expect(icon).toBeNull();
   });
 
-  it('applies correct badge color class for each message type', async () => {
-    for (const [type, expected] of [
-      ['COMMAND', 'obligation'], ['DONE', 'success'], ['FAILURE', 'danger'],
-      ['DECLINE', 'warning'], ['HANDOFF', 'transfer'], ['EVENT', 'telemetry'],
-      ['QUERY', 'info'], ['RESPONSE', 'info'], ['STATUS', 'info'],
-    ] as const) {
+  it('applies colored left border for each message type', async () => {
+    for (const type of ['COMMAND', 'DONE', 'FAILURE', 'DECLINE', 'HANDOFF', 'EVENT', 'QUERY', 'RESPONSE', 'STATUS', 'PROPOSE', 'JUDGMENT'] as const) {
       const el = await renderMessage({ message: { messageType: type } });
-      const badge = el.shadowRoot!.querySelector('.speech-act-badge');
-      expect(badge!.classList.contains(`badge-${expected}`), `${type} should have badge-${expected}`).toBe(true);
+      const container = el.shadowRoot!.querySelector('.message-container');
+      expect(container, `${type} should have a message-container`).toBeTruthy();
+      const style = container!.getAttribute('style');
+      expect(style, `${type} should have border-left style`).toContain('border-left');
       document.body.innerHTML = '';
     }
   });
 
-  it('renders commitment state badge for COMMAND messages', async () => {
+  it('renders commitment state badge in expanded section for COMMAND messages', async () => {
     const el = await renderMessage({ message: { messageType: 'COMMAND', commitmentId: 'c-1' } });
     (el as any).commitmentState = 'OPEN';
     await (el as any).updateComplete;
-    const badge = el.shadowRoot!.querySelector('pages-status-badge');
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
+    toggle.click();
+    await (el as any).updateComplete;
+    const badge = el.shadowRoot!.querySelector('.expanded-section pages-status-badge');
     expect(badge).toBeTruthy();
     expect((badge as any).state).toBe('OPEN');
   });
