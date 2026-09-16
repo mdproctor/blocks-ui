@@ -51,6 +51,8 @@ export class ChannelFeedElement extends ChannelFeedBase {
   @state() private _hoveredMessageId: string | null = null;
   private _isHoveringToolbar = false;
   private _hoverLeaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private _correctionMap = new Map<string, QhorusMessage[]>();
+  private _retractedIds = new Set<string>();
 
   static override readonly styles = css`
     :host {
@@ -202,15 +204,35 @@ export class ChannelFeedElement extends ChannelFeedBase {
     });
   }
 
+  private _applyCorrections(messages: QhorusMessage[]): QhorusMessage[] {
+    return messages
+      .filter(m => !m.correctsMessageId)
+      .map(m => {
+        const corrections = this._correctionMap.get(m.id);
+        const isRetracted = this._retractedIds.has(m.id);
+        if (corrections?.length || isRetracted) {
+          return {
+            ...m,
+            content: corrections?.length ? corrections[corrections.length - 1].content : m.content,
+            _corrected: !!corrections?.length,
+            _corrections: corrections ?? [],
+            _retracted: isRetracted,
+          } as QhorusMessage;
+        }
+        return m;
+      });
+  }
+
   _separateRootsAndReplies(): {
     roots: QhorusMessage[];
     repliesByParent: Map<string, QhorusMessage[]>;
   } {
-    const messageIds = new Set(this.messages.map(m => m.id));
+    const corrected = this._applyCorrections(this.messages);
+    const messageIds = new Set(corrected.map(m => m.id));
     const repliesByParent = new Map<string, QhorusMessage[]>();
     const roots: QhorusMessage[] = [];
 
-    for (const m of this.messages) {
+    for (const m of corrected) {
       if (m.inReplyTo && messageIds.has(m.inReplyTo)) {
         const list = repliesByParent.get(m.inReplyTo) ?? [];
         list.push(m);
@@ -284,6 +306,20 @@ export class ChannelFeedElement extends ChannelFeedBase {
   override willUpdate(changed: Map<string, unknown>) {
     if (changed.has('channelId')) {
       this._checkStaleCursor();
+    }
+    if (changed.has('messages')) {
+      this._correctionMap.clear();
+      this._retractedIds.clear();
+      for (const msg of this.messages) {
+        if (msg.correctsMessageId) {
+          if ((msg as any).retraction) {
+            this._retractedIds.add(msg.correctsMessageId);
+          }
+          const list = this._correctionMap.get(msg.correctsMessageId) ?? [];
+          list.push(msg);
+          this._correctionMap.set(msg.correctsMessageId, list);
+        }
+      }
     }
     if (changed.has('messages') && this.messages.length > 0) {
       this._showStalePrompt = false;
@@ -462,8 +498,9 @@ export class ChannelFeedElement extends ChannelFeedBase {
 
   private _renderTopics() {
     const reactionIndex = this._buildReactionIndex();
+    const corrected = this._applyCorrections(this.messages);
     const byTopic = new Map<string, QhorusMessage[]>();
-    for (const m of this.messages) {
+    for (const m of corrected) {
       const key = m.topicId ?? '';
       const list = byTopic.get(key) ?? [];
       list.push(m);

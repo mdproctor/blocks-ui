@@ -153,6 +153,27 @@ export class ChannelMessageElement extends LitElement {
       cursor: pointer; color: var(--pages-neutral-11, #333);
     }
     .reply-btn:hover { background: var(--pages-neutral-3, #e5e5e5); }
+    .corrected-marker {
+      font-size: var(--pages-font-size-xs, 11px);
+      color: var(--pages-neutral-8, #888);
+      font-style: italic;
+    }
+    .retraction-tombstone {
+      font-size: var(--pages-font-size-sm, 13px);
+      color: var(--pages-neutral-8, #888);
+      font-style: italic;
+      padding: var(--pages-space-1, 4px) 0;
+    }
+    .correction-history {
+      margin-bottom: var(--pages-space-2, 8px);
+      padding: var(--pages-space-1, 4px) 0;
+    }
+    .correction-history .detail-row {
+      display: flex; gap: var(--pages-space-2, 8px); padding: 2px 0;
+    }
+    .correction-history .detail-label {
+      color: var(--pages-neutral-8, #888); white-space: nowrap;
+    }
     @media (prefers-reduced-motion: reduce) {
       .expanded-section { transition: none; }
     }
@@ -201,7 +222,8 @@ export class ChannelMessageElement extends LitElement {
     return !!(
       (m.artefactRefs && m.artefactRefs.length > 0) ||
       m.commitmentId ||
-      m.correlationId
+      m.correlationId ||
+      (m as any)._corrections?.length
     );
   }
 
@@ -259,6 +281,20 @@ export class ChannelMessageElement extends LitElement {
             ` : nothing}
           </div>
         ` : nothing}
+        ${(m as any)._corrections?.length ? html`
+          <div class="correction-history">
+            <div class="detail-row">
+              <span class="detail-label">Original:</span>
+              <span>${m.content}</span>
+            </div>
+            ${(m as any)._corrections.map((c: QhorusMessage) => html`
+              <div class="detail-row">
+                <span class="detail-label">Corrected (${this._formatTime(c.createdAt)}):</span>
+                <span>${c.content}</span>
+              </div>
+            `)}
+          </div>
+        ` : nothing}
         <div class="metadata">
           ${m.topic ? html`
             <span class="meta-item"><span class="meta-label">Topic:</span> ${m.topic}</span>
@@ -288,13 +324,18 @@ export class ChannelMessageElement extends LitElement {
           ` : nothing}
           <span class="sender">${displaySender}</span>
           <time datetime=${m.createdAt}>${this._formatTime(m.createdAt)}</time>
+          ${(m as any)._corrected ? html`<span class="corrected-marker">(corrected)</span>` : nothing}
           ${this._hasExpandableContent ? html`
             <pages-button class="expand-toggle" variant="ghost" size="sm" @click=${this._toggle} aria-expanded=${this._expanded}>
               ${this._expanded ? '▼' : '▶'}
             </pages-button>
           ` : nothing}
         </div>
-        <div class="content">${this.renderContent?.(m) ?? unsafeHTML(renderMarkdown(m.content))}</div>
+        ${(m as any)._retracted ? html`
+          <div class="retraction-tombstone">[Retracted by ${displaySender} at ${this._formatTime(m.createdAt)}]</div>
+        ` : html`
+          <div class="content">${this.renderContent?.(m) ?? unsafeHTML(renderMarkdown(m.content))}</div>
+        `}
       ${m.messageType === 'HANDOFF' && m.target ? html`
         <div class="delegation-indicator">
           ↳ Delegated to <strong>${m.target}</strong>

@@ -280,6 +280,60 @@ describe('blocks-channel-message', () => {
     expect(custom!.textContent).toBe('agent-alpha-ch-1');
   });
 
+  // --- Correction markers (#34 Batch 4) ---
+
+  it('shows (corrected) marker when message has _corrected flag', async () => {
+    const el = await renderMessage({ message: { _corrected: true } as any });
+    const marker = el.shadowRoot!.querySelector('.corrected-marker');
+    expect(marker).toBeTruthy();
+    expect(marker!.textContent!.trim()).toBe('(corrected)');
+  });
+
+  it('does not show (corrected) marker on normal messages', async () => {
+    const el = await renderMessage();
+    const marker = el.shadowRoot!.querySelector('.corrected-marker');
+    expect(marker).toBeNull();
+  });
+
+  it('shows expand toggle when _corrections are present', async () => {
+    const el = await renderMessage({
+      message: {
+        _corrected: true,
+        _corrections: [makeMessage({ id: 'c-1', content: 'Fixed text' })],
+      } as any,
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeTruthy();
+  });
+
+  it('renders correction history in expanded section', async () => {
+    const el = await renderMessage({
+      message: {
+        _corrected: true,
+        _corrections: [
+          makeMessage({ id: 'c-1', content: 'Fixed text', createdAt: '2026-09-15T14:25:00Z' }),
+        ],
+      } as any,
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
+    toggle.click();
+    await (el as any).updateComplete;
+    const history = el.shadowRoot!.querySelector('.correction-history');
+    expect(history).toBeTruthy();
+    expect(history!.textContent).toContain('Fixed text');
+  });
+
+  it('renders retraction tombstone when _retracted is true', async () => {
+    const el = await renderMessage({
+      message: { _retracted: true, sender: 'alice', content: 'Original sensitive text' } as any,
+    });
+    const tombstone = el.shadowRoot!.querySelector('.retraction-tombstone');
+    expect(tombstone).toBeTruthy();
+    expect(tombstone!.textContent).toContain('Retracted');
+    const content = el.shadowRoot!.querySelector('.content');
+    expect(content).toBeNull();
+  });
+
   it('clicking artefact chip dispatches artefact-selected event', async () => {
     const el = await renderMessage({
       message: makeMessage({

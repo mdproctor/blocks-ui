@@ -800,6 +800,91 @@ describe('blocks-channel-feed', () => {
     expect(toolbar).toBeTruthy();
   });
 
+  // --- Correction collapsing (#34 Batch 4) ---
+
+  it('hides correction records from the feed and shows corrected content on original', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [
+      msg('msg-1', { sender: 'alice', content: 'Meeting at 3pm', messageType: 'RESPONSE' }),
+      msg('msg-2', { sender: 'alice', content: 'Meeting at 4pm', messageType: 'RESPONSE', correctsMessageId: 'msg-1' }),
+    ];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgs = el.shadowRoot!.querySelectorAll('blocks-channel-message');
+    expect(msgs.length).toBe(1);
+    expect((msgs[0] as any).message.content).toBe('Meeting at 4pm');
+  });
+
+  it('applies latest correction when multiple corrections exist', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [
+      msg('msg-1', { sender: 'alice', content: 'v1', messageType: 'RESPONSE' }),
+      msg('msg-2', { sender: 'alice', content: 'v2', messageType: 'RESPONSE', correctsMessageId: 'msg-1' }),
+      msg('msg-3', { sender: 'alice', content: 'v3', messageType: 'RESPONSE', correctsMessageId: 'msg-1' }),
+    ];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgs = el.shadowRoot!.querySelectorAll('blocks-channel-message');
+    expect(msgs.length).toBe(1);
+    expect((msgs[0] as any).message.content).toBe('v3');
+  });
+
+  it('marks corrected messages with _corrected flag', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [
+      msg('msg-1', { sender: 'alice', content: 'Old', messageType: 'RESPONSE' }),
+      msg('msg-2', { sender: 'alice', content: 'New', messageType: 'RESPONSE', correctsMessageId: 'msg-1' }),
+    ];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgs = el.shadowRoot!.querySelectorAll('blocks-channel-message');
+    expect((msgs[0] as any).message._corrected).toBe(true);
+  });
+
+  it('passes correction chain as _corrections on corrected messages', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [
+      msg('msg-1', { sender: 'alice', content: 'v1', messageType: 'RESPONSE' }),
+      msg('msg-2', { sender: 'alice', content: 'v2', messageType: 'RESPONSE', correctsMessageId: 'msg-1' }),
+    ];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgs = el.shadowRoot!.querySelectorAll('blocks-channel-message');
+    expect((msgs[0] as any).message._corrections.length).toBe(1);
+    expect((msgs[0] as any).message._corrections[0].content).toBe('v2');
+  });
+
+  it('marks retracted messages with _retracted flag', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [
+      msg('msg-1', { sender: 'alice', content: 'Original', messageType: 'RESPONSE' }),
+      msg('msg-2', { sender: 'alice', content: '', messageType: 'RESPONSE', correctsMessageId: 'msg-1' }),
+    ];
+    (el.messages[1] as any).retraction = true;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgs = el.shadowRoot!.querySelectorAll('blocks-channel-message');
+    expect((msgs[0] as any).message._retracted).toBe(true);
+  });
+
+  it('does not filter messages without correctsMessageId', async () => {
+    const el = document.createElement('blocks-channel-feed') as any;
+    el.messages = [
+      msg('msg-1', { sender: 'alice', content: 'Normal message', messageType: 'RESPONSE' }),
+      msg('msg-2', { sender: 'bob', content: 'Another message', messageType: 'COMMAND' }),
+    ];
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const msgs = el.shadowRoot!.querySelectorAll('blocks-channel-message');
+    expect(msgs.length).toBe(2);
+  });
+
   it('dismisses toolbar on Escape key', async () => {
     const el = document.createElement('blocks-channel-feed') as any;
     el.messages = [msg('m1', { sender: 'alice' })];

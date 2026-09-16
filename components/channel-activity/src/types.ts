@@ -71,6 +71,7 @@ export interface QhorusMessage {
   readonly deadline?: string;
   readonly acknowledgedAt?: string;
   readonly createdAt: string;
+  readonly correctsMessageId?: string;
 }
 
 export interface QhorusChannel {
