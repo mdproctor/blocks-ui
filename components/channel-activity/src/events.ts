@@ -23,6 +23,8 @@ export const ChannelEventTopics = {
   RENAME_SPACE: 'space:rename',
   DELETE_SPACE: 'space:delete',
   MOVE_CHANNEL_TO_SPACE: 'channel:move-to-space',
+  CORRECT_MESSAGE: 'channel:correct-message',
+  RETRACT_MESSAGE: 'channel:retract-message',
 } as const;
 
 export interface SendMessagePayload {

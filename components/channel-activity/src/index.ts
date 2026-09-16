@@ -13,6 +13,7 @@ export { CommitmentController } from './commitment-controller.js';
 export { renderMarkdown } from './markdown.js';
 export { ChannelMessageElement } from './channel-message.js';
 export { ChannelReactionBarElement } from './channel-reaction-bar.js';
+export { ChannelHoverToolbarElement } from './channel-hover-toolbar.js';
 export { ChannelInputElement } from './channel-input.js';
 export { ChannelEmojiPickerElement } from './channel-emoji-picker.js';
 export { ChannelThreadElement } from './channel-thread.js';
