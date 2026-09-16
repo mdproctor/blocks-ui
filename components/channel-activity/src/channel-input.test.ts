@@ -363,4 +363,57 @@ describe('blocks-channel-input', () => {
     const pill = el.shadowRoot!.querySelector('.topic-pill');
     expect(pill?.classList.contains('read-only')).toBe(true);
   });
+
+  it('renders a visible send button', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    document.body.appendChild(el);
+    await el.updateComplete;
+    const btn = el.shadowRoot!.querySelector('.send-btn');
+    expect(btn).toBeTruthy();
+  });
+
+  it('send button is disabled when textarea is empty', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    document.body.appendChild(el);
+    await el.updateComplete;
+    const btn = el.shadowRoot!.querySelector('.send-btn') as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+  });
+
+  it('send button is enabled when textarea has content', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    document.body.appendChild(el);
+    await el.updateComplete;
+    const textarea = el.shadowRoot!.querySelector('textarea')!;
+    textarea.value = 'hello';
+    textarea.dispatchEvent(new Event('input'));
+    await el.updateComplete;
+    const btn = el.shadowRoot!.querySelector('.send-btn') as HTMLButtonElement;
+    expect(btn.disabled).toBe(false);
+  });
+
+  it('clicking send button sends the message', async () => {
+    const el = document.createElement('blocks-channel-input') as any;
+    el.channelId = 'ch-1';
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const handler = vi.fn();
+    el.addEventListener('pages-event', handler);
+    const textarea = el.shadowRoot!.querySelector('textarea')!;
+    textarea.value = 'click send';
+    textarea.dispatchEvent(new Event('input'));
+    await el.updateComplete;
+
+    const btn = el.shadowRoot!.querySelector('.send-btn') as HTMLButtonElement;
+    btn.click();
+
+    expect(handler).toHaveBeenCalledOnce();
+    const detail = handler.mock.calls[0]![0]!.detail;
+    expect(detail.topic).toBe(ChannelEventTopics.SEND_MESSAGE);
+    expect(detail.payload.content).toBe('click send');
+  });
 });

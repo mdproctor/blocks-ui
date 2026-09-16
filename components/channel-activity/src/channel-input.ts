@@ -119,6 +119,25 @@ export class ChannelInputElement extends LitElement {
       margin-bottom: var(--pages-space-2, 8px);
     }
     .new-topic-btn:hover { background: var(--pages-neutral-3, #e5e5e5); }
+    .input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--pages-space-2, 8px);
+    }
+    .input-row textarea { flex: 1; }
+    .send-btn {
+      width: 32px; height: 32px;
+      border: none; border-radius: 50%;
+      background: var(--pages-accent-9, #007bff);
+      color: white; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .send-btn:disabled {
+      background: var(--pages-neutral-4, #e5e5e5);
+      color: var(--pages-neutral-8, #999);
+      cursor: default;
+    }
   `;
 
   computeAvailableTypes(): MessageType[] {
@@ -130,6 +149,10 @@ export class ChannelInputElement extends LitElement {
       types = types.filter(t => !this.deniedTypes!.includes(t));
     }
     return types;
+  }
+
+  private get _hasContent(): boolean {
+    return this._text.trim().length > 0;
   }
 
   private _handleKeydown(e: KeyboardEvent) {
@@ -203,13 +226,24 @@ export class ChannelInputElement extends LitElement {
           </select>
         </div>
       ` : nothing}
-      <textarea
-        aria-label="Message"
-        placeholder="Type a message..."
-        @keydown=${this._handleKeydown}
-        @input=${this._handleInput}
-        rows="1"
-      ></textarea>
+      <div class="input-row">
+        <textarea
+          aria-label="Message"
+          placeholder="Type a message..."
+          @keydown=${this._handleKeydown}
+          @input=${this._handleInput}
+          rows="1"
+        ></textarea>
+        <button class="send-btn"
+          ?disabled=${!this._hasContent}
+          title="Send message"
+          aria-label="Send message"
+          @click=${this._send}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </div>
       ${this._error ? (this.renderError?.(this._error) ?? html`<div class="error">${this._error}</div>`) : nothing}
     `;
   }
