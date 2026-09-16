@@ -9,6 +9,7 @@ export class ChannelHoverToolbarElement extends LitElement {
   @property({ type: Object }) message?: QhorusMessage;
   @property({ type: String }) currentActorId = '';
   @state() private _overflowOpen = false;
+  @state() private _retractConfirming = false;
 
   static override readonly styles = css`
     :host {
@@ -50,6 +51,40 @@ export class ChannelHoverToolbarElement extends LitElement {
     .overflow-item:hover {
       background: var(--pages-neutral-3, #e8e8e8);
     }
+    .retract-confirm {
+      position: absolute; top: 100%; right: 0;
+      background: var(--pages-neutral-1, white);
+      border: 1px solid var(--pages-danger-6, #fca5a5);
+      border-radius: 6px;
+      box-shadow: var(--pages-shadow-2, 0 4px 12px rgba(0,0,0,0.15));
+      z-index: 100; min-width: 220px;
+      padding: 12px;
+    }
+    .retract-confirm p {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--pages-neutral-12, #111);
+    }
+    .retract-confirm .retract-note {
+      font-size: 11px;
+      color: var(--pages-neutral-8, #888);
+      margin-bottom: 8px;
+    }
+    .retract-confirm-actions {
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .retract-cancel-btn {
+      padding: 4px 10px; border: 1px solid var(--pages-neutral-5, #d4d4d4);
+      border-radius: 4px; background: none; cursor: pointer;
+      font-size: 12px; color: var(--pages-neutral-11, #333);
+    }
+    .retract-confirm-btn {
+      padding: 4px 10px; border: none;
+      border-radius: 4px; background: var(--pages-danger-9, #dc2626);
+      color: white; cursor: pointer; font-size: 12px;
+    }
+    .retract-cancel-btn:hover { background: var(--pages-neutral-3, #e8e8e8); }
+    .retract-confirm-btn:hover { background: var(--pages-danger-10, #b91c1c); }
   `;
 
   private get _isOwnMessage(): boolean {
@@ -69,7 +104,7 @@ export class ChannelHoverToolbarElement extends LitElement {
         @click=${this._onReply}>↩</button>
       <button class="toolbar-btn more" title="More" aria-label="More actions"
         @click=${this._toggleOverflow}>⋯</button>
-      ${this._overflowOpen ? this._renderOverflow() : nothing}
+      ${this._retractConfirming ? this._renderRetractConfirm() : this._overflowOpen ? this._renderOverflow() : nothing}
     `;
   }
 
@@ -110,8 +145,30 @@ export class ChannelHoverToolbarElement extends LitElement {
   }
 
   private _onRetract() {
-    emitPagesEvent(this, ChannelEventTopics.RETRACT_MESSAGE, { messageId: this.message!.id });
     this._overflowOpen = false;
+    this._retractConfirming = true;
+  }
+
+  private _confirmRetract() {
+    emitPagesEvent(this, ChannelEventTopics.RETRACT_MESSAGE, { messageId: this.message!.id });
+    this._retractConfirming = false;
+  }
+
+  private _cancelRetract() {
+    this._retractConfirming = false;
+  }
+
+  private _renderRetractConfirm() {
+    return html`
+      <div class="retract-confirm">
+        <p>Retract this message?</p>
+        <div class="retract-note">This action is visible to all participants.</div>
+        <div class="retract-confirm-actions">
+          <button class="retract-cancel-btn" @click=${this._cancelRetract}>Cancel</button>
+          <button class="retract-confirm-btn" @click=${this._confirmRetract}>Retract</button>
+        </div>
+      </div>
+    `;
   }
 
   private _onViewDetails() {

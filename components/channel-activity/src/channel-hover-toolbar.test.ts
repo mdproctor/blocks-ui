@@ -126,7 +126,7 @@ describe('blocks-channel-hover-toolbar', () => {
     expect(handler.mock.calls[0]![0]!.detail.payload.messageId).toBe('msg-1');
   });
 
-  it('emits retract-message event from overflow', async () => {
+  it('emits retract-message event from overflow after confirmation', async () => {
     const el = await renderToolbar({ message: { sender: 'alice' }, currentActorId: 'alice' });
     const handler = vi.fn();
     el.addEventListener('pages-event', handler);
@@ -135,8 +135,63 @@ describe('blocks-channel-hover-toolbar', () => {
     await (el as any).updateComplete;
     const retractItem = el.shadowRoot!.querySelector('[data-action="retract"]') as HTMLButtonElement;
     retractItem.click();
+    await (el as any).updateComplete;
+    const confirmBtn = el.shadowRoot!.querySelector('.retract-confirm-btn') as HTMLButtonElement;
+    confirmBtn.click();
     expect(handler).toHaveBeenCalledOnce();
     expect(handler.mock.calls[0]![0]!.detail.topic).toBe(ChannelEventTopics.RETRACT_MESSAGE);
+  });
+
+  // --- Retraction confirmation (#34 Batch 4) ---
+
+  it('shows confirmation dialog instead of immediate retract', async () => {
+    const el = await renderToolbar({ message: { sender: 'alice' }, currentActorId: 'alice' });
+    const handler = vi.fn();
+    el.addEventListener('pages-event', handler);
+    const moreBtn = el.shadowRoot!.querySelector('.toolbar-btn.more') as HTMLButtonElement;
+    moreBtn.click();
+    await (el as any).updateComplete;
+    const retractItem = el.shadowRoot!.querySelector('[data-action="retract"]') as HTMLButtonElement;
+    retractItem.click();
+    await (el as any).updateComplete;
+
+    expect(handler).not.toHaveBeenCalled();
+    const confirm = el.shadowRoot!.querySelector('.retract-confirm');
+    expect(confirm).toBeTruthy();
+    expect(confirm!.textContent).toContain('Retract this message');
+  });
+
+  it('dispatches retract-message on confirm click', async () => {
+    const el = await renderToolbar({ message: { sender: 'alice' }, currentActorId: 'alice' });
+    const handler = vi.fn();
+    el.addEventListener('pages-event', handler);
+    const moreBtn = el.shadowRoot!.querySelector('.toolbar-btn.more') as HTMLButtonElement;
+    moreBtn.click();
+    await (el as any).updateComplete;
+    const retractItem = el.shadowRoot!.querySelector('[data-action="retract"]') as HTMLButtonElement;
+    retractItem.click();
+    await (el as any).updateComplete;
+
+    const confirmBtn = el.shadowRoot!.querySelector('.retract-confirm-btn') as HTMLButtonElement;
+    confirmBtn.click();
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler.mock.calls[0]![0]!.detail.topic).toBe(ChannelEventTopics.RETRACT_MESSAGE);
+  });
+
+  it('dismisses confirmation on cancel click', async () => {
+    const el = await renderToolbar({ message: { sender: 'alice' }, currentActorId: 'alice' });
+    const moreBtn = el.shadowRoot!.querySelector('.toolbar-btn.more') as HTMLButtonElement;
+    moreBtn.click();
+    await (el as any).updateComplete;
+    const retractItem = el.shadowRoot!.querySelector('[data-action="retract"]') as HTMLButtonElement;
+    retractItem.click();
+    await (el as any).updateComplete;
+
+    const cancelBtn = el.shadowRoot!.querySelector('.retract-cancel-btn') as HTMLButtonElement;
+    cancelBtn.click();
+    await (el as any).updateComplete;
+
+    expect(el.shadowRoot!.querySelector('.retract-confirm')).toBeNull();
   });
 
   it('always shows Copy text and View details in overflow', async () => {
