@@ -1,7 +1,0 @@
-{
-  "spec.bindings[]": {
-    "strategy": "key-presence",
-    "discriminatorKeys": ["subCase", "humanTask", "trigger"],
-    "sharedKeys": ["name", "guard"]
-  }
-}
