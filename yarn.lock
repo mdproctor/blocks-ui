@@ -1123,6 +1123,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/lsp-schemas@workspace:packages/lsp-schemas"
   dependencies:
+    "@casehubio/blocks-ui-casehub-diagram": "workspace:*"
+    "@casehubio/blocks-ui-core": "workspace:*"
     "@casehubio/pages-lsp": "workspace:*"
     "@casehubio/pages-schema": "workspace:*"
     esbuild: "npm:^0.28.1"
