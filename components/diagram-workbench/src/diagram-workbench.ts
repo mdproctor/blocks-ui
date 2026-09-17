@@ -3,16 +3,11 @@ import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import { customElement, property, state } from 'lit/decorators.js';
 import { onPagesEvent } from '@casehubio/pages-data';
 import type { CaseRuntimeState } from '@casehubio/graph-stencil-case';
+import { DIAGRAM_TAGS } from '@casehubio/blocks-ui-core';
 
 import '@casehubio/blocks-ui-casehub-diagram';
 import '@casehubio/blocks-ui-swf-diagram';
 import '@casehubio/blocks-ui-htn-diagram';
-
-const DIAGRAM_TAGS: Record<string, string> = {
-  swf: 'swf-diagram',
-  case: 'casehub-diagram',
-  htn: 'htn-diagram',
-};
 
 interface DrillDownLevel {
   name: string;
