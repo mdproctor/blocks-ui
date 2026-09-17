@@ -4,13 +4,13 @@ document:
   name: simple
   version: "1.0.0"
 do:
-  
   - fetchData:
       call: http
       with:
         method: GET
         endpoint:
           uri: https://api.example.com/data
+
   - transformResult:
       set:
         output: "${ .fetchData.body }"
