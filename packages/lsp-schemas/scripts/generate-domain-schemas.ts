@@ -15,13 +15,7 @@ export interface FormatConfig {
   discriminatorManifest?: string;
 }
 
-interface DiscriminatorRule {
-  strategy: 'key-presence';
-  discriminatorKeys: string[];
-  sharedKeys: string[];
-}
-
-type DiscriminatorManifest = Record<string, DiscriminatorRule>;
+import type { DiscriminatorRule } from './discriminators/case-definition.js';
 
 const FUNCTION_PROPS = new Set<string>();
 
@@ -42,7 +36,49 @@ function getSchemaVarName(symbolName: string): string {
   return `${base}Schema`;
 }
 
-export function typeToZod(type: Type, depth: number, visited: Set<string>): string {
+function tryBuildDiscriminatedUnion(
+  type: Type,
+  nonIndexProps: MorphSymbol[],
+  depth: number,
+  visited: Set<string>,
+  discriminatorConfig?: Record<string, DiscriminatorRule>,
+): string | null {
+  if (!discriminatorConfig) return null;
+
+  const aliasSymbol = type.getAliasSymbol();
+  const symbol = aliasSymbol || type.getSymbol();
+  const symbolName = symbol?.getName() ?? '';
+  if (!symbolName || symbolName.startsWith('__')) return null;
+
+  const rule = discriminatorConfig[symbolName];
+  if (!rule) return null;
+
+  const discKeys = new Set(rule.discriminatorKeys);
+  const commonProps = nonIndexProps.filter(p => !discKeys.has(p.getName()));
+  const variantProps = nonIndexProps.filter(p => discKeys.has(p.getName()));
+
+  if (variantProps.length === 0) return null;
+
+  const indent = '  '.repeat(depth + 2);
+  const closingIndent = '  '.repeat(depth + 1);
+
+  const commonFields = commonProps
+    .map(p => propToZodField(p, depth + 1, visited, discriminatorConfig))
+    .filter(Boolean);
+
+  const commonSchema = commonFields.length > 0
+    ? `z.object({\n${indent}${commonFields.join(`,\n${indent}`)},\n${closingIndent}})`
+    : 'z.object({})';
+
+  const branches = variantProps.map(p => {
+    const field = propToZodField(p, depth + 1, visited, discriminatorConfig);
+    return `${commonSchema}.extend({ ${field} })`;
+  });
+
+  return `z.union([\n${indent}${branches.join(`,\n${indent}`)},\n${closingIndent}])`;
+}
+
+export function typeToZod(type: Type, depth: number, visited: Set<string>, discriminatorConfig?: Record<string, DiscriminatorRule>): string {
   if (depth > 15) return 'z.unknown()';
 
   const text = type.getText();
@@ -118,8 +154,10 @@ export function typeToZod(type: Type, depth: number, visited: Set<string>): stri
         p => !isIndexSignature(p) && !p.getName().startsWith('__@'),
       );
       if (nonIndexProps.length === 0) return 'z.object({})';
+      const unionResult = tryBuildDiscriminatedUnion(type, nonIndexProps, depth, visited, discriminatorConfig);
+      if (unionResult) return unionResult;
       const fields = nonIndexProps
-        .map(p => propToZodField(p, depth + 1, visited))
+        .map(p => propToZodField(p, depth + 1, visited, discriminatorConfig))
         .filter(Boolean);
       if (fields.length === 0) return 'z.object({})';
       const indent = '  '.repeat(depth + 2);
@@ -153,8 +191,14 @@ export function typeToZod(type: Type, depth: number, visited: Set<string>): stri
       return 'z.object({})';
     }
 
+    const unionResult = tryBuildDiscriminatedUnion(type, nonIndexProps, depth, visited, discriminatorConfig);
+    if (unionResult) {
+      if (symbolId) visited.delete(symbolId);
+      return unionResult;
+    }
+
     const fields = props
-      .map(p => propToZodField(p, depth + 1, visited))
+      .map(p => propToZodField(p, depth + 1, visited, discriminatorConfig))
       .filter(Boolean);
 
     if (symbolId) visited.delete(symbolId);
@@ -172,6 +216,7 @@ export function propToZodField(
   prop: MorphSymbol,
   depth: number,
   visited: Set<string>,
+  discriminatorConfig?: Record<string, DiscriminatorRule>,
 ): string {
   const name = prop.getName();
   if (isIndexSignature(prop)) return '';
@@ -192,7 +237,7 @@ export function propToZodField(
 
   const isOptional = prop.isOptional();
   const baseType = isOptional ? type.getNonNullableType() : type;
-  let zodType = typeToZod(baseType, depth, visited);
+  let zodType = typeToZod(baseType, depth, visited, discriminatorConfig);
   if (!zodType) return '';
   if (isOptional) zodType += '.optional()';
 

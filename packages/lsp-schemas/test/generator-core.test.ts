@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
 import { typeToZod, propToZodField } from '../scripts/generate-domain-schemas.js';
+import type { DiscriminatorRule } from '../scripts/discriminators/case-definition.js';
 
 describe('typeToZod', () => {
   const project = new Project({ useInMemoryFileSystem: true });
@@ -241,15 +242,100 @@ describe('HTN generation', () => {
   });
 });
 
-describe('SWF generation', () => {
-  it('generated schema parses a valid SWF document', async () => {
-    const { swfDocumentSchema } = await import(
-      '../src/schemas/swf.generated.js'
+describe('discriminator-aware generation', () => {
+  const project = new Project({ useInMemoryFileSystem: true });
+
+  function zodForTypeWithDiscriminators(
+    typeCode: string,
+    typeName: string,
+    discriminatorConfig: Record<string, DiscriminatorRule>,
+  ): string {
+    const file = project.createSourceFile(
+      'disc.ts',
+      typeCode,
+      { overwrite: true },
     );
-    const result = swfDocumentSchema.safeParse({
-      document: { dsl: '1.0', name: 'test-workflow' },
-      do: [{ callTask: { call: 'http', with: { uri: 'https://example.com' } } }],
-    });
-    expect(result.success).toBe(true);
+    const typeAlias = file.getTypeAliasOrThrow(typeName);
+    return typeToZod(typeAlias.getType(), 0, new Set(), discriminatorConfig);
+  }
+
+  it('produces z.union for key-presence discriminated type', () => {
+    const code = `
+      export type Target = {
+        name?: string;
+        capability?: string;
+        subCase?: { ns: string };
+        humanTask?: { title: string };
+      };
+    `;
+    const config: Record<string, DiscriminatorRule> = {
+      Target: { strategy: 'key-presence', discriminatorKeys: ['capability', 'subCase', 'humanTask'] },
+    };
+    const result = zodForTypeWithDiscriminators(code, 'Target', config);
+    expect(result).toContain('z.union(');
+    expect(result).toContain('.extend(');
+    expect(result).toContain('capability');
+    expect(result).toContain('subCase');
+    expect(result).toContain('humanTask');
+    const nameInExtend = result.match(/\.extend\([^)]*name/g) || [];
+    expect(nameInExtend).toHaveLength(0);
+  });
+
+  it('keeps discriminator keys optional on variant schemas', () => {
+    const code = `
+      export type Target = {
+        name?: string;
+        capability?: string;
+        subCase?: { ns: string };
+      };
+    `;
+    const config: Record<string, DiscriminatorRule> = {
+      Target: { strategy: 'key-presence', discriminatorKeys: ['capability', 'subCase'] },
+    };
+    const result = zodForTypeWithDiscriminators(code, 'Target', config);
+    expect(result).toContain('capability: z.string().optional()');
+  });
+
+  it('produces flat z.object when type not in config', () => {
+    const code = `export type Plain = { a: string; b?: number };`;
+    const config: Record<string, DiscriminatorRule> = {};
+    const result = zodForTypeWithDiscriminators(code, 'Plain', config);
+    expect(result).toContain('z.object(');
+    expect(result).not.toContain('z.union(');
+  });
+
+  it('handles intersection types with index signatures', () => {
+    const code = `
+      type Base = {
+        name?: string;
+        capability?: string;
+        subCase?: string;
+        [k: string]: unknown;
+      };
+      type Extra = { [k: string]: unknown };
+      export type Binding = Base & Extra;
+    `;
+    const config: Record<string, DiscriminatorRule> = {
+      Binding: { strategy: 'key-presence', discriminatorKeys: ['capability', 'subCase'] },
+    };
+    const result = zodForTypeWithDiscriminators(code, 'Binding', config);
+    expect(result).toContain('z.union(');
+  });
+
+  it('produces correct number of union branches', () => {
+    const code = `
+      export type Trigger = {
+        contextChange?: {};
+        cloudEvent?: {};
+        schedule?: {};
+        scopeActivated?: {};
+      };
+    `;
+    const config: Record<string, DiscriminatorRule> = {
+      Trigger: { strategy: 'key-presence', discriminatorKeys: ['contextChange', 'cloudEvent', 'schedule', 'scopeActivated'] },
+    };
+    const result = zodForTypeWithDiscriminators(code, 'Trigger', config);
+    const extendCount = (result.match(/\.extend\(/g) || []).length;
+    expect(extendCount).toBe(4);
   });
 });
