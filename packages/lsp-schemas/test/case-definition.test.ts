@@ -101,6 +101,42 @@ describe('CaseDefinition format', () => {
     expect(edits.length).toBeGreaterThanOrEqual(3);
   });
 
+  it('safeParse accepts binding with no variant key (mid-edit)', async () => {
+    const { caseDefinitionDocumentSchema } = await import('../src/schemas/case-definition.generated.js');
+    const doc = {
+      dsl: 'casehub/case', namespace: 'test', name: 'case1', version: '1.0',
+      spec: { bindings: [{ name: 'b1', on: { contextChange: {} } }] },
+    };
+    expect(caseDefinitionDocumentSchema.safeParse(doc).success).toBe(true);
+  });
+
+  it('safeParse accepts binding with capability variant', async () => {
+    const { caseDefinitionDocumentSchema } = await import('../src/schemas/case-definition.generated.js');
+    const doc = {
+      dsl: 'casehub/case', namespace: 'test', name: 'case1', version: '1.0',
+      spec: { bindings: [{ name: 'b1', on: { contextChange: {} }, capability: 'review' }] },
+    };
+    expect(caseDefinitionDocumentSchema.safeParse(doc).success).toBe(true);
+  });
+
+  it('safeParse accepts binding with subCase variant', async () => {
+    const { caseDefinitionDocumentSchema } = await import('../src/schemas/case-definition.generated.js');
+    const doc = {
+      dsl: 'casehub/case', namespace: 'test', name: 'case1', version: '1.0',
+      spec: { bindings: [{ name: 'b1', on: { contextChange: {} }, subCase: { namespace: 'ns', name: 'sub', version: '1.0' } }] },
+    };
+    expect(caseDefinitionDocumentSchema.safeParse(doc).success).toBe(true);
+  });
+
+  it('safeParse accepts trigger with no variant key (mid-edit)', async () => {
+    const { caseDefinitionDocumentSchema } = await import('../src/schemas/case-definition.generated.js');
+    const doc = {
+      dsl: 'casehub/case', namespace: 'test', name: 'case1', version: '1.0',
+      spec: { bindings: [{ name: 'b1', on: {} }] },
+    };
+    expect(caseDefinitionDocumentSchema.safeParse(doc).success).toBe(true);
+  });
+
   it('produces no syntax errors for valid CaseDefinition', () => {
     const registry = createSchemaRegistry();
     registry.register(caseDefinitionFormat);

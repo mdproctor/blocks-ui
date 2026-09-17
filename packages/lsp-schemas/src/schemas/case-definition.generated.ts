@@ -91,29 +91,77 @@ export const caseDefinitionDocumentSchema = z.object({
         timing: z.enum(["per-evaluation", "case-lifetime"]).optional(),
         temporalDecayHalfLifeDays: z.number().optional(),
       }).optional(),
-      bindings: z.array(z.object({
+      bindings: z.array(z.union([
+          z.object({
           name: z.string().optional(),
-          on: z.object({
-            contextChange: z.object({
+          on: z.union([
+            z.object({}).extend({ contextChange: z.object({
               filter: z.string().optional(),
               listenLayer: z.string().optional(),
-            }).optional(),
-            cloudEvent: z.union([z.string(), z.object({
+            }).optional() }),
+            z.object({}).extend({ cloudEvent: z.union([z.string(), z.object({
                 type: z.string(),
                 source: z.string().optional(),
                 subject: z.string().optional(),
                 filter: z.string().optional(),
-              })]).optional(),
-            schedule: z.object({
+              })]).optional() }),
+            z.object({}).extend({ schedule: z.object({
               cron: z.string().optional(),
               every: z.string().optional(),
               timezone: z.string().optional(),
-            }).optional(),
-            scopeActivated: z.object({}).optional(),
-          }),
+            }).optional() }),
+            z.object({}).extend({ scopeActivated: z.object({}).optional() }),
+          ]),
           when: z.string().optional(),
-          capability: z.string().optional(),
-          subCase: z.object({
+          conflictResolverStrategy: z.enum(["LAST_WRITER_WINS", "FIRST_WRITER_WINS", "FAIL", "DEEP_MERGE"]).optional(),
+          outcomePolicy: z.object({
+            onDecline: z.enum(["REROUTE", "FAULT"]).optional(),
+            onFailure: z.enum(["REROUTE", "FAULT"]).optional(),
+            onExpired: z.enum(["REROUTE", "FAULT"]).optional(),
+            maxRerouteAttempts: z.number().optional(),
+          }).optional(),
+          inputProjectionOverride: z.string().optional(),
+          contextWrite: z.record(z.unknown()).optional(),
+          producedKeys: z.array(z.string()).optional(),
+          lifecycleScope: z.enum(["BINDING", "COMPOUND", "CASE"]).optional(),
+          participation: z.enum(["PARTICIPANT", "COMPANION"]).optional(),
+          executionMode: z.enum(["TRANSIENT", "PERSISTENT", "REINVOKED"]).optional(),
+        }).extend({ capability: z.string().optional() }),
+          z.object({
+          name: z.string().optional(),
+          on: z.union([
+            z.object({}).extend({ contextChange: z.object({
+              filter: z.string().optional(),
+              listenLayer: z.string().optional(),
+            }).optional() }),
+            z.object({}).extend({ cloudEvent: z.union([z.string(), z.object({
+                type: z.string(),
+                source: z.string().optional(),
+                subject: z.string().optional(),
+                filter: z.string().optional(),
+              })]).optional() }),
+            z.object({}).extend({ schedule: z.object({
+              cron: z.string().optional(),
+              every: z.string().optional(),
+              timezone: z.string().optional(),
+            }).optional() }),
+            z.object({}).extend({ scopeActivated: z.object({}).optional() }),
+          ]),
+          when: z.string().optional(),
+          conflictResolverStrategy: z.enum(["LAST_WRITER_WINS", "FIRST_WRITER_WINS", "FAIL", "DEEP_MERGE"]).optional(),
+          outcomePolicy: z.object({
+            onDecline: z.enum(["REROUTE", "FAULT"]).optional(),
+            onFailure: z.enum(["REROUTE", "FAULT"]).optional(),
+            onExpired: z.enum(["REROUTE", "FAULT"]).optional(),
+            maxRerouteAttempts: z.number().optional(),
+          }).optional(),
+          inputProjectionOverride: z.string().optional(),
+          contextWrite: z.record(z.unknown()).optional(),
+          producedKeys: z.array(z.string()).optional(),
+          lifecycleScope: z.enum(["BINDING", "COMPOUND", "CASE"]).optional(),
+          participation: z.enum(["PARTICIPANT", "COMPANION"]).optional(),
+          executionMode: z.enum(["TRANSIENT", "PERSISTENT", "REINVOKED"]).optional(),
+        }).extend({ subCase: z.object({
             namespace: z.string(),
             name: z.string(),
             version: z.string(),
@@ -126,8 +174,42 @@ export const caseDefinitionDocumentSchema = z.object({
             totalInGroup: z.number().optional(),
             requiredCount: z.number().optional(),
             onThresholdReached: z.enum(["KEEP", "CANCEL"]).optional(),
+          }).optional() }),
+          z.object({
+          name: z.string().optional(),
+          on: z.union([
+            z.object({}).extend({ contextChange: z.object({
+              filter: z.string().optional(),
+              listenLayer: z.string().optional(),
+            }).optional() }),
+            z.object({}).extend({ cloudEvent: z.union([z.string(), z.object({
+                type: z.string(),
+                source: z.string().optional(),
+                subject: z.string().optional(),
+                filter: z.string().optional(),
+              })]).optional() }),
+            z.object({}).extend({ schedule: z.object({
+              cron: z.string().optional(),
+              every: z.string().optional(),
+              timezone: z.string().optional(),
+            }).optional() }),
+            z.object({}).extend({ scopeActivated: z.object({}).optional() }),
+          ]),
+          when: z.string().optional(),
+          conflictResolverStrategy: z.enum(["LAST_WRITER_WINS", "FIRST_WRITER_WINS", "FAIL", "DEEP_MERGE"]).optional(),
+          outcomePolicy: z.object({
+            onDecline: z.enum(["REROUTE", "FAULT"]).optional(),
+            onFailure: z.enum(["REROUTE", "FAULT"]).optional(),
+            onExpired: z.enum(["REROUTE", "FAULT"]).optional(),
+            maxRerouteAttempts: z.number().optional(),
           }).optional(),
-          humanTask: z.object({
+          inputProjectionOverride: z.string().optional(),
+          contextWrite: z.record(z.unknown()).optional(),
+          producedKeys: z.array(z.string()).optional(),
+          lifecycleScope: z.enum(["BINDING", "COMPOUND", "CASE"]).optional(),
+          participation: z.enum(["PARTICIPANT", "COMPANION"]).optional(),
+          executionMode: z.enum(["TRANSIENT", "PERSISTENT", "REINVOKED"]).optional(),
+        }).extend({ humanTask: z.object({
             title: z.string().optional(),
             titleExpression: z.string().optional(),
             templateRef: z.string().optional(),
@@ -144,21 +226,8 @@ export const caseDefinitionDocumentSchema = z.object({
             outcomes: z.array(z.string()).optional(),
             payloadType: z.string().optional(),
             resolutionType: z.string().optional(),
-          }).optional(),
-          conflictResolverStrategy: z.enum(["LAST_WRITER_WINS", "FIRST_WRITER_WINS", "FAIL", "DEEP_MERGE"]).optional(),
-          outcomePolicy: z.object({
-            onDecline: z.enum(["REROUTE", "FAULT"]).optional(),
-            onFailure: z.enum(["REROUTE", "FAULT"]).optional(),
-            onExpired: z.enum(["REROUTE", "FAULT"]).optional(),
-            maxRerouteAttempts: z.number().optional(),
-          }).optional(),
-          inputProjectionOverride: z.string().optional(),
-          contextWrite: z.record(z.unknown()).optional(),
-          producedKeys: z.array(z.string()).optional(),
-          lifecycleScope: z.enum(["BINDING", "COMPOUND", "CASE"]).optional(),
-          participation: z.enum(["PARTICIPANT", "COMPANION"]).optional(),
-          executionMode: z.enum(["TRANSIENT", "PERSISTENT", "REINVOKED"]).optional(),
-        })).optional(),
+          }).optional() }),
+        ])).optional(),
       workers: z.array(z.object({
           name: z.string(),
           description: z.string().optional(),
