@@ -2,6 +2,7 @@ package io.casehub.intellij
 
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.application.ApplicationManager
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.awt.Color
 import javax.swing.UIManager
@@ -31,7 +32,7 @@ object DiagramThemeSync {
 
     fun buildThemeInjectionJs(): String {
         val css = buildThemeCss()
-        val encoded = Json.encodeToString(css)
+        val encoded = Json.encodeToString<String>(css)
         return "window.updateTheme($encoded)"
     }
 

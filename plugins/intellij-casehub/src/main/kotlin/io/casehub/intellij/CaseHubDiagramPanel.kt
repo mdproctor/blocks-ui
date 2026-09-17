@@ -4,6 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.awt.BorderLayout
 import java.nio.file.Files
@@ -40,8 +41,8 @@ class CaseHubDiagramPanel(parent: Disposable) : JPanel(BorderLayout()), Disposab
 
     fun pushYaml(yaml: String, format: String) {
         val b = browser ?: return
-        val encodedYaml = Json.encodeToString(yaml)
-        val encodedFormat = Json.encodeToString(format)
+        val encodedYaml = Json.encodeToString<String>(yaml)
+        val encodedFormat = Json.encodeToString<String>(format)
         b.cefBrowser.executeJavaScript(
             "window.updateYaml($encodedYaml, $encodedFormat)",
             "",
