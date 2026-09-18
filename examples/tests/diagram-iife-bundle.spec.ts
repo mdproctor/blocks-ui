@@ -193,4 +193,139 @@ test.describe('IIFE diagram bundle', () => {
 
     expect(errors, 'no page errors').toEqual([]);
   });
+
+  test('external stencil nodes render visible content', async ({ page }) => {
+    test.setTimeout(30000);
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto(`http://localhost:${server.port}/`);
+    await page.waitForTimeout(1000);
+
+    const yaml = `dsl: casehub/1.0
+namespace: test
+name: external-test
+version: "1.0"
+spec:
+  bindings:
+    - name: lookup
+      capability:
+        name: policy-verification
+        version: "2.1"
+  workers: []`;
+
+    await page.evaluate((y) => (window as any).updateYaml(y, 'case'), yaml);
+    await page.waitForTimeout(5000);
+
+    const externalNode = await page.evaluate(() => {
+      const nodes = document.querySelectorAll('.react-flow__node');
+      for (const node of nodes) {
+        const dataId = node.getAttribute('data-id') ?? '';
+        if (dataId.startsWith('external:')) {
+          const wrapper = node.querySelector('.stencil-decoration-wrapper');
+          const text = wrapper?.textContent?.trim() ?? '';
+          return { found: true, dataId, hasText: text.length > 0, text: text.substring(0, 100) };
+        }
+      }
+      return { found: false, dataId: '', hasText: false, text: '' };
+    });
+
+    expect(externalNode.found, 'should have an external node for unresolved capability').toBe(true);
+    expect(externalNode.hasText, `external node should render visible text, got: "${externalNode.text}"`).toBe(true);
+  });
+
+  test('SWF drill-down: swf-diagram registered and worker expand works', async ({ page }) => {
+    test.setTimeout(30000);
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto(`http://localhost:${server.port}/`);
+    await page.waitForTimeout(1000);
+
+    const yaml = `dsl: casehub/1.0
+namespace: test
+name: drilldown-test
+version: "1.0"
+spec:
+  bindings:
+    - name: detect
+      capability:
+        name: fraud-scoring
+        version: "1.0"
+  workers:
+    - name: fraud-agent
+      capabilities:
+        - fraud-scoring
+      agent:
+        model: gpt-4o
+        instructions: Run fraud detection
+      do:
+        - fetchData:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/enrich
+        - checkResult:
+            switch:
+              - when: \${.score > 0.8}
+                then: flag
+              - when: \${.score <= 0.8}
+                then: pass`;
+
+    await page.evaluate((y) => (window as any).updateYaml(y, 'case'), yaml);
+    await page.waitForTimeout(5000);
+
+    const swfRegistered = await page.evaluate(() => !!customElements.get('swf-diagram'));
+    expect(swfRegistered, 'swf-diagram should be registered for worker drill-down').toBe(true);
+
+    const expandButton = page.locator('[data-id*="fraud-agent"] button[title="Toggle expand"]');
+    expect(await expandButton.count(), 'worker with do tasks should have expand button').toBeGreaterThan(0);
+
+    await expandButton.click();
+    await page.waitForTimeout(2000);
+
+    const expanded = await page.evaluate(() => {
+      const diagram = document.querySelector('casehub-diagram') as any;
+      return {
+        expandedWorkers: diagram?._expandedWorkers ? Array.from(diagram._expandedWorkers) : [],
+      };
+    });
+    expect(expanded.expandedWorkers.length, 'worker should be in expanded set after click').toBeGreaterThan(0);
+
+    await page.screenshot({ path: 'test-results/iife-diagram-drilldown.png', fullPage: true });
+  });
+
+  test('add node from palette via stencil click', async ({ page }) => {
+    test.setTimeout(30000);
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto(`http://localhost:${server.port}/`);
+    await page.waitForTimeout(1000);
+
+    await page.evaluate((y) => (window as any).updateYaml(y, 'case'), SAMPLE_YAML);
+    await page.waitForTimeout(5000);
+
+    const beforeCount = await page.evaluate(() => {
+      const d = document.querySelector('casehub-diagram') as any;
+      return d?._nodes?.length ?? 0;
+    });
+
+    const palette = page.locator('pages-diagram-palette');
+    await expect(palette).toBeAttached();
+
+    const milestoneItem = palette.locator('div.palette-item[aria-label="Milestone"]');
+    await milestoneItem.click();
+    await page.waitForTimeout(1000);
+
+    const afterCount = await page.evaluate(() => {
+      const d = document.querySelector('casehub-diagram') as any;
+      return d?._nodes?.length ?? 0;
+    });
+
+    expect(afterCount, 'clicking palette item should add a node').toBeGreaterThan(beforeCount);
+
+    await page.screenshot({ path: 'test-results/iife-diagram-added-node.png', fullPage: true });
+  });
 });

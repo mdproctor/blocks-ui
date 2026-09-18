@@ -1,5 +1,11 @@
 import '@casehubio/blocks-ui-casehub-diagram';
+import '@casehubio/blocks-ui-swf-diagram';
 import { DIAGRAM_TAGS } from '@casehubio/blocks-ui-core';
+import { registerSwfStencils, createSwfThumbnailRenderer } from '@casehubio/graph-stencil-swf';
+import { registerThumbnailRenderer } from '@casehubio/graph-stencil-case';
+
+registerSwfStencils();
+registerThumbnailRenderer('swf', createSwfThumbnailRenderer());
 
 function dbg(msg: string) {
   console.log(`[casehub-diag] ${msg}`);
