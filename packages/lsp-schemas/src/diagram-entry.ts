@@ -15,7 +15,7 @@ function createDiagramElement(tag: string): HTMLElement {
   dbg(`creating element: <${tag}>`);
   const el = document.createElement(tag);
   dbg(`element created, tagName=${el.tagName}, constructor=${el.constructor.name}`);
-  el.setAttribute('mode', 'readonly');
+  // No readonly mode — allow full interaction (stencils, properties, editing)
   const root = document.getElementById('diagram-root')!;
   root.innerHTML = '';
   root.appendChild(el);
