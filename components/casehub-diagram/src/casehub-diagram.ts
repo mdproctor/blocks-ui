@@ -886,6 +886,7 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
             .editPolicy=${this._editPolicy()}
             .onMutation=${this._handleMutation}
             .miniMapNodeColor=${caseMiniMapNodeColor}
+            .connectionsEnabled=${!this.readonly}
             role="img"
             aria-label="Case definition diagram"
             style="flex: 1; height: 100%; min-width: 0;"

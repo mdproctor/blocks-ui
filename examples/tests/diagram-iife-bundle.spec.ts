@@ -194,6 +194,28 @@ test.describe('IIFE diagram bundle', () => {
     expect(errors, 'no page errors').toEqual([]);
   });
 
+  test('connections enabled and model set on graph canvas', async ({ page }) => {
+    test.setTimeout(30000);
+
+    await page.goto(`http://localhost:${server.port}/`);
+    await page.waitForTimeout(1000);
+    await page.evaluate((y) => (window as any).updateYaml(y, 'case'), SAMPLE_YAML);
+    await page.waitForTimeout(5000);
+
+    const canvasState = await page.evaluate(() => {
+      const coreCanvas = document.querySelector('graph-canvas-core') as any;
+      return {
+        connectionsEnabled: coreCanvas?.connectionsEnabled,
+        hasModel: !!coreCanvas?.model,
+        modelNodeCount: coreCanvas?.model?.nodes?.length ?? 0,
+      };
+    });
+
+    expect(canvasState.connectionsEnabled, 'connectionsEnabled should be true for interactive diagrams').toBe(true);
+    expect(canvasState.hasModel, 'model should be set on graph-canvas-core for connection validation').toBe(true);
+    expect(canvasState.modelNodeCount, 'model should have nodes').toBeGreaterThan(0);
+  });
+
   test('selection outline covers full rendered content', async ({ page }) => {
     test.setTimeout(30000);
 
