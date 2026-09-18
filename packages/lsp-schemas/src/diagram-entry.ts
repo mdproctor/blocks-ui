@@ -1,5 +1,4 @@
 import '@casehubio/blocks-ui-casehub-diagram';
-import '@casehubio/graph-renderer';
 import { DIAGRAM_TAGS } from '@casehubio/blocks-ui-core';
 
 function dbg(msg: string) {
@@ -56,21 +55,6 @@ function createDiagramElement(tag: string): HTMLElement {
     setTimeout(() => {
       const el = activeElement as any;
       dbg(`post-set check: _currentYaml=${el?._currentYaml?.length ?? 'null'}, _error=${el?._error ?? 'none'}, _nodes=${el?._nodes?.length ?? 'null'}, _edges=${el?._edges?.length ?? 'null'}, _renderInProgress=${el?._renderInProgress}`);
-      const canvas = el?.shadowRoot?.querySelector('pages-graph-canvas') ?? el?.querySelector('pages-graph-canvas');
-      if (canvas && !canvas.props && canvas.nodes?.length > 0) {
-        dbg(`pages-graph-canvas stuck on Loading — replacing with graph-canvas-core`);
-        const core = document.createElement('graph-canvas-core') as any;
-        core.nodes = canvas.nodes;
-        core.edges = canvas.edges;
-        core.model = canvas.model ?? el?._adapterResult?.model;
-        core.editPolicy = canvas.editPolicy;
-        core.miniMapNodeColor = canvas.miniMapNodeColor;
-        core.style.cssText = canvas.style.cssText;
-        core.setAttribute('role', 'img');
-        core.setAttribute('aria-label', 'Case definition diagram');
-        canvas.replaceWith(core);
-        dbg(`graph-canvas-core injected: nodes=${core.nodes?.length}, edges=${core.edges?.length}, model=${!!core.model}`);
-      }
     }, 2000);
   } catch (e) {
     dbg(`ERROR setting yaml: ${e}`);
