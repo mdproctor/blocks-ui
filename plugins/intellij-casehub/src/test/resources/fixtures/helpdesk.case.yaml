@@ -1,0 +1,75 @@
+dsl: casehub/case-definition/v1
+metadata:
+  name: helpdesk-intake
+  description: Helpdesk intake case with triage and resolution workflows
+
+spec:
+  capabilities:
+    - name: triage
+      description: Classify and prioritise incoming tickets
+    - name: resolve-l1
+      description: First-line resolution
+    - name: resolve-l2
+      description: Second-line escalation resolution
+    - name: escalate
+      description: Escalate to senior support
+    - name: audit
+      description: Post-resolution audit and compliance check
+
+  workers:
+    - name: triage-agent
+      capabilities:
+        - triage
+      workflow: triage-workflow.swf.yaml
+
+    - name: support-agent
+      capabilities:
+        - resolve-l1
+      workflow: l1-resolution.swf.yaml
+
+    - name: senior-agent
+      capabilities:
+        - resolve-l2
+        - escalate
+      workflow: l2-escalation.swf.yaml
+
+    - name: compliance-bot
+      capabilities:
+        - audit
+
+  bindings:
+    - name: intake-triage
+      type: automatic
+      capability: triage
+      trigger:
+        type: event
+        event: ticket.created
+
+    - name: l1-resolution
+      type: manual
+      capability: resolve-l1
+      trigger:
+        type: completion
+        source: intake-triage
+
+    - name: l2-escalation
+      type: manual
+      capability: resolve-l2
+      trigger:
+        type: signal
+        signal: escalation-requested
+
+    - name: post-resolution-audit
+      type: automatic
+      capability: audit
+      trigger:
+        type: completion
+        source: l1-resolution
+
+  gates:
+    - name: sla-check
+      quorum: 1
+      deadline: PT4H
+      evidence:
+        - ticket.priority
+        - ticket.category

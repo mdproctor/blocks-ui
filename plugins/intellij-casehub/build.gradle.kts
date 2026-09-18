@@ -17,14 +17,18 @@ repositories {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     intellijPlatform {
-        intellijIdeaCommunity(providers.gradleProperty("platformVersion").get())
+        local("/Applications/IntelliJ IDEA.app")
         plugin("com.redhat.devtools.lsp4ij", providers.gradleProperty("lsp4ijVersion").get())
         bundledPlugin("org.jetbrains.plugins.yaml")
+        bundledPlugin("com.intellij.modules.jcef")
     }
 }
 
 kotlin {
     jvmToolchain(21)
+    compilerOptions {
+        freeCompilerArgs.add("-Xskip-metadata-version-check")
+    }
 }
 
 intellijPlatform {
@@ -33,7 +37,7 @@ intellijPlatform {
         name = providers.gradleProperty("pluginName")
         version = providers.gradleProperty("pluginVersion")
         ideaVersion {
-            sinceBuild = "242"
+            sinceBuild = "262"
         }
     }
 

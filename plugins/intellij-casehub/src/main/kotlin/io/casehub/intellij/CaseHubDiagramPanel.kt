@@ -6,6 +6,10 @@ import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.cef.browser.CefBrowser
+import org.cef.browser.CefFrame
+import org.cef.handler.CefDisplayHandlerAdapter
+import org.cef.handler.CefLoadHandlerAdapter
 import java.awt.BorderLayout
 import java.nio.file.Files
 import java.nio.file.Path
@@ -17,6 +21,9 @@ import javax.swing.SwingConstants
 class CaseHubDiagramPanel(parent: Disposable) : JPanel(BorderLayout()), Disposable {
 
     private var browser: JBCefBrowser? = null
+    private var pageLoaded = false
+    private var pendingYaml: String? = null
+    private var pendingFormat: String? = null
 
     init {
         Disposer.register(parent, this)
@@ -34,12 +41,46 @@ class CaseHubDiagramPanel(parent: Disposable) : JPanel(BorderLayout()), Disposab
             val htmlFile = targetDir.resolve("diagram-shell.html")
             val cefBrowser = JBCefBrowser(htmlFile.toUri().toString())
             browser = cefBrowser
+
+            cefBrowser.jbCefClient.addDisplayHandler(object : CefDisplayHandlerAdapter() {
+                override fun onConsoleMessage(browser: CefBrowser?, level: org.cef.CefSettings.LogSeverity?, message: String?, source: String?, line: Int): Boolean {
+                    val prefix = if (level == org.cef.CefSettings.LogSeverity.LOGSEVERITY_ERROR) "ERROR" else "LOG"
+                    com.intellij.openapi.diagnostic.Logger.getInstance("CaseHubDiagram").info("[$prefix] $message ($source:$line)")
+                    return false
+                }
+            }, cefBrowser.cefBrowser)
+
+            cefBrowser.jbCefClient.addLoadHandler(object : CefLoadHandlerAdapter() {
+                override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
+                    if (frame?.isMain == true) {
+                        pageLoaded = true
+                        val yaml = pendingYaml
+                        val format = pendingFormat
+                        if (yaml != null && format != null) {
+                            pendingYaml = null
+                            pendingFormat = null
+                            doPushYaml(yaml, format)
+                            doPushTheme()
+                        }
+                    }
+                }
+            }, cefBrowser.cefBrowser)
+
             add(cefBrowser.component, BorderLayout.CENTER)
             Disposer.register(this, cefBrowser)
         }
     }
 
     fun pushYaml(yaml: String, format: String) {
+        if (!pageLoaded) {
+            pendingYaml = yaml
+            pendingFormat = format
+            return
+        }
+        doPushYaml(yaml, format)
+    }
+
+    private fun doPushYaml(yaml: String, format: String) {
         val b = browser ?: return
         val encodedYaml = Json.encodeToString<String>(yaml)
         val encodedFormat = Json.encodeToString<String>(format)
@@ -51,6 +92,11 @@ class CaseHubDiagramPanel(parent: Disposable) : JPanel(BorderLayout()), Disposab
     }
 
     fun pushTheme() {
+        if (!pageLoaded) return
+        doPushTheme()
+    }
+
+    private fun doPushTheme() {
         val b = browser ?: return
         b.cefBrowser.executeJavaScript(DiagramThemeSync.buildThemeInjectionJs(), "", 0)
     }

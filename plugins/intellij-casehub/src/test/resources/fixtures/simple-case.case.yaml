@@ -1,0 +1,31 @@
+dsl: casehub/case-definition/v1
+metadata:
+  name: helpdesk-intake
+  description: Helpdesk intake case definition
+
+spec:
+  capabilities:
+    - name: triage
+      description: Classify and prioritise incoming tickets
+    - name: resolve
+      description: Resolve the ticket
+    - name: escalate
+      description: Escalate to senior support
+
+  workers:
+    - name: support-agent
+      capabilities:
+        - triage
+        - resolve
+    - name: senior-agent
+      capabilities:
+        - escalate
+        - resolve
+
+  bindings:
+    - name: initial-triage
+      type: automatic
+      capability: triage
+    - name: resolution
+      type: manual
+      capability: resolve

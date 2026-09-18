@@ -1,0 +1,40 @@
+document:
+  dsl: 1.0.0
+  namespace: casehub.helpdesk
+  name: triage-workflow
+  version: 0.1.0
+
+do:
+  - classifyTicket:
+      call: http
+      with:
+        method: POST
+        endpoint:
+          uri: https://api.casehub.io/classify
+        body:
+          ticketId: ${ .ticket.id }
+          content: ${ .ticket.description }
+      then: applyPriority
+
+  - applyPriority:
+      switch:
+        - critical:
+            when: ${ .classification.priority == "critical" }
+            then: escalateImmediately
+        - normal:
+            when: ${ .classification.priority != "critical" }
+            then: assignToQueue
+
+  - escalateImmediately:
+      emit:
+        event:
+          with:
+            type: escalation-requested
+            source: triage-workflow
+      then: end
+
+  - assignToQueue:
+      set:
+        ticket.status: triaged
+        ticket.queue: ${ .classification.category }
+      then: end

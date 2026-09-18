@@ -35,6 +35,7 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.redhat.devtools.lsp4ij</depends>
     <depends>org.jetbrains.plugins.yaml</depends>
+    <depends optional="true" config-file="casehub-jcef.xml">com.intellij.modules.jcef</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileType
@@ -65,8 +66,6 @@
                 implementationClass="com.redhat.devtools.lsp4ij.features.foldingRange.LSPFoldingRangeBuilder"
                 order="first"/>
 
-        <fileEditorProvider
-                implementation="io.casehub.intellij.CaseHubFileEditorProvider"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
