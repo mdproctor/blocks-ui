@@ -11,4 +11,16 @@ await build({
   define: {
     'process.env.NODE_ENV': '"production"',
   },
+  loader: { '.css': 'text' },
+  plugins: [{
+    name: 'vite-raw-compat',
+    setup(b) {
+      b.onResolve({ filter: /\?raw$/ }, async args => {
+        const clean = args.path.replace(/\?raw$/, '');
+        const result = await b.resolve(clean, { resolveDir: args.resolveDir, kind: 'import-statement' });
+        if (result.errors.length > 0) return { errors: result.errors };
+        return { path: result.path };
+      });
+    },
+  }],
 });
