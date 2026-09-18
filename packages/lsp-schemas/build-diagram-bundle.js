@@ -8,6 +8,7 @@ await build({
   target: 'es2022',
   outfile: 'dist/diagram-panel.bundle.js',
   sourcemap: 'linked',
+  ignoreAnnotations: true,
   define: {
     'process.env.NODE_ENV': '"production"',
   },
