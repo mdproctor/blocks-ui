@@ -194,6 +194,42 @@ test.describe('IIFE diagram bundle', () => {
     expect(errors, 'no page errors').toEqual([]);
   });
 
+  test('selection outline covers full rendered content', async ({ page }) => {
+    test.setTimeout(30000);
+
+    await page.goto(`http://localhost:${server.port}/`);
+    await page.waitForTimeout(1000);
+    await page.evaluate((y) => (window as any).updateYaml(y, 'case'), SAMPLE_YAML);
+    await page.waitForTimeout(5000);
+
+    const overflows = await page.evaluate(() => {
+      const nodes = document.querySelectorAll('.react-flow__node');
+      const results: { id: string; wrapperH: number; contentH: number; overflow: number }[] = [];
+      for (const node of nodes) {
+        const wrapper = node.querySelector('.stencil-decoration-wrapper') as HTMLElement;
+        if (!wrapper) continue;
+        const wrapperRect = wrapper.getBoundingClientRect();
+        let maxBottom = wrapperRect.bottom;
+        for (const child of wrapper.querySelectorAll('*')) {
+          const r = child.getBoundingClientRect();
+          if (r.bottom > maxBottom) maxBottom = r.bottom;
+        }
+        const overflow = Math.round(maxBottom - wrapperRect.bottom);
+        results.push({
+          id: node.getAttribute('data-id') ?? '',
+          wrapperH: Math.round(wrapperRect.height),
+          contentH: Math.round(maxBottom - wrapperRect.top),
+          overflow,
+        });
+      }
+      return results;
+    });
+
+    for (const node of overflows) {
+      expect(node.overflow, `${node.id}: content overflows wrapper by ${node.overflow}px (wrapper=${node.wrapperH}, content=${node.contentH})`).toBeLessThanOrEqual(2);
+    }
+  });
+
   test('external stencil nodes render visible content', async ({ page }) => {
     test.setTimeout(30000);
     const errors: string[] = [];
