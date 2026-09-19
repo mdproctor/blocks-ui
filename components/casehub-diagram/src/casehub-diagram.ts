@@ -46,6 +46,11 @@ import './casehub-diagram-toolbar.js';
 
 const caseEditPolicy = createCaseEditPolicy();
 
+const CONNECTABLE_TARGETS: Record<string, string[]> = {
+  binding: ['worker'],
+  worker: ['binding'],
+};
+
 function caseMiniMapNodeColor(node: { type?: string }): string {
   switch (node.type) {
     case 'binding': return '#3b82f6';
@@ -269,6 +274,17 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
       this._fullRender(this._currentYaml);
     }, 150);
   };
+
+  override _chooserItems() {
+    const items = super._chooserItems();
+    const sourceId = this._chooserState?.sourceNodeId;
+    if (!sourceId || !this._adapterResult) return items;
+    const source = this._adapterResult.model.nodes.find(n => n.id === sourceId);
+    if (!source) return items;
+    const validTargets = CONNECTABLE_TARGETS[source.type];
+    if (!validTargets) return items;
+    return items.filter(item => validTargets.includes(item.type));
+  }
 
   override _onChooserSelect = (e: Event): void => {
     const detail = (e as CustomEvent).detail;

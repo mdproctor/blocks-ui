@@ -449,4 +449,32 @@ spec:
 
     expect(result.nodeAdded, 'should add a new node from connect-end-on-empty').toBe(true);
   });
+
+  test('connect-end picker filters items by connectable types from source', async ({ page }) => {
+    test.setTimeout(30000);
+    await loadDiagram(page, SAMPLE_YAML);
+
+    const result = await page.evaluate(async () => {
+      const diagram = (window as any)._findDiagram() as any;
+      if (!diagram) return { error: 'no diagram' };
+
+      const binding = diagram._adapterResult?.model?.nodes?.find((n: any) => n.type === 'binding');
+      if (!binding) return { error: 'no binding' };
+
+      diagram._lastPointerX = 400;
+      diagram._lastPointerY = 400;
+      diagram._showPickerAtConnectEnd({ sourceNodeId: binding.id });
+      await diagram.updateComplete;
+
+      const chooser = diagram.querySelector('pages-node-chooser');
+      if (!chooser) return { error: 'no chooser' };
+
+      const items = chooser.items?.map((i: any) => i.type) ?? [];
+
+      diagram._chooserState = null;
+      return { sourceType: binding.type, items };
+    });
+
+    expect(result.items, 'picker from binding should only show connectable types (worker)').toEqual(['worker']);
+  });
 });
