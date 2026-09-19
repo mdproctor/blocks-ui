@@ -1,5 +1,6 @@
 import '@casehubio/blocks-ui-casehub-diagram';
 import '@casehubio/blocks-ui-swf-diagram';
+import '@casehubio/blocks-ui-diagram-workbench';
 import { DIAGRAM_TAGS } from '@casehubio/blocks-ui-core';
 import { registerSwfStencils, createSwfThumbnailRenderer } from '@casehubio/graph-stencil-swf';
 import { registerThumbnailRenderer } from '@casehubio/graph-stencil-case';
@@ -27,6 +28,20 @@ function createDiagramElement(tag: string): HTMLElement {
   root.appendChild(el);
   dbg(`element appended to DOM, isConnected=${el.isConnected}`);
 
+  const injectOverrides = (host: Element) => {
+    const sr = host.shadowRoot;
+    if (sr && !sr.querySelector('#iife-overrides')) {
+      const s = document.createElement('style');
+      s.id = 'iife-overrides';
+      s.textContent = '.stencil-decoration-wrapper { height: auto !important; }';
+      sr.appendChild(s);
+    }
+    for (const child of host.querySelectorAll('*')) {
+      if (child.shadowRoot) injectOverrides(child);
+    }
+  };
+  requestAnimationFrame(() => injectOverrides(el));
+
   el.addEventListener('yaml-changed', (e: any) => {
     dbg(`yaml-changed event: ${e.detail?.yaml?.substring(0, 50)}...`);
   });
@@ -50,8 +65,11 @@ function createDiagramElement(tag: string): HTMLElement {
     return;
   }
 
-  if (!activeElement || activeElement.tagName.toLowerCase() !== tag) {
-    activeElement = createDiagramElement(tag);
+  const useWorkbench = format === 'case';
+  const elementTag = useWorkbench ? 'blocks-diagram-workbench' : tag;
+
+  if (!activeElement || activeElement.tagName.toLowerCase() !== elementTag) {
+    activeElement = createDiagramElement(elementTag);
   }
 
   dbg(`setting yaml property (${yaml?.length} chars)`);
