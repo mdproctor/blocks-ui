@@ -450,6 +450,59 @@ spec:
     expect(result.nodeAdded, 'should add a new node from connect-end-on-empty').toBe(true);
   });
 
+  test('connect-end from binding adding milestone creates condition edge', async ({ page }) => {
+    test.setTimeout(30000);
+    await loadDiagram(page, SAMPLE_YAML);
+
+    const result = await page.evaluate(async () => {
+      const diagram = (window as any)._findDiagram() as any;
+      if (!diagram) return { error: 'no diagram' };
+
+      const binding = diagram._adapterResult?.model?.nodes?.find((n: any) => n.type === 'binding');
+      if (!binding) return { error: 'no binding' };
+
+      const beforeEdges = diagram._edges?.length ?? 0;
+
+      diagram._lastPointerX = 500;
+      diagram._lastPointerY = 400;
+      diagram._showPickerAtConnectEnd({ sourceNodeId: binding.id });
+      await diagram.updateComplete;
+
+      const chooser = diagram.querySelector('pages-node-chooser');
+      if (!chooser) return { error: 'no chooser' };
+
+      chooser.dispatchEvent(new CustomEvent('pages-palette-select', {
+        bubbles: true, composed: true,
+        detail: { item: { type: 'milestone', label: 'Milestone', icon: 'flag' } },
+      }));
+
+      const waitForRender = () => new Promise<void>(r => {
+        const check = () => {
+          if (!diagram._renderInProgress) { r(); return; }
+          setTimeout(check, 100);
+        };
+        setTimeout(check, 500);
+      });
+      await waitForRender();
+
+      const afterEdges = diagram._edges?.length ?? 0;
+      const bindingName = binding.properties?.name as string;
+      const yaml = diagram._currentYaml as string;
+      const hasCondition = yaml.includes(`${bindingName}.complete`);
+
+      return {
+        bindingName,
+        beforeEdges,
+        afterEdges,
+        edgeAdded: afterEdges > beforeEdges,
+        hasCondition,
+      };
+    });
+
+    expect(result.hasCondition, `milestone should have condition referencing ${result.bindingName}`).toBe(true);
+    expect(result.edgeAdded, `edge should be created (${result.beforeEdges} → ${result.afterEdges})`).toBe(true);
+  });
+
   test('connect-end picker filters items by connectable types from source', async ({ page }) => {
     test.setTimeout(30000);
     await loadDiagram(page, SAMPLE_YAML);

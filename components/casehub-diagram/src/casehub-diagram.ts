@@ -277,15 +277,14 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
     const nodeType = detail?.item?.type;
     if (!nodeType || !this._adapterResult || !this._chooserState) return;
     const { sourceNodeId } = this._chooserState;
-    if (sourceNodeId && nodeType === 'worker') {
+    if (sourceNodeId) {
       const source = this._adapterResult.model.nodes.find(n => n.id === sourceNodeId);
-      if (source?.type === 'binding') {
-        const cap = source.properties['capability'] as { name?: string } | undefined;
-        const capName = cap?.name;
-        if (capName) {
+      if (source) {
+        const defaults = this._connectEndDefaults(source, nodeType);
+        if (defaults) {
           this._pushUndo();
           try {
-            const yaml = addElement(this._currentYaml, 'worker', { capabilities: [capName] });
+            const yaml = addElement(this._currentYaml, nodeType as any, defaults);
             this._currentYaml = yaml;
             void this._fullRender(yaml);
           } catch (err) {
@@ -300,6 +299,24 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
     this._handleMutation({ type: 'addNode', nodeType });
     this._chooserState = null;
   };
+
+  private _connectEndDefaults(source: { type: string; properties: Record<string, unknown> }, targetType: string): Record<string, unknown> | null {
+    const sourceName = source.properties['name'] as string | undefined;
+    if (source.type === 'binding' && targetType === 'worker') {
+      const cap = source.properties['capability'] as { name?: string } | undefined;
+      if (cap?.name) return { capabilities: [cap.name] };
+    }
+    if (source.type === 'binding' && targetType === 'milestone' && sourceName) {
+      return { condition: `${sourceName}.complete` };
+    }
+    if (source.type === 'binding' && targetType === 'goal' && sourceName) {
+      return { expression: { all: [sourceName] } };
+    }
+    if (source.type === 'milestone' && targetType === 'goal' && sourceName) {
+      return { expression: { all: [sourceName] } };
+    }
+    return null;
+  }
 
   override async updated(changed: Map<string, unknown>): Promise<void> {
     await super.updated(changed);
