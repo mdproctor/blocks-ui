@@ -46,10 +46,7 @@ import './casehub-diagram-toolbar.js';
 
 const caseEditPolicy = createCaseEditPolicy();
 
-const CONNECTABLE_TARGETS: Record<string, string[]> = {
-  binding: ['worker'],
-  worker: ['binding'],
-};
+
 
 function caseMiniMapNodeColor(node: { type?: string }): string {
   switch (node.type) {
@@ -275,17 +272,6 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
     }, 150);
   };
 
-  override _chooserItems() {
-    const items = super._chooserItems();
-    const sourceId = this._chooserState?.sourceNodeId;
-    if (!sourceId || !this._adapterResult) return items;
-    const source = this._adapterResult.model.nodes.find(n => n.id === sourceId);
-    if (!source) return items;
-    const validTargets = CONNECTABLE_TARGETS[source.type];
-    if (!validTargets) return items;
-    return items.filter(item => validTargets.includes(item.type));
-  }
-
   override _onChooserSelect = (e: Event): void => {
     const detail = (e as CustomEvent).detail;
     const nodeType = detail?.item?.type;
@@ -299,16 +285,7 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
         if (capName) {
           this._pushUndo();
           try {
-            let yaml = addElement(this._currentYaml, 'worker', { capabilities: [capName] });
-            const result = this._adaptYaml(yaml);
-            this._adapterResult = result;
-            const prevNodeIds = new Set(this._nodes.map(n => n.id));
-            const newWorker = result.model.nodes.find(n => n.type === 'worker' && !prevNodeIds.has(n.id));
-            if (newWorker) {
-              try {
-                yaml = this._applyGraphEdit(yaml, { type: 'addEdge', sourceId: sourceNodeId, targetId: newWorker.id });
-              } catch (_) { /* best effort */ }
-            }
+            const yaml = addElement(this._currentYaml, 'worker', { capabilities: [capName] });
             this._currentYaml = yaml;
             void this._fullRender(yaml);
           } catch (err) {
