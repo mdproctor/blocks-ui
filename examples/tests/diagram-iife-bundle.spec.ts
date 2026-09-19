@@ -475,6 +475,9 @@ spec:
       return { sourceType: binding.type, items };
     });
 
-    expect(result.items, 'picker from binding should only show connectable types (worker)').toEqual(['worker']);
+    expect(result.items, 'picker from binding should show types connectable to/from binding').toEqual(
+      expect.arrayContaining(['worker', 'milestone', 'goal']),
+    );
+    expect(result.items, 'should not include binding itself').not.toContain('binding');
   });
 });
