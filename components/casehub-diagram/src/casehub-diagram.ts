@@ -104,10 +104,6 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
   @state() private _paletteOpen = true;
   @state() private _paletteCompact = false;
   @state() private _propertiesOpen = true;
-  @state() private _chooserState: { x: number; y: number; sourceNodeId?: string | undefined } | null = null;
-
-  private _lastPointerX = 0;
-  private _lastPointerY = 0;
   private _expandedWorkers = new Set<string>();
   private _expandDebounce: ReturnType<typeof setTimeout> | null = null;
   private _cachedLayoutOpts: ElkLayoutOptions | null = null;
@@ -273,58 +269,6 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
       this._fullRender(this._currentYaml);
     }, 150);
   };
-
-  private _onCanvasPointerDown = (e: PointerEvent): void => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    this._lastPointerX = e.clientX - rect.left;
-    this._lastPointerY = e.clientY - rect.top;
-  };
-
-  private _showPickerAtPaneClick = (): void => {
-    if (this.readonly) return;
-    this._chooserState = { x: this._lastPointerX, y: this._lastPointerY };
-  };
-
-  private _showPickerAtConnectEnd = (payload: { sourceNodeId?: string }): void => {
-    if (this.readonly) return;
-    this._chooserState = {
-      x: this._lastPointerX,
-      y: this._lastPointerY,
-      sourceNodeId: payload?.sourceNodeId,
-    };
-  };
-
-  private _chooserItems() {
-    const policy = this._editPolicy();
-    if (!policy || !this._adapterResult) return [];
-    return policy.getCreatableTypes(null, this._adapterResult.model)
-      .map(s => ({ type: s.type, label: s.label, icon: s.icon }));
-  }
-
-  private _onChooserSelect = (e: CustomEvent): void => {
-    const nodeType = e.detail?.item?.type as string | undefined;
-    if (!nodeType || !this._adapterResult || !this._chooserState) return;
-    this._handleMutation({ type: 'addNode', nodeType });
-    this._chooserState = null;
-  };
-
-  private _onChooserDismiss = (): void => {
-    this._chooserState = null;
-  };
-
-  private _renderNodePicker() {
-    if (!this._chooserState) return nothing;
-    return html`
-      <div style="position:absolute;left:${this._chooserState.x}px;top:${this._chooserState.y}px;z-index:10;">
-        <pages-node-chooser
-          .items=${this._chooserItems()}
-          .iconRenderer=${this._iconRenderer()}
-          @pages-palette-select=${this._onChooserSelect}
-          @pages-chooser-dismiss=${this._onChooserDismiss}
-        ></pages-node-chooser>
-      </div>
-    `;
-  }
 
   override async updated(changed: Map<string, unknown>): Promise<void> {
     await super.updated(changed);
