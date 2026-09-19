@@ -104,7 +104,10 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
   @state() private _paletteOpen = true;
   @state() private _paletteCompact = false;
   @state() private _propertiesOpen = true;
+  @state() private _chooserState: { x: number; y: number; sourceNodeId?: string | undefined } | null = null;
 
+  private _lastPointerX = 0;
+  private _lastPointerY = 0;
   private _expandedWorkers = new Set<string>();
   private _expandDebounce: ReturnType<typeof setTimeout> | null = null;
   private _cachedLayoutOpts: ElkLayoutOptions | null = null;
@@ -270,6 +273,58 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
       this._fullRender(this._currentYaml);
     }, 150);
   };
+
+  private _onCanvasPointerDown = (e: PointerEvent): void => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    this._lastPointerX = e.clientX - rect.left;
+    this._lastPointerY = e.clientY - rect.top;
+  };
+
+  private _showPickerAtPaneClick = (): void => {
+    if (this.readonly) return;
+    this._chooserState = { x: this._lastPointerX, y: this._lastPointerY };
+  };
+
+  private _showPickerAtConnectEnd = (payload: { sourceNodeId?: string }): void => {
+    if (this.readonly) return;
+    this._chooserState = {
+      x: this._lastPointerX,
+      y: this._lastPointerY,
+      sourceNodeId: payload?.sourceNodeId,
+    };
+  };
+
+  private _chooserItems() {
+    const policy = this._editPolicy();
+    if (!policy || !this._adapterResult) return [];
+    return policy.getCreatableTypes(null, this._adapterResult.model)
+      .map(s => ({ type: s.type, label: s.label, icon: s.icon }));
+  }
+
+  private _onChooserSelect = (e: CustomEvent): void => {
+    const nodeType = e.detail?.item?.type as string | undefined;
+    if (!nodeType || !this._adapterResult || !this._chooserState) return;
+    this._handleMutation({ type: 'addNode', nodeType });
+    this._chooserState = null;
+  };
+
+  private _onChooserDismiss = (): void => {
+    this._chooserState = null;
+  };
+
+  private _renderNodePicker() {
+    if (!this._chooserState) return nothing;
+    return html`
+      <div style="position:absolute;left:${this._chooserState.x}px;top:${this._chooserState.y}px;z-index:10;">
+        <pages-node-chooser
+          .items=${this._chooserItems()}
+          .iconRenderer=${this._iconRenderer()}
+          @pages-palette-select=${this._onChooserSelect}
+          @pages-chooser-dismiss=${this._onChooserDismiss}
+        ></pages-node-chooser>
+      </div>
+    `;
+  }
 
   override async updated(changed: Map<string, unknown>): Promise<void> {
     await super.updated(changed);
@@ -879,26 +934,29 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
               </div>
             </div>
           ` : this._renderCollapsedDock('Stencils', '⊞', 'left')}
-          <pages-graph-canvas
-            .nodes=${this._nodes}
-            .edges=${this._edges}
-            .model=${this._adapterResult?.model}
-            .editPolicy=${this._editPolicy()}
-            .onMutation=${this._handleMutation}
-            .miniMapNodeColor=${caseMiniMapNodeColor}
-            .connectionsEnabled=${!this.readonly}
-            role="img"
-            aria-label="Case definition diagram"
-            style="flex: 1; height: 100%; min-width: 0;"
-            @pages-event=${(e: CustomEvent) => {
-              const topic = e.detail?.topic as string | undefined;
-              if (topic === 'graph:node:click') this._handleNodeClick(e);
-              if (topic === 'graph:selection:change') this._handleSelectionChange(e);
-              if (topic === 'diagram:drill-down') this._handleDrillDown(e.detail?.payload);
-              if (topic === 'graph:pane:click') this._showPickerAtPaneClick?.(e.detail?.payload);
-              if (topic === 'graph:connect:end-on-empty') this._showPickerAtConnectEnd?.(e.detail?.payload);
-            }}
-          ></pages-graph-canvas>
+          <div style="flex:1;height:100%;min-width:0;position:relative;" @pointerdown=${this._onCanvasPointerDown}>
+            <pages-graph-canvas
+              .nodes=${this._nodes}
+              .edges=${this._edges}
+              .model=${this._adapterResult?.model}
+              .editPolicy=${this._editPolicy()}
+              .onMutation=${this._handleMutation}
+              .miniMapNodeColor=${caseMiniMapNodeColor}
+              .connectionsEnabled=${!this.readonly}
+              role="img"
+              aria-label="Case definition diagram"
+              style="width:100%;height:100%;"
+              @pages-event=${(e: CustomEvent) => {
+                const topic = e.detail?.topic as string | undefined;
+                if (topic === 'graph:node:click') this._handleNodeClick(e);
+                if (topic === 'graph:selection:change') this._handleSelectionChange(e);
+                if (topic === 'diagram:drill-down') this._handleDrillDown(e.detail?.payload);
+                if (topic === 'graph:pane:click') this._showPickerAtPaneClick();
+                if (topic === 'graph:connect:end-on-empty') this._showPickerAtConnectEnd(e.detail?.payload);
+              }}
+            ></pages-graph-canvas>
+            ${this._renderNodePicker()}
+          </div>
           ${this._propertiesOpen ? html`
             <div style="width:300px; border-left:1px solid var(--pages-neutral-4,#e5e7eb); display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0;">
               ${this._renderDockHeader('Properties', 'right')}
@@ -918,7 +976,7 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
         </div>
         ${this._showConflict ? this._renderConflictDialog() : nothing}
         ${this._confirmMessage ? this._renderDeleteConfirm() : nothing}
-        ${typeof this._renderNodePicker === 'function' ? this._renderNodePicker() : nothing}
+
       </div>
     `;
   }

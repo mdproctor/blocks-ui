@@ -365,4 +365,45 @@ spec:
 
     expect(afterCount, 'clicking palette item should add a node').toBeGreaterThan(beforeCount);
   });
+
+  test('pane click shows node picker and adds node on selection', async ({ page }) => {
+    test.setTimeout(30000);
+    await loadDiagram(page, SAMPLE_YAML);
+
+    const beforeCount = await page.evaluate(() => {
+      const d = (window as any)._findDiagram() as any;
+      return d?._nodes?.length ?? 0;
+    });
+    expect(beforeCount, 'diagram should have nodes before picker test').toBeGreaterThan(0);
+
+    const result = await page.evaluate(async () => {
+      const diagram = (window as any)._findDiagram() as any;
+      if (!diagram) return { triggered: false, chooserVisible: false, added: false, beforeCount: 0, afterCount: 0 };
+
+      diagram._lastPointerX = 300;
+      diagram._lastPointerY = 300;
+      diagram._showPickerAtPaneClick();
+      await diagram.updateComplete;
+
+      const chooser = diagram.querySelector('pages-node-chooser');
+      if (!chooser) return { triggered: true, chooserVisible: false, added: false, beforeCount: 0, afterCount: 0 };
+
+      const before = diagram._nodes?.length ?? 0;
+      chooser.dispatchEvent(new CustomEvent('pages-palette-select', {
+        bubbles: true, composed: true,
+        detail: { item: { type: 'milestone', label: 'Milestone', icon: 'flag' } },
+      }));
+
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const after = diagram._nodes?.length ?? 0;
+          resolve({ triggered: true, chooserVisible: true, added: after > before, beforeCount: before, afterCount: after });
+        }, 1000);
+      });
+    });
+
+    expect(result.triggered, 'picker should trigger').toBe(true);
+    expect(result.chooserVisible, 'node chooser should appear on pane click').toBe(true);
+    expect(result.added, `selecting from chooser should add a node (${result.beforeCount} → ${result.afterCount})`).toBe(true);
+  });
 });
