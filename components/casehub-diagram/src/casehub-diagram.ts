@@ -270,6 +270,44 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
     }, 150);
   };
 
+  override _onChooserSelect = (e: Event): void => {
+    const detail = (e as CustomEvent).detail;
+    const nodeType = detail?.item?.type;
+    if (!nodeType || !this._adapterResult || !this._chooserState) return;
+    const { sourceNodeId } = this._chooserState;
+    if (sourceNodeId && nodeType === 'worker') {
+      const source = this._adapterResult.model.nodes.find(n => n.id === sourceNodeId);
+      if (source?.type === 'binding') {
+        const cap = source.properties['capability'] as { name?: string } | undefined;
+        const capName = cap?.name;
+        if (capName) {
+          this._pushUndo();
+          try {
+            let yaml = addElement(this._currentYaml, 'worker', { capabilities: [capName] });
+            const result = this._adaptYaml(yaml);
+            this._adapterResult = result;
+            const prevNodeIds = new Set(this._nodes.map(n => n.id));
+            const newWorker = result.model.nodes.find(n => n.type === 'worker' && !prevNodeIds.has(n.id));
+            if (newWorker) {
+              try {
+                yaml = this._applyGraphEdit(yaml, { type: 'addEdge', sourceId: sourceNodeId, targetId: newWorker.id });
+              } catch (_) { /* best effort */ }
+            }
+            this._currentYaml = yaml;
+            void this._fullRender(yaml);
+          } catch (err) {
+            this._currentYaml = this._undoStack.pop() ?? this._currentYaml;
+            this._error = `Edit failed: ${err}`;
+          }
+          this._chooserState = null;
+          return;
+        }
+      }
+    }
+    this._handleMutation({ type: 'addNode', nodeType });
+    this._chooserState = null;
+  };
+
   override async updated(changed: Map<string, unknown>): Promise<void> {
     await super.updated(changed);
     const palette = this.querySelector('pages-diagram-palette');

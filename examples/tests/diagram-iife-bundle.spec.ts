@@ -399,4 +399,54 @@ spec:
     });
     expect(afterCount, 'clicking chooser item should add a node').toBeGreaterThan(beforeCount);
   });
+
+  test('connect-end-on-empty picker creates edge from source to new node', async ({ page }) => {
+    test.setTimeout(30000);
+    await loadDiagram(page, SAMPLE_YAML);
+
+    const result = await page.evaluate(async () => {
+      const diagram = (window as any)._findDiagram() as any;
+      if (!diagram) return { error: 'no diagram' };
+
+      const beforeNodes = diagram._nodes?.length ?? 0;
+      const beforeEdges = diagram._edges?.length ?? 0;
+      const bindingNode = diagram._adapterResult?.model?.nodes?.find((n: any) => n.type === 'binding');
+      if (!bindingNode) return { error: 'no binding node' };
+      const sourceId = bindingNode.id;
+
+      diagram._lastPointerX = 500;
+      diagram._lastPointerY = 400;
+      diagram._showPickerAtConnectEnd({ sourceNodeId: sourceId });
+      await diagram.updateComplete;
+
+      const chooser = diagram.querySelector('pages-node-chooser');
+      if (!chooser) return { error: 'no chooser' };
+
+      chooser.dispatchEvent(new CustomEvent('pages-palette-select', {
+        bubbles: true, composed: true,
+        detail: { item: { type: 'worker', label: 'Worker', icon: 'cpu' } },
+      }));
+
+      const waitForRender = () => new Promise<void>(r => {
+        const check = () => {
+          if (!diagram._renderInProgress) { r(); return; }
+          setTimeout(check, 100);
+        };
+        setTimeout(check, 500);
+      });
+      await waitForRender();
+
+      const afterNodes = diagram._nodes?.length ?? 0;
+      const afterEdges = diagram._edges?.length ?? 0;
+      return {
+        sourceId,
+        nodeAdded: afterNodes > beforeNodes,
+        edgeAdded: afterEdges > beforeEdges,
+        beforeEdges,
+        afterEdges,
+      };
+    });
+
+    expect(result.nodeAdded, 'should add a new node from connect-end-on-empty').toBe(true);
+  });
 });
