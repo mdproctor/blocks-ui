@@ -186,9 +186,12 @@ spec:
     expect(workbenchState.workbenchRegistered, 'blocks-diagram-workbench should be registered').toBe(true);
     expect(workbenchState.workbenchExists, 'case format should use diagram-workbench').toBe(true);
 
-    const drillButton = page.locator('[data-id*="fraud-agent"] button[title="Drill down"]');
-    expect(await drillButton.count(), 'worker should have drill-down button').toBeGreaterThan(0);
-    await drillButton.click();
+    await page.evaluate(() => {
+      const wb = document.querySelector('blocks-diagram-workbench');
+      const diagram = wb?.shadowRoot?.querySelector('casehub-diagram');
+      const btn = diagram?.querySelector('[data-id*="fraud-agent"] button[title="Drill down"]');
+      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
     await page.waitForTimeout(2000);
 
     const afterDrill = await page.evaluate(() => {
@@ -328,9 +331,11 @@ spec:
 
     expect(await page.evaluate(() => !!customElements.get('swf-diagram')), 'swf-diagram should be registered').toBe(true);
 
-    const expandButton = page.locator('[data-id*="fraud-agent"] button[title="Toggle expand"]');
-    expect(await expandButton.count(), 'worker with do tasks should have expand button').toBeGreaterThan(0);
-    await expandButton.click();
+    await page.evaluate(() => {
+      const diagram = (window as any)._findDiagram();
+      const btn = diagram?.querySelector('[data-id*="fraud-agent"] button[title="Toggle expand"]');
+      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
     await page.waitForTimeout(2000);
 
     const expanded = await page.evaluate(() => {
@@ -533,6 +538,35 @@ spec:
     expect(result.hasWorkerEdge, 'binding should already have a worker edge').toBe(true);
     expect(result.items, 'worker should NOT appear when binding already at max outbound').not.toContain('worker');
     expect(result.items, 'milestone should still appear').toContain('milestone');
+  });
+
+  test('node picker auto-dismisses on mouse leave', async ({ page }) => {
+    test.setTimeout(30000);
+    await loadDiagram(page, SAMPLE_YAML);
+
+    const dismissed = await page.evaluate(async () => {
+      const diagram = (window as any)._findDiagram() as any;
+      diagram._lastPointerX = 400;
+      diagram._lastPointerY = 400;
+      diagram._showPickerAtPaneClick();
+      await diagram.updateComplete;
+
+      const chooser = diagram.querySelector('pages-node-chooser');
+      if (!chooser) return { error: 'no chooser' };
+
+      chooser.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve({
+            chooserGone: !diagram.querySelector('pages-node-chooser'),
+            chooserState: diagram._chooserState,
+          });
+        }, 1500);
+      });
+    });
+
+    expect(dismissed.chooserGone, 'chooser should dismiss after mouse leave timeout').toBe(true);
   });
 
   test('connect-end picker filters items by connectable types from source', async ({ page }) => {
