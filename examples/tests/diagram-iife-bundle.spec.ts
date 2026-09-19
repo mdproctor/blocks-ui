@@ -503,9 +503,54 @@ spec:
     expect(result.edgeAdded, `edge should be created (${result.beforeEdges} → ${result.afterEdges})`).toBe(true);
   });
 
-  test('connect-end picker filters items by connectable types from source', async ({ page }) => {
+  test('connect-end picker hides types when source is at max connections', async ({ page }) => {
     test.setTimeout(30000);
     await loadDiagram(page, SAMPLE_YAML);
+
+    const result = await page.evaluate(async () => {
+      const diagram = (window as any)._findDiagram() as any;
+      if (!diagram) return { error: 'no diagram' };
+
+      const binding = diagram._adapterResult?.model?.nodes?.find((n: any) =>
+        n.type === 'binding' && n.properties?.capability?.name);
+      if (!binding) return { error: 'no binding with capability' };
+
+      const hasWorkerEdge = diagram._edges?.some((e: any) =>
+        e.source === binding.id && e.type?.includes('capability'));
+
+      diagram._lastPointerX = 400;
+      diagram._lastPointerY = 400;
+      diagram._showPickerAtConnectEnd({ sourceNodeId: binding.id });
+      await diagram.updateComplete;
+
+      const chooser = diagram.querySelector('pages-node-chooser');
+      const items = chooser?.items?.map((i: any) => i.type) ?? [];
+      diagram._chooserState = null;
+
+      return { bindingId: binding.id, hasWorkerEdge, items };
+    });
+
+    expect(result.hasWorkerEdge, 'binding should already have a worker edge').toBe(true);
+    expect(result.items, 'worker should NOT appear when binding already at max outbound').not.toContain('worker');
+    expect(result.items, 'milestone should still appear').toContain('milestone');
+  });
+
+  test('connect-end picker filters items by connectable types from source', async ({ page }) => {
+    test.setTimeout(30000);
+
+    const yaml = `dsl: casehub/1.0
+namespace: test
+name: filter-test
+version: "1.0"
+spec:
+  bindings:
+    - name: unconnected-binding
+      capability:
+        name: new-capability
+        version: "1.0"
+  workers: []`;
+
+    await loadDiagram(page, yaml);
 
     const result = await page.evaluate(async () => {
       const diagram = (window as any)._findDiagram() as any;
@@ -528,7 +573,7 @@ spec:
       return { sourceType: binding.type, items };
     });
 
-    expect(result.items, 'picker from binding should show types connectable to/from binding').toEqual(
+    expect(result.items, 'picker from unconnected binding should show worker, milestone, goal').toEqual(
       expect.arrayContaining(['worker', 'milestone', 'goal']),
     );
     expect(result.items, 'should not include binding itself').not.toContain('binding');
