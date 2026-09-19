@@ -37,7 +37,7 @@ import type { NodeDecoration } from '@casehubio/graph-core';
 import { edgesOf } from '@casehubio/graph-core';
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { detectDiagramType } from '@casehubio/blocks-ui-core';
-import { stringify } from 'yaml';
+import { stringify, parseDocument } from 'yaml';
 import { DiagramBaseMixin } from '@casehubio/pages-diagram-core';
 import type { AdapterResult } from '@casehubio/pages-diagram-core';
 import type { PropertyPaletteSource, EditorResolver, FieldRenderContext } from '@casehubio/pages-property-palette';
@@ -300,11 +300,16 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
     this._chooserState = null;
   };
 
-  private _connectEndDefaults(source: { type: string; properties: Record<string, unknown> }, targetType: string): Record<string, unknown> | null {
+  private _connectEndDefaults(source: { type: string; id: string; properties: Record<string, unknown> }, targetType: string): Record<string, unknown> | null {
     const sourceName = source.properties['name'] as string | undefined;
     if (source.type === 'binding' && targetType === 'worker') {
-      const cap = source.properties['capability'] as { name?: string } | undefined;
-      if (cap?.name) return { capabilities: [cap.name] };
+      const cap = source.properties['capability'] as { name?: string } | string | undefined;
+      const capName = typeof cap === 'object' ? cap?.name : (cap || undefined);
+      if (capName) return { capabilities: [capName] };
+      if (sourceName) {
+        this._setBindingCapability(source.id, sourceName);
+        return { capabilities: [sourceName] };
+      }
     }
     if (source.type === 'binding' && targetType === 'milestone' && sourceName) {
       return { condition: `${sourceName}.complete` };
@@ -316,6 +321,14 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
       return { expression: { all: [sourceName] } };
     }
     return null;
+  }
+
+  private _setBindingCapability(bindingId: string, capabilityName: string): void {
+    const path = this._adapterResult?.yamlPaths.get(bindingId);
+    if (!path) return;
+    const doc = parseDocument(this._currentYaml);
+    doc.setIn([...path, 'capability', 'name'], capabilityName);
+    this._currentYaml = doc.toString();
   }
 
   override async updated(changed: Map<string, unknown>): Promise<void> {
