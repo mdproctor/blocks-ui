@@ -311,6 +311,17 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
         return { capabilities: [sourceName] };
       }
     }
+    if (source.type === 'worker' && targetType === 'binding') {
+      const caps = source.properties['capabilities'] as string[] | undefined;
+      let capName = caps?.[0];
+      if (!capName && sourceName) {
+        capName = sourceName;
+        this._addWorkerCapability(source.id, capName);
+      }
+      if (capName) {
+        return { capability: { name: capName } };
+      }
+    }
     if (source.type === 'binding' && targetType === 'milestone' && sourceName) {
       return { condition: `${sourceName}.complete` };
     }
@@ -321,6 +332,19 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
       return { expression: { all: [sourceName] } };
     }
     return null;
+  }
+
+  private _addWorkerCapability(workerId: string, capabilityName: string): void {
+    const path = this._adapterResult?.yamlPaths.get(workerId);
+    if (!path) return;
+    const doc = parseDocument(this._currentYaml);
+    const existing = doc.getIn([...path, 'capabilities']);
+    if (Array.isArray(existing)) {
+      doc.addIn([...path, 'capabilities'], capabilityName);
+    } else {
+      doc.setIn([...path, 'capabilities'], [capabilityName]);
+    }
+    this._currentYaml = doc.toString();
   }
 
   private _setBindingCapability(bindingId: string, capabilityName: string): void {

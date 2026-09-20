@@ -609,6 +609,54 @@ spec:
     expect(result.hasEdge, `binding ${result.bindingId} should be connected to worker ${result.workerId}`).toBe(true);
   });
 
+  test('new worker + drag to add binding creates connected pair', async ({ page }) => {
+    test.setTimeout(30000);
+    await loadDiagram(page, SAMPLE_YAML);
+
+    const result = await page.evaluate(async () => {
+      const diagram = (window as any)._findDiagram() as any;
+
+      diagram._handleMutation({ type: 'addNode', nodeType: 'worker' });
+      await new Promise(r => setTimeout(r, 3000));
+
+      const newWorker = diagram._adapterResult?.model?.nodes?.find(
+        (n: any) => n.type === 'worker' && n.id.includes('worker-'));
+      if (!newWorker) return { error: 'no new worker' };
+
+      diagram._lastPointerX = 500;
+      diagram._lastPointerY = 400;
+      diagram._showPickerAtConnectEnd({ sourceNodeId: newWorker.id });
+      await diagram.updateComplete;
+
+      const chooser = diagram.querySelector('pages-node-chooser');
+      if (!chooser) return { error: 'no chooser' };
+
+      chooser.dispatchEvent(new CustomEvent('pages-palette-select', {
+        bubbles: true, composed: true,
+        detail: { item: { type: 'binding', label: 'Binding', icon: 'link' } },
+      }));
+
+      await new Promise(r => setTimeout(r, 3000));
+
+      const newBinding = diagram._adapterResult?.model?.nodes?.find(
+        (n: any) => n.type === 'binding' && n.id.includes('binding-'));
+
+      const hasEdge = diagram._edges?.some((e: any) =>
+        (e.source === newBinding?.id && e.target === newWorker.id) ||
+        (e.source === newWorker.id && e.target === newBinding?.id));
+
+      return {
+        workerId: newWorker.id,
+        workerCaps: newWorker.properties?.capabilities,
+        bindingId: newBinding?.id,
+        bindingCap: newBinding?.properties?.capability,
+        hasEdge,
+      };
+    });
+
+    expect(result.hasEdge, `worker ${result.workerId} should be connected to binding ${result.bindingId}`).toBe(true);
+  });
+
   test('node picker auto-dismisses on mouse leave', async ({ page }) => {
     test.setTimeout(30000);
     await loadDiagram(page, SAMPLE_YAML);
