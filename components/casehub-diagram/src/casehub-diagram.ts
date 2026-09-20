@@ -327,7 +327,7 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
     const path = this._adapterResult?.yamlPaths.get(bindingId);
     if (!path) return;
     const doc = parseDocument(this._currentYaml);
-    doc.setIn([...path, 'capability', 'name'], capabilityName);
+    doc.setIn([...path, 'capability'], { name: capabilityName });
     this._currentYaml = doc.toString();
   }
 

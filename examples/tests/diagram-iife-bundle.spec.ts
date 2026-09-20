@@ -540,6 +540,75 @@ spec:
     expect(result.items, 'milestone should still appear').toContain('milestone');
   });
 
+  test('new binding + drag to add worker creates connected pair', async ({ page }) => {
+    test.setTimeout(30000);
+    await loadDiagram(page, SAMPLE_YAML);
+
+    const result = await page.evaluate(async () => {
+      const diagram = (window as any)._findDiagram() as any;
+
+      // Step 1: add a new binding via palette
+      diagram._handleMutation({ type: 'addNode', nodeType: 'binding' });
+      await new Promise(r => setTimeout(r, 3000));
+
+      // Find the new binding
+      const newBinding = diagram._adapterResult?.model?.nodes?.find(
+        (n: any) => n.type === 'binding' && n.id.includes('binding-'));
+      if (!newBinding) return { error: 'no new binding', nodes: diagram._adapterResult?.model?.nodes?.map((n: any) => n.id) };
+
+      const edgesBefore = diagram._edges?.length ?? 0;
+
+      // Step 2: simulate connect-end from the new binding, select worker
+      diagram._lastPointerX = 500;
+      diagram._lastPointerY = 400;
+      diagram._showPickerAtConnectEnd({ sourceNodeId: newBinding.id });
+      await diagram.updateComplete;
+
+      const chooser = diagram.querySelector('pages-node-chooser');
+      if (!chooser) return { error: 'no chooser' };
+
+      chooser.dispatchEvent(new CustomEvent('pages-palette-select', {
+        bubbles: true, composed: true,
+        detail: { item: { type: 'worker', label: 'Worker', icon: 'cpu' } },
+      }));
+
+      await new Promise(r => setTimeout(r, 3000));
+
+      const edgesAfter = diagram._edges?.length ?? 0;
+      const yaml = diagram._currentYaml;
+
+      // Check binding has capability set
+      const updatedBinding = diagram._adapterResult?.model?.nodes?.find(
+        (n: any) => n.id === newBinding.id);
+      const newWorker = diagram._adapterResult?.model?.nodes?.find(
+        (n: any) => n.type === 'worker' && n.id.includes('worker-'));
+
+      // Check for edge between them
+      const hasEdge = diagram._edges?.some((e: any) =>
+        (e.source === newBinding.id && e.target === newWorker?.id) ||
+        (e.source === newWorker?.id && e.target === newBinding.id));
+
+      return {
+        bindingId: newBinding.id,
+        bindingCap: updatedBinding?.properties?.capability,
+        workerId: newWorker?.id,
+        workerCaps: newWorker?.properties?.capabilities,
+        edgesBefore,
+        edgesAfter,
+        hasEdge,
+        yamlSnippet: yaml?.slice(-300),
+      };
+    });
+
+    if ('error' in result) {
+      console.log('Error:', JSON.stringify(result));
+    } else {
+      console.log('Result:', JSON.stringify(result, null, 2));
+    }
+
+    expect(result.hasEdge, `binding ${result.bindingId} should be connected to worker ${result.workerId}`).toBe(true);
+  });
+
   test('node picker auto-dismisses on mouse leave', async ({ page }) => {
     test.setTimeout(30000);
     await loadDiagram(page, SAMPLE_YAML);
