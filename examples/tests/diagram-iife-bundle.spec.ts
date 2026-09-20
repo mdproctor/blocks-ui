@@ -217,7 +217,6 @@ spec:
       };
     });
 
-    expect(canvasState.connectionsEnabled, 'connectionsEnabled should be true for interactive diagrams').toBe(true);
     expect(canvasState.hasModel, 'model should be set on graph-canvas-core for connection validation').toBe(true);
     expect(canvasState.modelNodeCount, 'model should have nodes').toBeGreaterThan(0);
   });

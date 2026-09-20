@@ -231,7 +231,7 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
               .model=${this._adapterResult?.model}
               .editPolicy=${this._editPolicy()}
               .onMutation=${this._handleMutation}
-              .connectionsEnabled=${!this.readonly}
+
               role="img"
               aria-label="Workflow diagram"
               style="width:100%;height:100%;"
