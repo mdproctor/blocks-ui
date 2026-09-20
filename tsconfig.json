@@ -38,6 +38,7 @@
     { "path": "components/conversation-viewer/tsconfig.build.json" },
     { "path": "packages/blocks-ui-schema/tsconfig.build.json" },
     { "path": "packages/graph-stencil-org/tsconfig.build.json" },
-    { "path": "components/org-diagram/tsconfig.build.json" }
+    { "path": "components/org-diagram/tsconfig.build.json" },
+    { "path": "packages/agent-avatar-2d/tsconfig.build.json" }
   ]
 }

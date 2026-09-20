@@ -105,6 +105,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@casehubio/agent-avatar-2d@workspace:packages/agent-avatar-2d":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/agent-avatar-2d@workspace:packages/agent-avatar-2d"
+  dependencies:
+    "@casehubio/blocks-ui-core": "workspace:*"
+    "@dicebear/avataaars": "npm:^9.0.0"
+    "@dicebear/core": "npm:^9.0.0"
+    lit: "npm:^3.2.1"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/blocks-ui-approval-gate@workspace:*, @casehubio/blocks-ui-approval-gate@workspace:components/approval-gate":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-approval-gate@workspace:components/approval-gate"
@@ -1386,6 +1400,24 @@ __metadata:
   version: 4.0.0
   resolution: "@csstools/css-tokenizer@npm:4.0.0"
   checksum: 10c0/669cf3d0f9c8e1ffdf8c9955ad8beba0c8cfe03197fe29a4fcbd9ee6f7a18856cfa42c62670021a75183d9ab37f5d14a866e6a9df753a6c07f59e36797a9ea9f
+  languageName: node
+  linkType: hard
+
+"@dicebear/avataaars@npm:^9.0.0":
+  version: 9.4.3
+  resolution: "@dicebear/avataaars@npm:9.4.3"
+  peerDependencies:
+    "@dicebear/core": ^9.0.0
+  checksum: 10c0/1bff96a48b2a6cb04a9d99c55b16b64e4ffb6c17aa6e86ae5ff394c15606184e65211dfcf40db175eac2ef5c434412c3da09c9108cd2853452317674ffdf11d1
+  languageName: node
+  linkType: hard
+
+"@dicebear/core@npm:^9.0.0":
+  version: 9.4.3
+  resolution: "@dicebear/core@npm:9.4.3"
+  dependencies:
+    "@types/json-schema": "npm:^7.0.15"
+  checksum: 10c0/161a7714ff28f82f2ff22e85f808b80b27c8e872476f1098ed834e4c4a26694a251b0ffc871d8171e6f016d27dcfe7d4d4ab5503eb4665083ea400150becf120
   languageName: node
   linkType: hard
 
