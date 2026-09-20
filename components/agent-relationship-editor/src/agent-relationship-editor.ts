@@ -3,6 +3,9 @@ import { customElement, property, state } from 'lit/decorators.js';
 import type { AgentRelationship, RelationshipKind } from '@casehubio/graph-stencil-org';
 import { AgentSetupEventTopics, lookupRelationshipType } from '@casehubio/blocks-ui-core';
 import type { RelationshipChangeset, AgentRosterEntry } from './types.js';
+import './arc-view.js';
+
+type ViewTab = 'table' | 'arc';
 
 const RELATIONSHIP_KINDS: RelationshipKind[] = [
   'SUPERVISES', 'DELEGATES_TO', 'ESCALATES_TO', 'REPORTS_TO', 'BACKS_UP', 'EXTENDED',
@@ -172,6 +175,26 @@ export class AgentRelationshipEditor extends LitElement {
       color: var(--pages-neutral-9, #737373);
       font-size: 14px;
     }
+    .view-tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: var(--pages-space-3, 0.75rem);
+    }
+    .view-tab {
+      padding: 6px 16px;
+      border: 1px solid var(--pages-neutral-4, #e5e5e5);
+      border-radius: 4px 4px 0 0;
+      background: var(--pages-neutral-2, #fafafa);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+    }
+    .view-tab.active {
+      background: var(--pages-neutral-1, #fff);
+      border-bottom-color: var(--pages-neutral-1, #fff);
+      font-weight: 600;
+    }
   `;
 
   @property({ type: String, attribute: 'agent-id' }) agentId = '';
@@ -180,6 +203,7 @@ export class AgentRelationshipEditor extends LitElement {
 
   @state() private _pendingAdditions: AgentRelationship[] = [];
   @state() private _pendingRemovals: Set<number> = new Set();
+  @state() private _viewTab: ViewTab = 'table';
   @state() private _showAddForm = false;
   @state() private _addTargetId = '';
   @state() private _addKind: RelationshipKind = 'SUPERVISES';
@@ -287,6 +311,14 @@ export class AgentRelationshipEditor extends LitElement {
     }
 
     return html`
+      <div class="view-tabs">
+        <button class="view-tab ${this._viewTab === 'table' ? 'active' : ''}" @click=${() => { this._viewTab = 'table'; }}>Table</button>
+        <button class="view-tab ${this._viewTab === 'arc' ? 'active' : ''}" @click=${() => { this._viewTab = 'arc'; }}>Arc</button>
+      </div>
+
+      ${this._viewTab === 'arc' ? html`
+        <arc-view agent-id=${this.agentId} .relationships=${this.relationships} .roster=${this.roster}></arc-view>
+      ` : html`
       <button class="add-relationship" @click=${() => { this._showAddForm = true; }}>+ Add Relationship</button>
 
       ${this._showAddForm ? this._renderAddForm() : nothing}
@@ -326,6 +358,7 @@ export class AgentRelationshipEditor extends LitElement {
           <button class="btn-confirm" @click=${() => this._confirm()}>Confirm Changes</button>
         </div>
       ` : nothing}
+      `}
     `;
   }
 

@@ -22,6 +22,7 @@ export { resolveKindColors, DEFAULT_KIND_PALETTE } from './adapter/kind-colors.j
 export { applyCollapsedUnits } from './adapter/collapse.js';
 export { applyOrgEdgeLabels } from './adapter/edge-labels.js';
 export { applySelectionHighlight } from './adapter/selection-highlight.js';
+export { extractEgoSubgraph } from './adapter/ego-subgraph.js';
 
 // ─── Layout Rule Engine ─────────────────────────────────────────────
 export { OrgLayoutEngine } from './layout/engine.js';
