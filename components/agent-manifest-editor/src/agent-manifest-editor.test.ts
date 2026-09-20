@@ -69,3 +69,41 @@ describe('agent-manifest-editor', () => {
     expect(detail.topic).toBe('manifest:configured');
   });
 });
+
+describe('agent-manifest-editor expanded section', () => {
+  let el: ManifestEditorEl;
+
+  beforeEach(async () => {
+    el = document.createElement('agent-manifest-editor') as ManifestEditorEl;
+    document.body.appendChild(el);
+    await el.updateComplete;
+    const card = el.shadowRoot!.querySelector('.preset-card') as HTMLElement;
+    card?.click();
+    await el.updateComplete;
+  });
+
+  afterEach(() => {
+    el.remove();
+  });
+
+  it('shows credential type selector in expanded view', async () => {
+    const selector = el.shadowRoot!.querySelector('.credential-type-selector');
+    expect(selector).toBeTruthy();
+  });
+
+  it('shows model list grouped by tier', async () => {
+    const tiers = el.shadowRoot!.querySelectorAll('.tier-group');
+    expect(tiers.length).toBeGreaterThan(0);
+  });
+
+  it('shows alias editor section', async () => {
+    const aliasSection = el.shadowRoot!.querySelector('.alias-editor');
+    expect(aliasSection).toBeTruthy();
+  });
+
+  it('has test connection button', async () => {
+    const btn = el.shadowRoot!.querySelector('.btn-test-connection');
+    expect(btn).toBeTruthy();
+  });
+});
+
