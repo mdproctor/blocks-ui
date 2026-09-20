@@ -7,6 +7,7 @@ export * from './commitment.js';
 export * from './orchestration.js';
 export * from './conversation.js';
 export * from './relationship.js';
+export * from './manifest.js';
 
 export type { QueueScopeChangedPayload } from './events.js';
 export type { InboxMode, QueueScope, QueueSummaryEntry } from './work-item.js';
