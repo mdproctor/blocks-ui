@@ -224,24 +224,28 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
           <div style="border-right:1px solid var(--pages-neutral-4,#e5e7eb); display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0; padding:8px;">
             ${this._renderStencilPalette()}
           </div>
-          <pages-graph-canvas
-            .nodes=${filteredNodes}
-            .edges=${filteredEdges}
-            .model=${this._adapterResult?.model}
-            .editPolicy=${this._editPolicy()}
-            .onMutation=${this._handleMutation}
-            role="img"
-            aria-label="Workflow diagram"
-            style="flex: 1; height: 100%; min-width: 0;"
-            @pages-event=${(e: CustomEvent) => {
-              const topic = e.detail?.topic as string | undefined;
-              if (topic === 'graph:node:click') this._handleNodeClick(e);
-              if (topic === 'graph:selection:change') this._handleSelectionChange(e);
-              if (topic === 'diagram:drill-down') this._handleDrillDown(e.detail?.payload);
-              if (topic === 'graph:pane:click') this._showPickerAtPaneClick?.(e.detail?.payload);
-              if (topic === 'graph:connect:end-on-empty') this._showPickerAtConnectEnd?.(e.detail?.payload);
-            }}
-          ></pages-graph-canvas>
+          <div style="flex:1;height:100%;min-width:0;position:relative;" @pointerdown=${this._onCanvasPointerDown}>
+            <pages-graph-canvas
+              .nodes=${filteredNodes}
+              .edges=${filteredEdges}
+              .model=${this._adapterResult?.model}
+              .editPolicy=${this._editPolicy()}
+              .onMutation=${this._handleMutation}
+              .connectionsEnabled=${!this.readonly}
+              role="img"
+              aria-label="Workflow diagram"
+              style="width:100%;height:100%;"
+              @pages-event=${(e: CustomEvent) => {
+                const topic = e.detail?.topic as string | undefined;
+                if (topic === 'graph:node:click') this._handleNodeClick(e);
+                if (topic === 'graph:selection:change') this._handleSelectionChange(e);
+                if (topic === 'diagram:drill-down') this._handleDrillDown(e.detail?.payload);
+                if (topic === 'graph:pane:click') this._showPickerAtPaneClick();
+                if (topic === 'graph:connect:end-on-empty') this._showPickerAtConnectEnd(e.detail?.payload);
+              }}
+            ></pages-graph-canvas>
+            ${this._renderNodePicker()}
+          </div>
           ${hasSelection ? html`
             <div style="width:300px; border-left:1px solid var(--pages-neutral-4,#e5e7eb); display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0;">
               <div style="padding:6px 10px; border-bottom:1px solid var(--pages-neutral-4,#e5e7eb); background:var(--pages-neutral-2,#f8f9fa);">
@@ -265,7 +269,7 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
           ` : nothing}
         </div>
         ${this._showConflict ? this._renderConflictDialog() : nothing}
-        ${typeof this._renderNodePicker === 'function' ? this._renderNodePicker() : nothing}
+
       </div>
     `;
   }

@@ -720,6 +720,74 @@ spec:
     expect(addedTask.added, 'should be able to add tasks to drilled-down SWF').toBe(true);
   });
 
+  test('SWF diagram picker works in drill-down', async ({ page }) => {
+    test.setTimeout(30000);
+
+    const yaml = `dsl: casehub/1.0
+namespace: test
+name: swf-picker-test
+version: "1.0"
+spec:
+  bindings:
+    - name: detect
+      capability:
+        name: fraud-scoring
+        version: "1.0"
+  workers:
+    - name: fraud-agent
+      capabilities:
+        - fraud-scoring
+      agent:
+        model: gpt-4o
+        instructions: Run fraud detection
+      do:
+        - fetchData:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/enrich`;
+
+    await loadDiagram(page, yaml);
+
+    // Drill down
+    const drillButton = page.locator('[data-id*="fraud-agent"] button[title="Drill down"]');
+    await drillButton.click();
+    await page.waitForTimeout(3000);
+
+    // Trigger picker in the SWF diagram
+    const pickerResult = await page.evaluate(async () => {
+      const wb = document.querySelector('blocks-diagram-workbench') as any;
+      const swf = wb?.shadowRoot?.querySelector('swf-diagram') as any;
+      if (!swf) return { error: 'no swf diagram' };
+
+      const beforeNodes = swf._nodes?.length ?? 0;
+
+      swf._lastPointerX = 300;
+      swf._lastPointerY = 300;
+      swf._showPickerAtPaneClick();
+      await swf.updateComplete;
+
+      const chooser = swf.querySelector('pages-node-chooser');
+      if (!chooser) return { error: 'no chooser', hasPicker: false, beforeNodes };
+
+      const items = chooser.items?.map((i: any) => i.type) ?? [];
+
+      chooser.dispatchEvent(new CustomEvent('pages-palette-select', {
+        bubbles: true, composed: true,
+        detail: { item: { type: 'swf-call', label: 'Call', icon: 'globe' } },
+      }));
+
+      await new Promise(r => setTimeout(r, 2000));
+      const afterNodes = swf._nodes?.length ?? 0;
+
+      return { hasPicker: true, items, beforeNodes, afterNodes, added: afterNodes > beforeNodes };
+    });
+
+    expect(pickerResult.hasPicker, 'SWF picker should appear').toBe(true);
+    expect(pickerResult.added, 'selecting from SWF picker should add a task').toBe(true);
+  });
+
   test('node picker auto-dismisses on mouse leave', async ({ page }) => {
     test.setTimeout(30000);
     await loadDiagram(page, SAMPLE_YAML);
