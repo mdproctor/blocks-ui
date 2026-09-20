@@ -57,6 +57,11 @@ const ALL_PAGES = [
   { hash: '#document-workbench/brainstorm-options', label: 'Brainstorm Options', tag: 'blocks-example-brainstorm-options' },
   { hash: '#document-workbench/brainstorm-picker', label: 'Brainstorm Picker', tag: 'blocks-example-brainstorm-picker' },
   { hash: '#document-workbench/workspace-status', label: 'Workspace Status', tag: 'blocks-example-workspace-status' },
+  { hash: '#agent-setup/agent-avatar', label: 'Agent Avatar 2D', tag: 'blocks-example-agent-avatar' },
+  { hash: '#agent-setup/agent-manifest-editor', label: 'Manifest Editor', tag: 'blocks-example-agent-manifest-editor' },
+  { hash: '#agent-setup/agent-catalog', label: 'Agent Catalog', tag: 'blocks-example-agent-catalog' },
+  { hash: '#agent-setup/agent-profile', label: 'Agent Profile', tag: 'blocks-example-agent-profile' },
+  { hash: '#agent-setup/agent-relationship-editor', label: 'Relationship Editor', tag: 'blocks-example-agent-relationship-editor' },
 ];
 
 test('check all example pages for errors', async ({ page }) => {

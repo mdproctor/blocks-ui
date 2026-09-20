@@ -53,6 +53,16 @@ const NAV: NavCategory[] = [
     ],
   },
   {
+    label: 'Agent Setup',
+    items: [
+      { id: 'agent-avatar', label: 'Agent Avatar 2D', hash: '#agent-setup/agent-avatar' },
+      { id: 'agent-manifest-editor', label: 'Manifest Editor', hash: '#agent-setup/agent-manifest-editor' },
+      { id: 'agent-catalog', label: 'Agent Catalog', hash: '#agent-setup/agent-catalog' },
+      { id: 'agent-profile', label: 'Agent Profile', hash: '#agent-setup/agent-profile' },
+      { id: 'agent-relationship-editor', label: 'Relationship Editor', hash: '#agent-setup/agent-relationship-editor' },
+    ],
+  },
+  {
     label: 'Orchestration',
     items: [
       { id: 'decomposition-tree', label: 'Decomposition Tree', hash: '#orchestration/decomposition-tree' },
@@ -315,6 +325,11 @@ export class ExampleShell extends LitElement {
       case '#document-workbench/brainstorm-options': return html`<blocks-example-brainstorm-options></blocks-example-brainstorm-options>`;
       case '#document-workbench/brainstorm-picker': return html`<blocks-example-brainstorm-picker></blocks-example-brainstorm-picker>`;
       case '#document-workbench/workspace-status': return html`<blocks-example-workspace-status></blocks-example-workspace-status>`;
+      case '#agent-setup/agent-avatar': return html`<blocks-example-agent-avatar></blocks-example-agent-avatar>`;
+      case '#agent-setup/agent-manifest-editor': return html`<blocks-example-agent-manifest-editor></blocks-example-agent-manifest-editor>`;
+      case '#agent-setup/agent-catalog': return html`<blocks-example-agent-catalog></blocks-example-agent-catalog>`;
+      case '#agent-setup/agent-profile': return html`<blocks-example-agent-profile></blocks-example-agent-profile>`;
+      case '#agent-setup/agent-relationship-editor': return html`<blocks-example-agent-relationship-editor></blocks-example-agent-relationship-editor>`;
       default: return html`<blocks-example-workbench></blocks-example-workbench>`;
     }
   }
