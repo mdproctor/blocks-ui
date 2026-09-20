@@ -186,12 +186,9 @@ spec:
     expect(workbenchState.workbenchRegistered, 'blocks-diagram-workbench should be registered').toBe(true);
     expect(workbenchState.workbenchExists, 'case format should use diagram-workbench').toBe(true);
 
-    await page.evaluate(() => {
-      const wb = document.querySelector('blocks-diagram-workbench');
-      const diagram = wb?.shadowRoot?.querySelector('casehub-diagram');
-      const btn = diagram?.querySelector('[data-id*="fraud-agent"] button[title="Drill down"]');
-      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    const drillButton = page.locator('[data-id*="fraud-agent"] button[title="Drill down"]');
+    expect(await drillButton.count(), 'worker should have drill-down button').toBeGreaterThan(0);
+    await drillButton.click();
     await page.waitForTimeout(2000);
 
     const afterDrill = await page.evaluate(() => {
@@ -331,11 +328,9 @@ spec:
 
     expect(await page.evaluate(() => !!customElements.get('swf-diagram')), 'swf-diagram should be registered').toBe(true);
 
-    await page.evaluate(() => {
-      const diagram = (window as any)._findDiagram();
-      const btn = diagram?.querySelector('[data-id*="fraud-agent"] button[title="Toggle expand"]');
-      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    const expandButton = page.locator('[data-id*="fraud-agent"] button[title="Toggle expand"]');
+    expect(await expandButton.count(), 'worker with do tasks should have expand button').toBeGreaterThan(0);
+    await expandButton.click();
     await page.waitForTimeout(2000);
 
     const expanded = await page.evaluate(() => {
@@ -688,12 +683,9 @@ spec:
     await loadDiagram(page, yaml);
 
     // Drill down into the worker
-    await page.evaluate(() => {
-      const wb = document.querySelector('blocks-diagram-workbench');
-      const diagram = wb?.shadowRoot?.querySelector('casehub-diagram');
-      const btn = diagram?.querySelector('[data-id*="fraud-agent"] button[title="Drill down"]');
-      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    const drillButton = page.locator('[data-id*="fraud-agent"] button[title="Drill down"]');
+    expect(await drillButton.count(), 'worker should have drill-down button').toBeGreaterThan(0);
+    await drillButton.click();
     await page.waitForTimeout(3000);
 
     const drillState = await page.evaluate(() => {
