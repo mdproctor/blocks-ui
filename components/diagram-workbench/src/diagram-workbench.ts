@@ -102,8 +102,7 @@ export class DiagramWorkbench extends LitElement {
     return staticHtml`
       <${tagLiteral}
         .yaml=${level.yaml}
-        layout-direction="RIGHT"
-        readonly>
+        layout-direction="RIGHT">
       </${tagLiteral}>
     `;
   }

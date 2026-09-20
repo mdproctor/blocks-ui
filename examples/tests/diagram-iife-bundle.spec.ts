@@ -657,6 +657,77 @@ spec:
     expect(result.hasEdge, `worker ${result.workerId} should be connected to binding ${result.bindingId}`).toBe(true);
   });
 
+  test('drilled-down SWF diagram is editable and syncs back', async ({ page }) => {
+    test.setTimeout(30000);
+
+    const yaml = `dsl: casehub/1.0
+namespace: test
+name: editable-drill-test
+version: "1.0"
+spec:
+  bindings:
+    - name: detect
+      capability:
+        name: fraud-scoring
+        version: "1.0"
+  workers:
+    - name: fraud-agent
+      capabilities:
+        - fraud-scoring
+      agent:
+        model: gpt-4o
+        instructions: Run fraud detection
+      do:
+        - fetchData:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/enrich`;
+
+    await loadDiagram(page, yaml);
+
+    // Drill down into the worker
+    await page.evaluate(() => {
+      const wb = document.querySelector('blocks-diagram-workbench');
+      const diagram = wb?.shadowRoot?.querySelector('casehub-diagram');
+      const btn = diagram?.querySelector('[data-id*="fraud-agent"] button[title="Drill down"]');
+      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await page.waitForTimeout(3000);
+
+    const drillState = await page.evaluate(() => {
+      const wb = document.querySelector('blocks-diagram-workbench') as any;
+      const swf = wb?.shadowRoot?.querySelector('swf-diagram');
+      return {
+        stackDepth: wb?._stack?.length ?? 0,
+        swfExists: !!swf,
+        swfReadonly: swf?.readonly ?? 'N/A',
+        swfHasNodes: (swf?._nodes?.length ?? 0) > 0,
+      };
+    });
+
+    expect(drillState.stackDepth, 'should have drilled down').toBeGreaterThan(0);
+    expect(drillState.swfExists, 'SWF diagram should exist').toBe(true);
+    expect(drillState.swfReadonly, 'drilled-down SWF should NOT be readonly').toBe(false);
+
+    // Add a task to the SWF via palette
+    const addedTask = await page.evaluate(async () => {
+      const wb = document.querySelector('blocks-diagram-workbench') as any;
+      const swf = wb?.shadowRoot?.querySelector('swf-diagram') as any;
+      if (!swf) return { error: 'no swf' };
+
+      const beforeNodes = swf._nodes?.length ?? 0;
+      swf._handleMutation({ type: 'addNode', nodeType: 'swf-call' });
+      await new Promise(r => setTimeout(r, 3000));
+      const afterNodes = swf._nodes?.length ?? 0;
+
+      return { beforeNodes, afterNodes, added: afterNodes > beforeNodes };
+    });
+
+    expect(addedTask.added, 'should be able to add tasks to drilled-down SWF').toBe(true);
+  });
+
   test('node picker auto-dismisses on mouse leave', async ({ page }) => {
     test.setTimeout(30000);
     await loadDiagram(page, SAMPLE_YAML);
