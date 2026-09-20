@@ -1,0 +1,31 @@
+{
+  "name": "@casehubio/blocks-ui-agent-manifest-editor",
+  "version": "0.1.0",
+  "description": "LLM provider/model/credential config with presets, auto-detection, guided setup",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/blocks-ui.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@casehubio/blocks-ui-core": "workspace:*",
+    "lit": "^3.2.1"
+  },
+  "devDependencies": {
+    "rimraf": "^6.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "Apache-2.0"
+}
