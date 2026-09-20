@@ -123,6 +123,11 @@ yarn typecheck
 | `components/reconciliation-status/` | Desired vs actual reconciliation — per-cluster sections with per-node status grid. EventStreamController push updates. |
 | `components/dimension-dashboard/` | Multi-dimension status dashboard — N dimensions with severity badges, active response counts, compact layout. Dual data mode. |
 | `components/topology-viewer/` | Service dependency DAG — topology graph with status-coloured nodes, replica badges, edge labels. EventStreamController push updates. |
+| `packages/agent-avatar-2d/` | 2D avatar generation from disposition axes — canonical term registry mapping disposition terms to DiceBear Avataaars features, deterministic SVG generation, `<agent-avatar>` web component with size variants |
+| `components/agent-manifest-editor/` | LLM provider/model/credential config — provider card grid with detection badges, credential type switcher (env/file/ref), model tier grouping, alias editor, preset templates (Anthropic/OpenAI/Ollama/Multi-provider), test connection |
+| `components/agent-catalog/` | Agent template browsing — popular section, pill-based filtering (disposition/domain), search, dense card grid with avatar thumbnails. From-scratch wizard: 6-step guided flow (identity → capabilities → disposition → goals → briefing → avatar) with progressive preview panel |
+| `components/agent-profile/` | Agent character sheet — header with avatar and badges, briefing, capabilities grid, 5-axis disposition radar chart with per-axis term pills, goals/constraints two-column, memory seed placeholder. Inline edit mode with agent:updated emission |
+| `components/agent-relationship-editor/` | Relationship table editor — grouped by RelationshipKind with colour-coded headers, direction arrows, inline add form with agent picker and kind selector, pending changeset (additions green, removals strikethrough). Tab strip: Table (editing) and Arc (read-only SVG arc diagram). Ego subgraph extraction in graph-stencil-org |
 
 ## Design Philosophy
 
