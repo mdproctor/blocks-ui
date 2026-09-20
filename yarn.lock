@@ -105,13 +105,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@casehubio/agent-avatar-2d@workspace:packages/agent-avatar-2d":
+"@casehubio/agent-avatar-2d@workspace:*, @casehubio/agent-avatar-2d@workspace:packages/agent-avatar-2d":
   version: 0.0.0-use.local
   resolution: "@casehubio/agent-avatar-2d@workspace:packages/agent-avatar-2d"
   dependencies:
     "@casehubio/blocks-ui-core": "workspace:*"
     "@dicebear/avataaars": "npm:^9.0.0"
     "@dicebear/core": "npm:^9.0.0"
+    lit: "npm:^3.2.1"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehubio/blocks-ui-agent-catalog@workspace:components/agent-catalog":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/blocks-ui-agent-catalog@workspace:components/agent-catalog"
+  dependencies:
+    "@casehubio/agent-avatar-2d": "workspace:*"
+    "@casehubio/blocks-ui-core": "workspace:*"
     lit: "npm:^3.2.1"
     rimraf: "npm:^6.1.0"
     typescript: "npm:^5.6.0"
