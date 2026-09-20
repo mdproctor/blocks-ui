@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WorkItemEventTopics } from './events.js';
+import { WorkItemEventTopics, AgentSetupEventTopics } from './events.js';
 
 describe('WorkItemEventTopics', () => {
   it('uses colon separators per matchesTopic protocol', () => {
@@ -11,5 +11,15 @@ describe('WorkItemEventTopics', () => {
   it('does not have legacy QUEUE_SELECTED or QUEUE_DESELECTED', () => {
     expect('QUEUE_SELECTED' in WorkItemEventTopics).toBe(false);
     expect('QUEUE_DESELECTED' in WorkItemEventTopics).toBe(false);
+  });
+});
+
+describe('AgentSetupEventTopics', () => {
+  it('defines all required topics', () => {
+    expect(AgentSetupEventTopics.MANIFEST_CONFIGURED).toBe('manifest:configured');
+    expect(AgentSetupEventTopics.AGENT_SELECTED).toBe('agent:selected');
+    expect(AgentSetupEventTopics.AGENT_CREATED).toBe('agent:created');
+    expect(AgentSetupEventTopics.AGENT_UPDATED).toBe('agent:updated');
+    expect(AgentSetupEventTopics.RELATIONSHIP_CHANGED).toBe('relationship:changed');
   });
 });

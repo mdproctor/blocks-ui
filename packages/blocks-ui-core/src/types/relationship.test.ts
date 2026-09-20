@@ -51,3 +51,18 @@ describe('registerRelationshipType', () => {
     expect(d.style).toBe('dashed');
   });
 });
+
+describe('agent relationship types', () => {
+  it('registers supervises', () => {
+    const desc = lookupRelationshipType('supervises');
+    expect(desc).not.toBe(FALLBACK_RELATIONSHIP);
+    expect(desc.label).toBe('Supervises');
+    expect(desc.directed).toBe(true);
+  });
+
+  it('registers all 6 agent relationship kinds', () => {
+    for (const kind of ['supervises', 'delegates_to', 'escalates_to', 'reports_to', 'backs_up', 'extended']) {
+      expect(lookupRelationshipType(kind)).not.toBe(FALLBACK_RELATIONSHIP);
+    }
+  });
+});

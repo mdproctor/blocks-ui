@@ -16,3 +16,11 @@ export interface WorkItemSelectedPayload {
 export interface QueueScopeChangedPayload {
   readonly queue: QueueView | null;
 }
+
+export const AgentSetupEventTopics = {
+  MANIFEST_CONFIGURED: 'manifest:configured',
+  AGENT_SELECTED: 'agent:selected',
+  AGENT_CREATED: 'agent:created',
+  AGENT_UPDATED: 'agent:updated',
+  RELATIONSHIP_CHANGED: 'relationship:changed',
+} as const;

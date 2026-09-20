@@ -22,3 +22,22 @@ export function registerRelationshipType(type: string, descriptor: RelationshipT
 export function lookupRelationshipType(type: string): RelationshipTypeDescriptor {
   return REGISTRY.get(type) ?? FALLBACK_RELATIONSHIP;
 }
+
+registerRelationshipType('supervises', {
+  label: 'Supervises', color: '#6366f1', style: 'solid', directed: true,
+});
+registerRelationshipType('delegates_to', {
+  label: 'Delegates To', color: '#8b5cf6', style: 'solid', directed: true,
+});
+registerRelationshipType('escalates_to', {
+  label: 'Escalates To', color: '#ef4444', style: 'dashed', directed: true,
+});
+registerRelationshipType('reports_to', {
+  label: 'Reports To', color: '#3b82f6', style: 'solid', directed: true,
+});
+registerRelationshipType('backs_up', {
+  label: 'Backs Up', color: '#10b981', style: 'dotted', directed: true,
+});
+registerRelationshipType('extended', {
+  label: 'Extended', color: '#6b7280', style: 'dashed', directed: true,
+});
