@@ -41,6 +41,8 @@
     { "path": "components/org-diagram/tsconfig.build.json" },
     { "path": "packages/agent-avatar-2d/tsconfig.build.json" },
     { "path": "components/agent-manifest-editor/tsconfig.build.json" },
-    { "path": "components/agent-catalog/tsconfig.build.json" }
+    { "path": "components/agent-catalog/tsconfig.build.json" },
+    { "path": "components/agent-profile/tsconfig.build.json" },
+    { "path": "components/agent-relationship-editor/tsconfig.build.json" }
   ]
 }
