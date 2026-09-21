@@ -76,6 +76,20 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
     return swfEditPolicy;
   }
 
+  override _handlePaletteSelect = (e: Event): void => {
+    if (this.readonly) return;
+    const detail = (e as CustomEvent).detail;
+    const nodeType = detail?.item?.type as string | undefined;
+    if (!nodeType || !this._adapterResult) return;
+    const policy = this._editPolicy();
+    const placement = policy.getAddPlacement?.(nodeType, this._adapterResult.model) ?? { type: 'detached' as const };
+    if (placement.type === 'splitEdge') {
+      this._handleMutation({ type: 'splitEdge', edgeId: placement.edgeId, insertNodeType: nodeType });
+    } else {
+      this._handleMutation({ type: 'addNode', nodeType });
+    }
+  };
+
   protected override _iconRenderer() {
     return swfIconRenderer;
   }
@@ -108,7 +122,7 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
       case 'reconnectEdge':
         throw new Error('reconnectEdge for SWF diagrams — not yet implemented');
       case 'splitEdge':
-        throw new Error('splitEdge for SWF diagrams — not yet implemented');
+        return addSwfTask(yaml, edit.insertNodeType);
       default:
         throw new Error(`Unsupported edit type: ${(edit as GraphEdit).type}`);
     }

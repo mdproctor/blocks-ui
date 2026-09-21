@@ -1,6 +1,6 @@
 import type { GraphNode, GraphModel, GraphEdge } from '@casehubio/graph-core';
 import { getGrammar, inboundEdges, outboundEdges, nodeById } from '@casehubio/graph-core';
-import type { EditPolicy, StencilTypeInfo, DeleteStrategy } from '@casehubio/graph-renderer';
+import type { EditPolicy, StencilTypeInfo, DeleteStrategy, AddPlacement } from '@casehubio/graph-renderer';
 
 const CREATABLE_TYPES: readonly StencilTypeInfo[] = [
   { type: 'swf-call', label: 'Call', icon: 'phone' },
@@ -69,6 +69,17 @@ export function createSwfEditPolicy(): EditPolicy {
 
     getCreatableTypes(_nearNode: GraphNode | null, _model: GraphModel): StencilTypeInfo[] {
       return [...CREATABLE_TYPES];
+    },
+
+    getAddPlacement(_nodeType: string, model: GraphModel): AddPlacement {
+      const endNode = model.nodes.find(n => n.type === 'swf-end');
+      if (endNode) {
+        const incoming = inboundEdges(model, endNode.id);
+        if (incoming.length === 1) {
+          return { type: 'splitEdge', edgeId: incoming[0]!.id };
+        }
+      }
+      return { type: 'detached' };
     },
 
     canDelete(node: GraphNode, _model: GraphModel): boolean {
