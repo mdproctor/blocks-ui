@@ -86,7 +86,7 @@ export class AgentWizard extends LitElement {
     }
     .step.active {
       background: var(--pages-accent-9, #0066cc);
-      color: #fff;
+      color: var(--pages-accent-contrast, #fff);
     }
     .step.completed {
       background: var(--pages-accent-3, #dbeafe);
@@ -123,6 +123,8 @@ export class AgentWizard extends LitElement {
       font-size: 14px;
       font-family: inherit;
       box-sizing: border-box;
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
     .form-field textarea {
       resize: vertical;
@@ -145,7 +147,7 @@ export class AgentWizard extends LitElement {
     }
     .btn-next, .btn-finish {
       background: var(--pages-accent-9, #0066cc);
-      color: #fff;
+      color: var(--pages-accent-contrast, #fff);
     }
     .btn-next:hover, .btn-finish:hover {
       background: var(--pages-accent-10, #0052a3);
@@ -257,6 +259,8 @@ export class AgentWizard extends LitElement {
       border-radius: 4px;
       font-size: 13px;
       font-family: inherit;
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
     .add-item {
       background: none;
@@ -319,6 +323,7 @@ export class AgentWizard extends LitElement {
       padding: 1px 6px;
       border-radius: 4px;
       background: var(--pages-neutral-3, #f0f0f0);
+      color: var(--pages-neutral-12, #111);
     }
     .char-count {
       font-size: 11px;

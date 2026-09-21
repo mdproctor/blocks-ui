@@ -23,6 +23,8 @@ export class AgentCatalog extends LitElement {
       font-size: 14px;
       font-family: inherit;
       box-sizing: border-box;
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
     .filter-bar {
       display: flex;
@@ -38,7 +40,8 @@ export class AgentCatalog extends LitElement {
       font-weight: 500;
       cursor: pointer;
       background: var(--pages-neutral-1, #fff);
-      transition: background 0.15s, border-color 0.15s;
+      color: var(--pages-neutral-12, #111);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
     .filter-pill:hover { border-color: var(--pages-accent-7, #0066cc); }
     .filter-pill.active {

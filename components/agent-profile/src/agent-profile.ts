@@ -91,6 +91,7 @@ export class AgentProfile extends LitElement {
       border-radius: var(--pages-radius-2, 4px);
       font-size: 13px;
       background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
 
     .disposition-container {
@@ -174,6 +175,8 @@ export class AgentProfile extends LitElement {
       box-sizing: border-box;
       resize: vertical;
       min-height: 80px;
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
     .edit-mode input[type="text"] {
       width: 100%;
@@ -183,6 +186,8 @@ export class AgentProfile extends LitElement {
       font-size: 14px;
       font-family: inherit;
       box-sizing: border-box;
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
     .edit-buttons {
       display: flex;
@@ -199,7 +204,7 @@ export class AgentProfile extends LitElement {
       cursor: pointer;
       font-family: inherit;
       background: var(--pages-accent-9, #0066cc);
-      color: #fff;
+      color: var(--pages-accent-contrast, #fff);
     }
     .btn-cancel {
       padding: 8px 16px;

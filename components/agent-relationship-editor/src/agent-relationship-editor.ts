@@ -114,6 +114,8 @@ export class AgentRelationshipEditor extends LitElement {
       border-radius: 4px;
       font-size: 13px;
       font-family: inherit;
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
     .add-form input {
       padding: 6px 8px;
@@ -121,6 +123,8 @@ export class AgentRelationshipEditor extends LitElement {
       border-radius: 4px;
       font-size: 13px;
       font-family: inherit;
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
     .btn-add-confirm {
       padding: 6px 12px;
@@ -131,7 +135,7 @@ export class AgentRelationshipEditor extends LitElement {
       cursor: pointer;
       font-family: inherit;
       background: var(--pages-accent-9, #0066cc);
-      color: #fff;
+      color: var(--pages-accent-contrast, #fff);
     }
     .btn-add-cancel {
       padding: 6px 12px;
@@ -158,7 +162,7 @@ export class AgentRelationshipEditor extends LitElement {
       cursor: pointer;
       font-family: inherit;
       background: var(--pages-accent-9, #0066cc);
-      color: #fff;
+      color: var(--pages-accent-contrast, #fff);
     }
     .btn-reset {
       padding: 8px 16px;

@@ -79,10 +79,10 @@ export class AgentManifestEditor extends LitElement {
       font-weight: 600;
       text-transform: uppercase;
     }
-    .tier-FLAGSHIP { background: #ede9fe; color: #5b21b6; }
-    .tier-STANDARD { background: #dbeafe; color: #1e40af; }
-    .tier-FAST { background: #dcfce7; color: #166534; }
-    .tier-EMBEDDING { background: #f3f4f6; color: #374151; }
+    .tier-FLAGSHIP { background: var(--pages-purple-3, #ede9fe); color: var(--pages-purple-11, #5b21b6); }
+    .tier-STANDARD { background: var(--pages-accent-3, #dbeafe); color: var(--pages-accent-11, #1e40af); }
+    .tier-FAST { background: var(--pages-success-3, #dcfce7); color: var(--pages-success-11, #166534); }
+    .tier-EMBEDDING { background: var(--pages-neutral-3, #f3f4f6); color: var(--pages-neutral-11, #374151); }
     h3 { margin: 0 0 var(--pages-space-3, 0.75rem); font-size: 16px; }
     h4 { margin: var(--pages-space-3, 0.75rem) 0 var(--pages-space-2, 0.5rem); font-size: 14px; font-weight: 600; }
     .credential-type-selector {
@@ -109,6 +109,8 @@ export class AgentManifestEditor extends LitElement {
       border-radius: var(--pages-radius-2, 4px);
       font-size: 13px;
       font-family: inherit;
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
     }
     .tier-group { margin-top: var(--pages-space-2, 0.5rem); }
     .tier-group-header {

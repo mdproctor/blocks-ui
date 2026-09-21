@@ -25,6 +25,7 @@ export class AgentCatalogPage extends LitElement {
       border: 1px solid var(--pages-neutral-4, #e5e5e5);
       border-radius: 16px;
       background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #111);
       cursor: pointer;
       font-size: 13px;
       font-family: inherit;
