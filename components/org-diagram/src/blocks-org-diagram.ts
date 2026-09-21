@@ -38,7 +38,6 @@ import { emitPagesEvent } from '@casehubio/pages-data';
 import { DiagramBaseMixin } from '@casehubio/pages-diagram-core';
 import type { AdapterResult } from '@casehubio/pages-diagram-core';
 import '@casehubio/graph-renderer';
-import '@casehubio/pages-diagram-palette';
 import './blocks-org-diagram-toolbar.js';
 import './panels/escalation-chain-panel.js';
 import './panels/supervision-chain-panel.js';
@@ -110,9 +109,6 @@ export class BlocksOrgDiagram extends DiagramBaseMixin(LitElement) {
   private _derivedData: DerivedOrgData | null = null;
   private _baseEdges: any[] = [];
   private _computedNodeSizes: ReadonlyMap<string, { width: number; height: number }> = new Map();
-  @state() private _chooserState: { x: number; y: number; sourceNodeId?: string | undefined } | null = null;
-  private _lastPointerX = 0;
-  private _lastPointerY = 0;
   private _engine: OrgLayoutEngine;
   private _lastFacts: FactBase | null = null;
 
@@ -188,21 +184,9 @@ export class BlocksOrgDiagram extends DiagramBaseMixin(LitElement) {
       .map(s => ({ type: s.type, label: s.label, icon: s.icon }));
   }
 
-  override _renderStencilPalette(): TemplateResult {
-    const items = this._paletteItems();
-    if (items.length === 0) return html``;
-    return html`
-      <pages-diagram-palette
-        .items=${items}
-        .iconRenderer=${this._iconRenderer()}
-        paletteId=${this.tagName.toLowerCase()}
-        @pages-palette-select=${this._onOrgPaletteSelect}>
-      </pages-diagram-palette>
-    `;
-  }
-
-  private _onOrgPaletteSelect = (e: CustomEvent): void => {
-    const nodeType = e.detail?.item?.type as string | undefined;
+  override _handlePaletteSelect = (e: Event): void => {
+    const detail = (e as CustomEvent).detail;
+    const nodeType = detail?.item?.type as string | undefined;
     if (!nodeType || !this._adapterResult) return;
     if (nodeType === 'org-agent' && this._selectedNodeId) {
       const selectedNode = this._adapterResult.model.nodes.find(n => n.id === this._selectedNodeId);
@@ -214,27 +198,7 @@ export class BlocksOrgDiagram extends DiagramBaseMixin(LitElement) {
     this._handleMutation({ type: 'addNode', nodeType });
   };
 
-  private _onCanvasPointerDown = (e: PointerEvent): void => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    this._lastPointerX = e.clientX - rect.left;
-    this._lastPointerY = e.clientY - rect.top;
-  };
-
-  private _onPaneClick = (): void => {
-    if (this.readonly) return;
-    this._chooserState = { x: this._lastPointerX, y: this._lastPointerY };
-  };
-
-  private _onConnectEndOnEmpty = (payload: { sourceNodeId?: string }): void => {
-    if (this.readonly) return;
-    this._chooserState = {
-      x: this._lastPointerX,
-      y: this._lastPointerY,
-      sourceNodeId: payload?.sourceNodeId,
-    };
-  };
-
-  private _chooserItems() {
+  override _chooserItems() {
     const policy = this._editPolicy();
     if (!policy || !this._adapterResult) return [];
     const model = this._adapterResult.model;
@@ -251,8 +215,8 @@ export class BlocksOrgDiagram extends DiagramBaseMixin(LitElement) {
       .map(s => ({ type: s.type, label: s.label, icon: s.icon }));
   }
 
-  private _onChooserSelect = (e: CustomEvent): void => {
-    const nodeType = e.detail?.item?.type as string | undefined;
+  override _onChooserSelect = (e: Event): void => {
+    const nodeType = (e as CustomEvent).detail?.item?.type as string | undefined;
     if (!nodeType || !this._adapterResult || !this._chooserState) return;
     const { sourceNodeId } = this._chooserState;
     if (nodeType === 'org-agent') {
@@ -273,10 +237,6 @@ export class BlocksOrgDiagram extends DiagramBaseMixin(LitElement) {
     } else {
       this._handleMutation({ type: 'addNode', nodeType });
     }
-    this._chooserState = null;
-  };
-
-  private _onChooserDismiss = (): void => {
     this._chooserState = null;
   };
 
@@ -585,24 +545,15 @@ export class BlocksOrgDiagram extends DiagramBaseMixin(LitElement) {
                 const payload = e.detail?.payload ?? e.detail;
                 if (topic === 'graph:node:click') this._handleNodeClick(e);
                 if (topic === 'graph:selection:change') { const prev = this._selectedNodeId; this._handleSelectionChange(e); if (this._selectedNodeId !== prev) this._updateEdgeStyles(); }
-                if (topic === 'graph:pane:click') { this._onPaneClick(); this._onNodeHoverEnd(); }
-                if (topic === 'graph:connect:end-on-empty') this._onConnectEndOnEmpty(payload);
+                if (topic === 'graph:pane:click') { this._showPickerAtPaneClick(); this._onNodeHoverEnd(); }
+                if (topic === 'graph:connect:end-on-empty') this._showPickerAtConnectEnd(payload);
                 if (topic === 'graph:node:mouseenter') { const nodeId = payload?.nodeId as string | undefined; if (nodeId) this._onNodeHover(nodeId, e as unknown as MouseEvent); }
                 if (topic === 'graph:node:mouseleave') this._onNodeHoverEnd();
                 if (topic === 'graph:edge:mouseenter') { this._onEdgeHover(payload?.edgeId as string, payload?.edgeType as string, payload?.label as string, payload?.clientX as number, payload?.clientY as number); }
                 if (topic === 'graph:edge:mouseleave') this._onEdgeHoverEnd();
               }}
             ></graph-canvas-core>
-            ${this._chooserState ? html`
-              <div style="position:absolute;left:${this._chooserState.x}px;top:${this._chooserState.y}px;z-index:10;">
-                <pages-node-chooser
-                  .items=${this._chooserItems()}
-                  .iconRenderer=${this._iconRenderer()}
-                  @pages-palette-select=${this._onChooserSelect}
-                  @pages-chooser-dismiss=${this._onChooserDismiss}
-                ></pages-node-chooser>
-              </div>
-            ` : nothing}
+            ${this._renderNodePicker()}
           </div>
           ${this._propertiesOpen ? html`
             <div style="width:300px;border-left:1px solid var(--pages-neutral-4,#e5e7eb);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;">
