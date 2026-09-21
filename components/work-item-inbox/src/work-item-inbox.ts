@@ -475,7 +475,7 @@ export class WorkItemInbox extends WorkItemInboxBase {
     if (props.mode) this.mode = props.mode;
   }
 
-  protected override onPushEvent(event: unknown): void {
+  override onPushEvent(event: unknown): void {
     this._handlePushEvent(event as WorkItemLifecycleEvent);
   }
 

@@ -121,7 +121,7 @@ export class TopologyViewer extends PushMixin(LitElement) {
     }
   }
 
-  protected override onPushEvent(event: unknown): void {
+  override onPushEvent(event: unknown): void {
     const update = event as { serviceId: string; status: TopologyNodeStatus };
     if (this.data && update.serviceId) {
       this.data = {

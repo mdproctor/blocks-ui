@@ -164,7 +164,7 @@ export class KpiMetricRow extends PushMixin(LiveRegionMixin(LitElement)) {
     this._stopRefreshTimer();
   }
 
-  protected override onPushEvent(event: unknown): void {
+  override onPushEvent(event: unknown): void {
     this._applyMetricUpdate(event as MetricDefinition);
     this._stopRefreshTimer();
   }

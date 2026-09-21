@@ -81,7 +81,7 @@ export class SessionDetail extends PushMixin(LitElement) {
     this.pushTopics = [];
   }
 
-  protected override onPushEvent(event: unknown): void {
+  override onPushEvent(event: unknown): void {
     const payload = event as Record<string, unknown>;
     this._events = [...this._events, {
       timestamp: new Date().toISOString(),

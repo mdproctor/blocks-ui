@@ -131,7 +131,7 @@ export class NotificationBell extends PushMixin(KeyboardShortcutMixin(FocusTrapM
     }
   }
 
-  protected override onPushEvent(event: unknown): void {
+  override onPushEvent(event: unknown): void {
     const data = event as { count?: number };
     if (typeof data.count === 'number') {
       this.unreadCount = data.count;

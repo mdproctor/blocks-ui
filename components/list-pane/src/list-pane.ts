@@ -62,7 +62,7 @@ export class ListPane extends PushMixin(DataSourceMixin(LitElement)) {
     this._refreshUnsub?.();
   }
 
-  protected override onPushEvent(_event: unknown): void {
+  override onPushEvent(_event: unknown): void {
     this.refresh();
   }
 

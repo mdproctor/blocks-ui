@@ -128,7 +128,7 @@ export class ReconciliationStatus extends PushMixin(LitElement) {
     }
   }
 
-  protected override onPushEvent(event: unknown): void {
+  override onPushEvent(event: unknown): void {
     this.data = event as ReconciliationSnapshot;
   }
 

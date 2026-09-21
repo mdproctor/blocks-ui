@@ -63,7 +63,7 @@ export class ExecutionMonitor extends PushMixin(LiveRegionMixin(LitElement)) {
     this._connected = this.pushConnected;
   }
 
-  protected override onPushEvent(event: unknown): void {
+  override onPushEvent(event: unknown): void {
     this._snapshot = event as ExecutionSnapshot;
     this._stale = false;
     this._lastUpdateTime = Date.now();

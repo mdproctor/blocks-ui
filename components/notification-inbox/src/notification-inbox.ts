@@ -468,7 +468,7 @@ export class NotificationInbox extends NotificationInboxBase {
 
   // --- Push ---
 
-  protected override onPushEvent(event: unknown): void {
+  override onPushEvent(event: unknown): void {
     this._handlePushEvent(event as Notification);
   }
 
