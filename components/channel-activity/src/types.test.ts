@@ -44,6 +44,8 @@ describe('MessageType helpers', () => {
     expect(messageTypeCategory('DECLINE')).toBe('warning');
     expect(messageTypeCategory('HANDOFF')).toBe('transfer');
     expect(messageTypeCategory('EVENT')).toBe('telemetry');
+    expect(messageTypeCategory('PROPOSE')).toBe('obligation');
+    expect(messageTypeCategory('JUDGMENT')).toBe('info');
   });
 
   it('categorises every commitment state', () => {
@@ -60,7 +62,7 @@ describe('MessageType helpers', () => {
   });
 
   it('all enum arrays are non-empty', () => {
-    expect(MESSAGE_TYPES.length).toBe(9);
+    expect(MESSAGE_TYPES.length).toBe(11);
     expect(ACTOR_TYPES.length).toBe(3);
     expect(COMMITMENT_STATES.length).toBe(7);
     expect(CHANNEL_SEMANTICS.length).toBe(5);

@@ -22,7 +22,7 @@ describe('ChannelEventTopics', () => {
   });
 
   it('has exactly 22 topics', () => {
-    expect(Object.keys(ChannelEventTopics).length).toBe(22);
+    expect(Object.keys(ChannelEventTopics).length).toBe(24);
   });
 
   it('topic event constants have channel: prefix', () => {

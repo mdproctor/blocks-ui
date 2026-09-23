@@ -1,9 +1,8 @@
-import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { LitElement, html, css } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import type { Reaction } from './types.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { ChannelEventTopics } from './events.js';
-import './channel-emoji-picker.js';
 import '@casehubio/pages-ui-components';
 
 interface GroupedReaction {
@@ -19,12 +18,7 @@ export class ChannelReactionBarElement extends LitElement {
   @property({ type: String }) messageId = '';
   @property({ type: String }) currentActorId?: string;
 
-  @state() private _showPicker = false;
-  @state() private _flipVertical = false;
-  @state() private _flipHorizontal = false;
 
-  private static readonly PICKER_WIDTH = 353;
-  private static readonly PICKER_HEIGHT = 400;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -52,36 +46,7 @@ export class ChannelReactionBarElement extends LitElement {
       background: var(--pages-accent-2, #eef2ff);
     }
     .count { color: var(--pages-neutral-9, #737373); }
-    .add-reaction-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 28px; height: 24px;
-      border-radius: 9999px;
-      border: 1px dashed var(--pages-neutral-5, #d4d4d4);
-      background: none; cursor: pointer;
-      font-size: var(--pages-font-size-xs, 11px);
-      color: var(--pages-neutral-8, #888);
-    }
-    .add-reaction-btn:hover { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-11, #333); }
-    .picker-container {
-      position: relative;
-    }
-    .picker-popover {
-      position: absolute;
-      bottom: 100%;
-      left: 0;
-      z-index: 100;
-      margin-bottom: var(--pages-space-1, 4px);
-    }
-    .picker-popover.flip {
-      bottom: auto;
-      top: 100%;
-      margin-bottom: 0;
-      margin-top: var(--pages-space-1, 4px);
-    }
-    .picker-popover.align-right {
-      left: auto;
-      right: 0;
-    }
+
   `;
 
   private _grouped(): GroupedReaction[] {
@@ -104,28 +69,6 @@ export class ChannelReactionBarElement extends LitElement {
     emitPagesEvent(this, topic, { messageId: this.messageId, emoji });
   }
 
-  private _togglePicker() {
-    if (!this._showPicker) {
-      this._computePickerPosition();
-    }
-    this._showPicker = !this._showPicker;
-    this.setAttribute('aria-expanded', String(this._showPicker));
-  }
-
-  private _computePickerPosition() {
-    const container = this.shadowRoot?.querySelector('.picker-container');
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    this._flipVertical = rect.top < ChannelReactionBarElement.PICKER_HEIGHT;
-    this._flipHorizontal = rect.left + ChannelReactionBarElement.PICKER_WIDTH > window.innerWidth;
-  }
-
-  private _onEmojiSelected(e: Event) {
-    const emoji = (e as CustomEvent).detail.emoji;
-    emitPagesEvent(this, ChannelEventTopics.REACT, { messageId: this.messageId, emoji });
-    this._showPicker = false;
-  }
-
   override render() {
     const groups = this._grouped();
     return html`
@@ -136,14 +79,6 @@ export class ChannelReactionBarElement extends LitElement {
           <span class="count">${g.count}</span>
         </pages-button>
       `)}
-      <div class="picker-container">
-        <pages-button class="add-reaction-btn" variant="ghost" size="sm" @click=${this._togglePicker} title="Add reaction">+</pages-button>
-        ${this._showPicker ? html`
-          <div class="picker-popover ${this._flipVertical ? 'flip' : ''} ${this._flipHorizontal ? 'align-right' : ''}">
-            <blocks-channel-emoji-picker @emoji-selected=${this._onEmojiSelected}></blocks-channel-emoji-picker>
-          </div>
-        ` : nothing}
-      </div>
     `;
   }
 }

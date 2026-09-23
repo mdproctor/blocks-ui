@@ -2,7 +2,20 @@ import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import type { QhorusMessage, Reaction, CommitmentState, ActorType } from './types.js';
-import { messageTypeCategory, isObligationCreating } from './types.js';
+import { messageTypeCategory, isObligationCreating, type MessageType } from './types.js';
+
+function speechActBorderColor(type: MessageType): string {
+  const cat = messageTypeCategory(type);
+  switch (cat) {
+    case 'info': return 'var(--pages-info-9, #2563eb)';
+    case 'obligation': return 'var(--pages-accent-9, #7c3aed)';
+    case 'success': return 'var(--pages-success-9, #16a34a)';
+    case 'danger': return 'var(--pages-danger-9, #dc2626)';
+    case 'warning': return 'var(--pages-warning-9, #d97706)';
+    case 'transfer': return 'var(--pages-info-7, #38bdf8)';
+    case 'telemetry': return 'var(--pages-neutral-7, #a3a3a3)';
+  }
+}
 import { renderMarkdown } from './markdown.js';
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { ChannelEventTopics } from './events.js';
@@ -36,6 +49,11 @@ export class ChannelMessageElement extends LitElement {
     :host(:hover) {
       background: var(--pages-neutral-2, #f5f5f5);
     }
+    .message-container {
+      border-left-width: 3px;
+      border-left-style: solid;
+      padding-left: var(--pages-space-3, 12px);
+    }
     .message-header {
       display: flex;
       align-items: center;
@@ -54,21 +72,7 @@ export class ChannelMessageElement extends LitElement {
       font-size: var(--pages-font-size-xs, 11px);
       color: var(--pages-neutral-8, #888);
     }
-    .speech-act-badge {
-      font-size: 10px;
-      font-weight: var(--pages-font-weight-medium, 500);
-      padding: 1px 6px;
-      border-radius: 9999px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .badge-info { background: var(--pages-info-3, #dbeafe); color: var(--pages-info-11, #1e40af); }
-    .badge-obligation { background: var(--pages-accent-3, #e0e7ff); color: var(--pages-accent-11, #3730a3); }
-    .badge-success { background: var(--pages-success-3, #d1fae5); color: var(--pages-success-11, #065f46); }
-    .badge-danger { background: var(--pages-danger-3, #fee2e2); color: var(--pages-danger-11, #991b1b); }
-    .badge-warning { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-11, #92400e); }
-    .badge-transfer { background: var(--pages-info-3, #dbeafe); color: var(--pages-info-11, #1e40af); }
-    .badge-telemetry { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-9, #737373); }
+
 
     .content {
       font-size: var(--pages-font-size-base, 14px);
@@ -149,6 +153,27 @@ export class ChannelMessageElement extends LitElement {
       cursor: pointer; color: var(--pages-neutral-11, #333);
     }
     .reply-btn:hover { background: var(--pages-neutral-3, #e5e5e5); }
+    .corrected-marker {
+      font-size: var(--pages-font-size-xs, 11px);
+      color: var(--pages-neutral-8, #888);
+      font-style: italic;
+    }
+    .retraction-tombstone {
+      font-size: var(--pages-font-size-sm, 13px);
+      color: var(--pages-neutral-8, #888);
+      font-style: italic;
+      padding: var(--pages-space-1, 4px) 0;
+    }
+    .correction-history {
+      margin-bottom: var(--pages-space-2, 8px);
+      padding: var(--pages-space-1, 4px) 0;
+    }
+    .correction-history .detail-row {
+      display: flex; gap: var(--pages-space-2, 8px); padding: 2px 0;
+    }
+    .correction-history .detail-label {
+      color: var(--pages-neutral-8, #888); white-space: nowrap;
+    }
     @media (prefers-reduced-motion: reduce) {
       .expanded-section { transition: none; }
     }
@@ -190,6 +215,17 @@ export class ChannelMessageElement extends LitElement {
       this._expanded = false;
     }
   };
+
+  private get _hasExpandableContent(): boolean {
+    const m = this.message;
+    if (!m) return false;
+    return !!(
+      (m.artefactRefs && m.artefactRefs.length > 0) ||
+      m.commitmentId ||
+      m.correlationId ||
+      (m as any)._corrections?.length
+    );
+  }
 
   private _toggle() {
     this._expanded = !this._expanded;
@@ -245,6 +281,20 @@ export class ChannelMessageElement extends LitElement {
             ` : nothing}
           </div>
         ` : nothing}
+        ${(m as any)._corrections?.length ? html`
+          <div class="correction-history">
+            <div class="detail-row">
+              <span class="detail-label">Original:</span>
+              <span>${m.content}</span>
+            </div>
+            ${(m as any)._corrections.map((c: QhorusMessage) => html`
+              <div class="detail-row">
+                <span class="detail-label">Corrected (${this._formatTime(c.createdAt)}):</span>
+                <span>${c.content}</span>
+              </div>
+            `)}
+          </div>
+        ` : nothing}
         <div class="metadata">
           ${m.topic ? html`
             <span class="meta-item"><span class="meta-label">Topic:</span> ${m.topic}</span>
@@ -253,9 +303,7 @@ export class ChannelMessageElement extends LitElement {
             <span class="meta-item"><span class="meta-label">Channel:</span> ${this.channelName}</span>
           ` : nothing}
         </div>
-        <div class="action-bar">
-          <pages-button class="reply-btn" variant="ghost" size="sm" @click=${this._onReply}>↩ Reply</pages-button>
-        </div>
+
       </div>
     `;
   }
@@ -263,27 +311,31 @@ export class ChannelMessageElement extends LitElement {
   override render() {
     if (!this.message) return nothing;
     const m = this.message;
-    const category = messageTypeCategory(m.messageType);
     const displaySender = this._displaySender(m.sender, m.actorType);
 
     return html`
-      <div class="message-header">
-        ${this.showActorBadge ? html`
-          <span class="actor-icon" data-actor=${m.actorType}>${this._actorIcon(m.actorType)}</span>
-        ` : nothing}
-        <span class="sender">${displaySender}</span>
-        ${this.showSpeechAct ? html`
-          <span class="speech-act-badge badge-${category}">${m.messageType}</span>
-        ` : nothing}
-        ${this.commitmentState && isObligationCreating(m.messageType) ? html`
-          <pages-status-badge domain="commitment" .state=${this.commitmentState}></pages-status-badge>
-        ` : nothing}
-        <time datetime=${m.createdAt}>${this._formatTime(m.createdAt)}</time>
-        <pages-button class="expand-toggle" variant="ghost" size="sm" @click=${this._toggle} aria-expanded=${this._expanded}>
-          ${this._expanded ? '▼' : '▶'}
-        </pages-button>
-      </div>
-      <div class="content">${this.renderContent?.(m) ?? unsafeHTML(renderMarkdown(m.content))}</div>
+      <div class="message-container"
+        style="border-left-color: ${speechActBorderColor(m.messageType)}"
+        aria-label="${m.messageType} message from ${displaySender}"
+        title="${m.messageType}">
+        <div class="message-header">
+          ${this.showActorBadge ? html`
+            <span class="actor-icon" data-actor=${m.actorType}>${this._actorIcon(m.actorType)}</span>
+          ` : nothing}
+          <span class="sender">${displaySender}</span>
+          <time datetime=${m.createdAt}>${this._formatTime(m.createdAt)}</time>
+          ${(m as any)._corrected ? html`<span class="corrected-marker">(corrected)</span>` : nothing}
+          ${this._hasExpandableContent ? html`
+            <pages-button class="expand-toggle" variant="ghost" size="sm" @click=${this._toggle} aria-expanded=${this._expanded}>
+              ${this._expanded ? '▼' : '▶'}
+            </pages-button>
+          ` : nothing}
+        </div>
+        ${(m as any)._retracted ? html`
+          <div class="retraction-tombstone">[Retracted by ${displaySender} at ${this._formatTime(m.createdAt)}]</div>
+        ` : html`
+          <div class="content">${this.renderContent?.(m) ?? unsafeHTML(renderMarkdown(m.content))}</div>
+        `}
       ${m.messageType === 'HANDOFF' && m.target ? html`
         <div class="delegation-indicator">
           ↳ Delegated to <strong>${m.target}</strong>
@@ -300,6 +352,7 @@ export class ChannelMessageElement extends LitElement {
       ` : nothing}
       ${this._expanded ? this._renderExpanded() : nothing}
       <blocks-channel-reaction-bar .reactions=${this.reactions} .messageId=${m.id} .currentActorId=${this.currentActorId}></blocks-channel-reaction-bar>
+      </div>
     `;
   }
 

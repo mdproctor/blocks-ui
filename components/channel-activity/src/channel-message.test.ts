@@ -53,17 +53,26 @@ describe('blocks-channel-message', () => {
     expect(shadow.innerHTML).toContain('<strong>bold</strong>');
   });
 
-  it('renders speech act badge by default', async () => {
+  it('renders colored left border instead of speech act badge', async () => {
     const el = await renderMessage({ message: { messageType: 'COMMAND' } });
     const badge = el.shadowRoot!.querySelector('.speech-act-badge');
-    expect(badge).toBeTruthy();
-    expect(badge!.textContent!.trim()).toBe('COMMAND');
+    expect(badge).toBeNull();
+    const container = el.shadowRoot!.querySelector('.message-container');
+    expect(container).toBeTruthy();
+    const style = container!.getAttribute('style');
+    expect(style).toContain('border-left');
   });
 
-  it('hides speech act badge when showSpeechAct=false', async () => {
-    const el = await renderMessage({ showSpeechAct: false });
-    const badge = el.shadowRoot!.querySelector('.speech-act-badge');
-    expect(badge).toBeNull();
+  it('includes aria-label with speech act type', async () => {
+    const el = await renderMessage({ message: { messageType: 'COMMAND' } });
+    const container = el.shadowRoot!.querySelector('.message-container');
+    expect(container?.getAttribute('aria-label')).toContain('COMMAND');
+  });
+
+  it('includes title tooltip with speech act type', async () => {
+    const el = await renderMessage({ message: { messageType: 'COMMAND' } });
+    const container = el.shadowRoot!.querySelector('.message-container');
+    expect(container?.getAttribute('title')).toBe('COMMAND');
   });
 
   it('renders actor icon by default', async () => {
@@ -79,24 +88,25 @@ describe('blocks-channel-message', () => {
     expect(icon).toBeNull();
   });
 
-  it('applies correct badge color class for each message type', async () => {
-    for (const [type, expected] of [
-      ['COMMAND', 'obligation'], ['DONE', 'success'], ['FAILURE', 'danger'],
-      ['DECLINE', 'warning'], ['HANDOFF', 'transfer'], ['EVENT', 'telemetry'],
-      ['QUERY', 'info'], ['RESPONSE', 'info'], ['STATUS', 'info'],
-    ] as const) {
+  it('applies colored left border for each message type', async () => {
+    for (const type of ['COMMAND', 'DONE', 'FAILURE', 'DECLINE', 'HANDOFF', 'EVENT', 'QUERY', 'RESPONSE', 'STATUS', 'PROPOSE', 'JUDGMENT'] as const) {
       const el = await renderMessage({ message: { messageType: type } });
-      const badge = el.shadowRoot!.querySelector('.speech-act-badge');
-      expect(badge!.classList.contains(`badge-${expected}`), `${type} should have badge-${expected}`).toBe(true);
+      const container = el.shadowRoot!.querySelector('.message-container');
+      expect(container, `${type} should have a message-container`).toBeTruthy();
+      const style = container!.getAttribute('style');
+      expect(style, `${type} should have border-left style`).toContain('border-left');
       document.body.innerHTML = '';
     }
   });
 
-  it('renders commitment state badge for COMMAND messages', async () => {
+  it('renders commitment state badge in expanded section for COMMAND messages', async () => {
     const el = await renderMessage({ message: { messageType: 'COMMAND', commitmentId: 'c-1' } });
     (el as any).commitmentState = 'OPEN';
     await (el as any).updateComplete;
-    const badge = el.shadowRoot!.querySelector('pages-status-badge');
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
+    toggle.click();
+    await (el as any).updateComplete;
+    const badge = el.shadowRoot!.querySelector('.expanded-section pages-status-badge');
     expect(badge).toBeTruthy();
     expect((badge as any).state).toBe('OPEN');
   });
@@ -137,8 +147,40 @@ describe('blocks-channel-message', () => {
     expect(time!.getAttribute('datetime')).toBe('2026-07-07T12:00:00Z');
   });
 
-  it('expand toggle works', async () => {
+  it('hides expand toggle on message with no expandable content', async () => {
     const el = await renderMessage();
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeNull();
+  });
+
+  it('shows expand toggle when artefactRefs present', async () => {
+    const el = await renderMessage({
+      message: { artefactRefs: [{ uri: 'doc:spec.md', type: 'DOCUMENT', label: 'Spec' }] },
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeTruthy();
+  });
+
+  it('shows expand toggle when commitmentId present', async () => {
+    const el = await renderMessage({
+      message: { messageType: 'COMMAND', commitmentId: 'c-123' },
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeTruthy();
+  });
+
+  it('shows expand toggle when correlationId present', async () => {
+    const el = await renderMessage({
+      message: { correlationId: 'corr-1' },
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeTruthy();
+  });
+
+  it('expand toggle works when expandable', async () => {
+    const el = await renderMessage({
+      message: { commitmentId: 'c-1', messageType: 'COMMAND' },
+    });
     const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     toggle.click();
@@ -147,24 +189,22 @@ describe('blocks-channel-message', () => {
     expect(el.shadowRoot!.querySelector('.expanded-section')).toBeTruthy();
   });
 
-  it('reply button emits channel:message-selected event', async () => {
-    const el = await renderMessage();
+  it('expanded section has no action bar (reply moved to hover toolbar)', async () => {
+    const el = await renderMessage({
+      message: { commitmentId: 'c-1', messageType: 'COMMAND' },
+    });
     const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
     toggle.click();
     await (el as any).updateComplete;
 
-    const handler = vi.fn();
-    el.addEventListener('pages-event', handler);
-    const replyBtn = el.shadowRoot!.querySelector('.reply-btn') as HTMLButtonElement;
-    replyBtn.click();
-
-    expect(handler).toHaveBeenCalledOnce();
-    expect(handler.mock.calls[0]![0]!.detail.topic).toBe(ChannelEventTopics.MESSAGE_SELECTED);
-    expect(handler.mock.calls[0]![0]!.detail.payload.message.id).toBe('msg-1');
+    const actionBar = el.shadowRoot!.querySelector('.action-bar');
+    expect(actionBar).toBeNull();
   });
 
   it('collapses on Escape key', async () => {
-    const el = await renderMessage();
+    const el = await renderMessage({
+      message: { commitmentId: 'c-1', messageType: 'COMMAND' },
+    });
     const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
     toggle.click();
     await (el as any).updateComplete;
@@ -193,7 +233,7 @@ describe('blocks-channel-message', () => {
     const parent = makeMessage({ id: 'parent-1', sender: 'claudony-worker-bob', actorType: 'AGENT', content: 'Original question' });
     const formatSender = (s: string) => s.replace('claudony-worker-', '');
     const el = await renderMessage({
-      message: { inReplyTo: 'parent-1' },
+      message: { inReplyTo: 'parent-1', correlationId: 'corr-1' },
       parentMessage: parent,
       formatSender,
     });
@@ -238,6 +278,60 @@ describe('blocks-channel-message', () => {
     const el = await renderMessage({ renderContent });
     const custom = el.shadowRoot!.querySelector('.custom');
     expect(custom!.textContent).toBe('agent-alpha-ch-1');
+  });
+
+  // --- Correction markers (#34 Batch 4) ---
+
+  it('shows (corrected) marker when message has _corrected flag', async () => {
+    const el = await renderMessage({ message: { _corrected: true } as any });
+    const marker = el.shadowRoot!.querySelector('.corrected-marker');
+    expect(marker).toBeTruthy();
+    expect(marker!.textContent!.trim()).toBe('(corrected)');
+  });
+
+  it('does not show (corrected) marker on normal messages', async () => {
+    const el = await renderMessage();
+    const marker = el.shadowRoot!.querySelector('.corrected-marker');
+    expect(marker).toBeNull();
+  });
+
+  it('shows expand toggle when _corrections are present', async () => {
+    const el = await renderMessage({
+      message: {
+        _corrected: true,
+        _corrections: [makeMessage({ id: 'c-1', content: 'Fixed text' })],
+      } as any,
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle');
+    expect(toggle).toBeTruthy();
+  });
+
+  it('renders correction history in expanded section', async () => {
+    const el = await renderMessage({
+      message: {
+        _corrected: true,
+        _corrections: [
+          makeMessage({ id: 'c-1', content: 'Fixed text', createdAt: '2026-09-15T14:25:00Z' }),
+        ],
+      } as any,
+    });
+    const toggle = el.shadowRoot!.querySelector('.expand-toggle') as HTMLButtonElement;
+    toggle.click();
+    await (el as any).updateComplete;
+    const history = el.shadowRoot!.querySelector('.correction-history');
+    expect(history).toBeTruthy();
+    expect(history!.textContent).toContain('Fixed text');
+  });
+
+  it('renders retraction tombstone when _retracted is true', async () => {
+    const el = await renderMessage({
+      message: { _retracted: true, sender: 'alice', content: 'Original sensitive text' } as any,
+    });
+    const tombstone = el.shadowRoot!.querySelector('.retraction-tombstone');
+    expect(tombstone).toBeTruthy();
+    expect(tombstone!.textContent).toContain('Retracted');
+    const content = el.shadowRoot!.querySelector('.content');
+    expect(content).toBeNull();
   });
 
   it('clicking artefact chip dispatches artefact-selected event', async () => {

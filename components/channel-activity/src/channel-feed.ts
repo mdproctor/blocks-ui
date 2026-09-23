@@ -7,6 +7,7 @@ import { LiveRegionMixin, KeyboardShortcutMixin, RovingTabindexMixin, FocusTrapM
 import { ChannelEventTopics } from './events.js';
 import './channel-message.js';
 import './channel-thread.js';
+import './channel-hover-toolbar.js';
 import '@casehubio/pages-ui-components';
 
 interface MessageGroup {
@@ -47,6 +48,11 @@ export class ChannelFeedElement extends ChannelFeedBase {
   @state() private _staleCursorId?: string;
   @state() _scrolledUp = false;
   @state() _unreadCount = 0;
+  @state() private _hoveredMessageId: string | null = null;
+  private _isHoveringToolbar = false;
+  private _hoverLeaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private _correctionMap = new Map<string, QhorusMessage[]>();
+  private _retractedIds = new Set<string>();
 
   static override readonly styles = css`
     :host {
@@ -150,6 +156,14 @@ export class ChannelFeedElement extends ChannelFeedBase {
       z-index: 5;
     }
     .new-messages-pill:hover { background: var(--pages-accent-10, #4f46e5); }
+    .message-item { position: relative; }
+    .hover-toolbar-anchor {
+      position: absolute;
+      top: 0;
+      right: var(--pages-space-3, 12px);
+      z-index: 50;
+      transform: translateY(-50%);
+    }
   `;
 
   private _loadCursors(): Record<string, { id: string; ts: number }> {
@@ -190,15 +204,35 @@ export class ChannelFeedElement extends ChannelFeedBase {
     });
   }
 
+  private _applyCorrections(messages: QhorusMessage[]): QhorusMessage[] {
+    return messages
+      .filter(m => !m.correctsMessageId)
+      .map(m => {
+        const corrections = this._correctionMap.get(m.id);
+        const isRetracted = this._retractedIds.has(m.id);
+        if (corrections?.length || isRetracted) {
+          return {
+            ...m,
+            content: corrections?.length ? corrections[corrections.length - 1].content : m.content,
+            _corrected: !!corrections?.length,
+            _corrections: corrections ?? [],
+            _retracted: isRetracted,
+          } as QhorusMessage;
+        }
+        return m;
+      });
+  }
+
   _separateRootsAndReplies(): {
     roots: QhorusMessage[];
     repliesByParent: Map<string, QhorusMessage[]>;
   } {
-    const messageIds = new Set(this.messages.map(m => m.id));
+    const corrected = this._applyCorrections(this.messages);
+    const messageIds = new Set(corrected.map(m => m.id));
     const repliesByParent = new Map<string, QhorusMessage[]>();
     const roots: QhorusMessage[] = [];
 
-    for (const m of this.messages) {
+    for (const m of corrected) {
       if (m.inReplyTo && messageIds.has(m.inReplyTo)) {
         const list = repliesByParent.get(m.inReplyTo) ?? [];
         list.push(m);
@@ -273,6 +307,20 @@ export class ChannelFeedElement extends ChannelFeedBase {
     if (changed.has('channelId')) {
       this._checkStaleCursor();
     }
+    if (changed.has('messages')) {
+      this._correctionMap.clear();
+      this._retractedIds.clear();
+      for (const msg of this.messages) {
+        if (msg.correctsMessageId) {
+          if ((msg as any).retraction) {
+            this._retractedIds.add(msg.correctsMessageId);
+          }
+          const list = this._correctionMap.get(msg.correctsMessageId) ?? [];
+          list.push(msg);
+          this._correctionMap.set(msg.correctsMessageId, list);
+        }
+      }
+    }
     if (changed.has('messages') && this.messages.length > 0) {
       this._showStalePrompt = false;
     }
@@ -328,6 +376,7 @@ export class ChannelFeedElement extends ChannelFeedBase {
     const feed = this.renderRoot.querySelector('.feed');
     if (feed) {
       feed.addEventListener('scroll', this._onFeedScroll);
+      feed.addEventListener('keydown', this._onFeedKeydown);
     }
   }
 
@@ -336,8 +385,25 @@ export class ChannelFeedElement extends ChannelFeedBase {
     const feed = this.renderRoot.querySelector('.feed');
     if (feed) {
       feed.removeEventListener('scroll', this._onFeedScroll);
+      feed.removeEventListener('keydown', this._onFeedKeydown);
     }
   }
+
+  private _onFeedKeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && this._hoveredMessageId) {
+      this._hoveredMessageId = null;
+      this._isHoveringToolbar = false;
+      return;
+    }
+    if (e.key === 'Enter') {
+      const target = e.target as HTMLElement;
+      const msgItem = target.closest?.('[data-message-id]') as HTMLElement | null;
+      if (msgItem) {
+        const msgId = msgItem.getAttribute('data-message-id');
+        if (msgId) this._onMessageEnter(msgId);
+      }
+    }
+  };
 
   private _onFeedScroll = () => {
     const feed = this.renderRoot.querySelector('.feed');
@@ -350,6 +416,49 @@ export class ChannelFeedElement extends ChannelFeedBase {
       this._scrolledUp = true;
     }
   };
+
+  private _onMessageEnter(msgId: string) {
+    if (this._hoverLeaveTimer) {
+      clearTimeout(this._hoverLeaveTimer);
+      this._hoverLeaveTimer = null;
+    }
+    this._hoveredMessageId = msgId;
+  }
+
+  private _onMessageLeave() {
+    this._hoverLeaveTimer = setTimeout(() => {
+      if (!this._isHoveringToolbar) {
+        this._hoveredMessageId = null;
+      }
+    }, 100);
+  }
+
+  private _onToolbarEnter() {
+    this._isHoveringToolbar = true;
+    if (this._hoverLeaveTimer) {
+      clearTimeout(this._hoverLeaveTimer);
+      this._hoverLeaveTimer = null;
+    }
+  }
+
+  private _onToolbarLeave() {
+    this._isHoveringToolbar = false;
+    this._hoveredMessageId = null;
+  }
+
+  private _renderHoverToolbar(msg: QhorusMessage) {
+    if (this._hoveredMessageId !== msg.id) return nothing;
+    return html`
+      <div class="hover-toolbar-anchor"
+        @mouseenter=${this._onToolbarEnter}
+        @mouseleave=${this._onToolbarLeave}>
+        <blocks-channel-hover-toolbar
+          .message=${msg}
+          .currentActorId=${this.currentActorId ?? ''}>
+        </blocks-channel-hover-toolbar>
+      </div>
+    `;
+  }
 
   private _scrollToBottom() {
     const feed = this.renderRoot.querySelector('.feed');
@@ -389,8 +498,9 @@ export class ChannelFeedElement extends ChannelFeedBase {
 
   private _renderTopics() {
     const reactionIndex = this._buildReactionIndex();
+    const corrected = this._applyCorrections(this.messages);
     const byTopic = new Map<string, QhorusMessage[]>();
-    for (const m of this.messages) {
+    for (const m of corrected) {
       const key = m.topicId ?? '';
       const list = byTopic.get(key) ?? [];
       list.push(m);
@@ -416,7 +526,10 @@ export class ChannelFeedElement extends ChannelFeedBase {
                 <span class="group-sender">${group.sender}</span>
               </div>
               ${group.messages.map(msg => html`
-                <div class="${this._messageItemClasses(msg)}" data-message-id=${msg.id} tabindex="-1" style=${this._highlightStyle(msg)}>
+                <div class="${this._messageItemClasses(msg)}" data-message-id=${msg.id} tabindex="-1" style=${this._highlightStyle(msg)}
+                  @mouseenter=${() => this._onMessageEnter(msg.id)}
+                  @mouseleave=${() => this._onMessageLeave()}>
+                  ${this._renderHoverToolbar(msg)}
                   <blocks-channel-message .message=${msg}
                                   .reactions=${reactionIndex.get(msg.id) ?? []}
                                   .showActorBadge=${group.messages.indexOf(msg) === 0}
@@ -455,7 +568,10 @@ export class ChannelFeedElement extends ChannelFeedBase {
                          data-contains=${repliesByParent.get(msg.id)!.map(r => r.id).join(' ')}>
           </blocks-channel-thread>
         ` : html`
-          <div class="${this._messageItemClasses(msg)}" data-message-id=${msg.id} tabindex="-1" style=${this._highlightStyle(msg)}>
+          <div class="${this._messageItemClasses(msg)}" data-message-id=${msg.id} tabindex="-1" style=${this._highlightStyle(msg)}
+            @mouseenter=${() => this._onMessageEnter(msg.id)}
+            @mouseleave=${() => this._onMessageLeave()}>
+            ${this._renderHoverToolbar(msg)}
             <blocks-channel-message .message=${msg}
                             .reactions=${reactionIndex.get(msg.id) ?? []}
                             .showActorBadge=${group.messages.indexOf(msg) === 0}

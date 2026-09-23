@@ -1,6 +1,7 @@
 export const MESSAGE_TYPES = [
   'QUERY', 'COMMAND', 'RESPONSE', 'STATUS', 'DONE',
   'FAILURE', 'DECLINE', 'HANDOFF', 'EVENT',
+  'PROPOSE', 'JUDGMENT',
 ] as const;
 export type MessageType = typeof MESSAGE_TYPES[number];
 
@@ -70,6 +71,7 @@ export interface QhorusMessage {
   readonly deadline?: string;
   readonly acknowledgedAt?: string;
   readonly createdAt: string;
+  readonly correctsMessageId?: string;
 }
 
 export interface QhorusChannel {
@@ -127,17 +129,18 @@ export function isTerminalMessageType(type: MessageType): boolean {
 }
 
 export function isObligationCreating(type: MessageType): boolean {
-  return type === 'COMMAND';
+  return type === 'COMMAND' || type === 'PROPOSE';
 }
 
 export function messageTypeCategory(type: MessageType): 'info' | 'obligation' | 'success' | 'danger' | 'warning' | 'transfer' | 'telemetry' {
   switch (type) {
     case 'QUERY': case 'RESPONSE': case 'STATUS': return 'info';
-    case 'COMMAND': return 'obligation';
+    case 'COMMAND': case 'PROPOSE': return 'obligation';
     case 'DONE': return 'success';
     case 'FAILURE': return 'danger';
     case 'DECLINE': return 'warning';
     case 'HANDOFF': return 'transfer';
     case 'EVENT': return 'telemetry';
+    case 'JUDGMENT': return 'info';
   }
 }
