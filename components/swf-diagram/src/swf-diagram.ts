@@ -1,10 +1,11 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
-import { toSwfGraph, applySwfPropertyEdit, addSwfTask, removeSwfTask, moveSwfTask, registerSwfStencils, createSwfEditPolicy } from '@casehubio/graph-stencil-swf';
+import { toSwfGraph, applySwfPropertyEdit, addSwfTask, removeSwfTask, moveSwfTask, registerSwfStencils, createSwfEditPolicy, computeSwfStackLayout } from '@casehubio/graph-stencil-swf';
 import { DiagramBaseMixin } from '@casehubio/pages-diagram-core';
 import type { AdapterResult } from '@casehubio/pages-diagram-core';
 import type { EditPolicy, GraphEdit } from '@casehubio/graph-renderer';
+import { toReactFlowGraph } from '@casehubio/graph-renderer';
 import { emitPagesEvent } from '@casehubio/pages-data';
 import { detectDiagramType } from '@casehubio/blocks-ui-core';
 import { stringify } from 'yaml';
@@ -70,6 +71,32 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
 
   protected override _layoutOptions() {
     return { direction: this.layoutDirection, spacing: 40, containerPadding: 25, wrapping: true };
+  }
+
+  override async _fullRender(yamlStr: string): Promise<void> {
+    if ((this as any)._renderInProgress) { (this as any)._pendingRenderYaml = yamlStr; return; }
+    (this as any)._renderInProgress = true;
+    try {
+      (this as any)._error = '';
+      const result = this._adaptYaml(yamlStr);
+      (this as any)._adapterResult = result;
+      const layout = computeSwfStackLayout(result.model);
+      (this as any)._lastLayout = layout;
+      const { nodes, edges } = toReactFlowGraph(result.model, layout, this._decorations(), this._layoutOptions().direction);
+      (this as any)._nodes = nodes;
+      (this as any)._edges = edges;
+    } catch (e) {
+      (this as any)._error = String(e);
+    } finally {
+      (this as any)._renderInProgress = false;
+      if ((this as any)._pendingRenderYaml && (this as any)._pendingRenderYaml !== yamlStr) {
+        const pending = (this as any)._pendingRenderYaml;
+        (this as any)._pendingRenderYaml = '';
+        await this._fullRender(pending);
+      } else {
+        (this as any)._pendingRenderYaml = '';
+      }
+    }
   }
 
   protected override _editPolicy(): EditPolicy {

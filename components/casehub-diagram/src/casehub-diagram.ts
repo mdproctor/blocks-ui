@@ -45,9 +45,6 @@ import '@casehubio/graph-renderer';
 import './casehub-diagram-toolbar.js';
 
 const caseEditPolicy = createCaseEditPolicy();
-
-
-
 function caseMiniMapNodeColor(node: { type?: string }): string {
   switch (node.type) {
     case 'binding': return '#3b82f6';
@@ -109,7 +106,6 @@ export class CasehubDiagram extends DiagramBaseMixin(LitElement) {
   private _expandedWorkers = new Set<string>();
   private _expandDebounce: ReturnType<typeof setTimeout> | null = null;
   private _cachedLayoutOpts: ElkLayoutOptions | null = null;
-
   protected _adaptYaml(yaml: string): AdapterResult {
     this._cachedLayoutOpts = null;
     return toGraph(yaml);
