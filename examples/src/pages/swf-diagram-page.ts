@@ -131,6 +131,23 @@ do:
       set:
         decision: approved
         reason: 'Auto-approved: low risk score'
+  - notifyBeneficiaries:
+      for:
+        each: beneficiary
+        in: \${ .claim.beneficiaries }
+      do:
+        - sendLetter:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/letters/send
+        - recordDispatch:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/dispatch/record
       then: tryNotify
   - humanReview:
       call: http
