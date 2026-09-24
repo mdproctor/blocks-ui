@@ -242,6 +242,55 @@ do:
           uri: https://api.internal/decisions/record
 `;
 
+const FOR_LOOP_YAML = `document:
+  dsl: 1.0.0-alpha1
+  namespace: batch
+  name: batch-processing
+  version: "1.0.0"
+do:
+  - fetchManifest:
+      call: http
+      with:
+        method: get
+        endpoint:
+          uri: https://api.internal/manifests/latest
+  - processItems:
+      for:
+        each: item
+        in: .manifest.items
+      do:
+        - validateItem:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/items/validate
+        - transformItem:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/items/transform
+        - storeItem:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/items/store
+  - generateReport:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/reports/generate
+  - notifyComplete:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/notifications/send
+`;
+
 const EXAMPLES: Record<string, { label: string; description: string; yaml: string; direction?: 'DOWN' | 'RIGHT' }> = {
   'claim-review': {
     label: 'Claim Review (branching)',
@@ -252,6 +301,11 @@ const EXAMPLES: Record<string, { label: string; description: string; yaml: strin
     label: 'Nested Risk Assessment',
     description: 'Nested switches — elevated risk branch splits again into medical vs financial review. Tests recursive column layout with variable-width branches.',
     yaml: NESTED_YAML,
+  },
+  'for-loop': {
+    label: 'Batch Processing (for loop)',
+    description: 'For-loop iterating over items — loop body rendered as a container block within the column.',
+    yaml: FOR_LOOP_YAML,
   },
   'doc-pipeline': {
     label: 'Document Pipeline (sequential)',
