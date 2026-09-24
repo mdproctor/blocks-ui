@@ -219,7 +219,7 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
       if (!sp || !tp || sp !== tp) return true;
       if (sp === 'root') return true;
       const parentType = nodeTypes.get(sp);
-      return parentType !== 'swf-try';
+      return parentType !== 'swf-try' && parentType !== 'swf-try-catch';
     });
   }
 
