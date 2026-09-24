@@ -98,6 +98,90 @@ do:
           uri: https://api.internal/audit/record
 `;
 
+const NESTED_FOR_YAML = `document:
+  dsl: 1.0.0-alpha1
+  namespace: etl
+  name: multi-region-sync
+  version: "1.0.0"
+do:
+  - loadManifest:
+      call: http
+      with:
+        method: get
+        endpoint:
+          uri: https://api.internal/manifests/latest
+  - validateSchema:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/schema/validate
+  - processRegions:
+      for:
+        each: region
+        in: \${ .manifest.regions }
+      do:
+        - acquireLock:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/locks/acquire
+        - fetchRegionData:
+            call: http
+            with:
+              method: get
+              endpoint:
+                uri: https://api.internal/regions/data
+        - transformRecords:
+            for:
+              each: record
+              in: \${ .region.records }
+            do:
+              - normalise:
+                  call: http
+                  with:
+                    method: post
+                    endpoint:
+                      uri: https://api.internal/normalise
+              - enrich:
+                  call: http
+                  with:
+                    method: post
+                    endpoint:
+                      uri: https://api.internal/enrich
+              - deduplicate:
+                  call: http
+                  with:
+                    method: post
+                    endpoint:
+                      uri: https://api.internal/dedup
+        - bulkInsert:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/bulk/insert
+        - releaseLock:
+            call: http
+            with:
+              method: post
+              endpoint:
+                uri: https://api.internal/locks/release
+  - reconcile:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/reconcile
+  - publishReport:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/reports/publish
+`;
+
 const YAML = `document:
   dsl: 1.0.0-alpha1
   namespace: claims
@@ -313,6 +397,11 @@ const EXAMPLES: Record<string, { label: string; description: string; yaml: strin
     label: 'Claim Review (branching)',
     description: 'Three-way branching from risk assessment switch, try/catch error handling, 8 task types.',
     yaml: YAML,
+  },
+  'nested-for': {
+    label: 'Nested For Loops (ETL)',
+    description: 'Outer for-loop over regions, inner for-loop over records with 3 steps. Tests nested container sizing, column spacing, and connector routing.',
+    yaml: NESTED_FOR_YAML,
   },
   'nested-risk': {
     label: 'Nested Risk Assessment',
