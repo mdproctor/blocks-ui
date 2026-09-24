@@ -170,11 +170,88 @@ do:
           uri: https://api.internal/audit/record
 `;
 
+const NESTED_YAML = `document:
+  dsl: 1.0.0-alpha1
+  namespace: underwriting
+  name: nested-risk-assessment
+  version: "1.0.0"
+do:
+  - ingestApplication:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/applications/ingest
+  - classifyRisk:
+      switch:
+        - standardRisk:
+            when: '.riskTier == "standard"'
+            then: assessStandard
+        - elevatedRisk:
+            when: '.riskTier == "elevated"'
+            then: triageElevated
+        - declineRisk:
+            when: '.riskTier == "decline"'
+            then: autoDecline
+  - assessStandard:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/underwriting/standard
+      then: mergeDecision
+  - triageElevated:
+      switch:
+        - medicalReview:
+            when: '.elevatedReason == "medical"'
+            then: orderMedicalRecords
+        - financialReview:
+            when: '.elevatedReason == "financial"'
+            then: runCreditCheck
+  - orderMedicalRecords:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/medical/request-records
+      then: reviewElevated
+  - runCreditCheck:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/financial/credit-check
+      then: reviewElevated
+  - reviewElevated:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/underwriting/elevated-review
+      then: mergeDecision
+  - autoDecline:
+      set:
+        decision: declined
+        reason: 'Auto-declined: risk tier exceeds threshold'
+      then: mergeDecision
+  - mergeDecision:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/decisions/record
+`;
+
 const EXAMPLES: Record<string, { label: string; description: string; yaml: string; direction?: 'DOWN' | 'RIGHT' }> = {
   'claim-review': {
     label: 'Claim Review (branching)',
     description: 'Three-way branching from risk assessment switch, try/catch error handling, 8 task types.',
     yaml: YAML,
+  },
+  'nested-risk': {
+    label: 'Nested Risk Assessment',
+    description: 'Nested switches — elevated risk branch splits again into medical vs financial review. Tests recursive column layout with variable-width branches.',
+    yaml: NESTED_YAML,
   },
   'doc-pipeline': {
     label: 'Document Pipeline (sequential)',
