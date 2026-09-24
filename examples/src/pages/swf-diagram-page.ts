@@ -116,6 +116,17 @@ do:
         method: post
         endpoint:
           uri: https://api.internal/schema/validate
+  - routeByMode:
+      switch:
+        - fullSync:
+            when: '.mode == "full"'
+            then: processRegions
+        - deltaSync:
+            when: '.mode == "delta"'
+            then: fetchChangeset
+        - dryRun:
+            when: '.mode == "dry-run"'
+            then: simulateSync
   - processRegions:
       for:
         each: region
@@ -168,6 +179,27 @@ do:
               method: post
               endpoint:
                 uri: https://api.internal/locks/release
+      then: reconcile
+  - fetchChangeset:
+      call: http
+      with:
+        method: get
+        endpoint:
+          uri: https://api.internal/changesets/latest
+  - applyDelta:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/delta/apply
+      then: reconcile
+  - simulateSync:
+      call: http
+      with:
+        method: post
+        endpoint:
+          uri: https://api.internal/simulate
+      then: reconcile
   - reconcile:
       call: http
       with:

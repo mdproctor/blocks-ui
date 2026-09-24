@@ -226,11 +226,12 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
   private _computeFilteredNodes(filteredEdges: typeof this._edges) {
     const connectedIds = new Set(filteredEdges.flatMap(e => [e.source, e.target]));
     const containerTypes = new Set(['swf-try', 'swf-try-catch', 'swf-for']);
+    const structuralTypes = new Set(['swf-try-catch']);
     return this._nodes
       .filter(n => n.type !== 'swf-root')
       .map(n => {
         const cleared = n.parentId === 'root' ? { ...n, parentId: undefined } : { ...n };
-        if (!connectedIds.has(n.id)) {
+        if (!connectedIds.has(n.id) || structuralTypes.has(n.type ?? '')) {
           cleared.data = { ...cleared.data, _hideHandles: true };
         }
         if (containerTypes.has(n.type ?? '')) {

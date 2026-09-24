@@ -8,7 +8,7 @@ const H_GAP = 30;
 const CONTAINER_PAD_X = 20;
 const CONTAINER_PAD_TOP = 40;
 const CONTAINER_PAD_BOTTOM = 20;
-const INNER_V_GAP = 10;
+const INNER_V_GAP = 30;
 
 const SKIP_TYPES = new Set(['swf-root']);
 
