@@ -222,7 +222,7 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
 
   private _computeFilteredNodes(filteredEdges: typeof this._edges) {
     const connectedIds = new Set(filteredEdges.flatMap(e => [e.source, e.target]));
-    const containerTypes = new Set(['swf-try-catch']);
+    const containerTypes = new Set(['swf-try', 'swf-try-catch', 'swf-for']);
     return this._nodes
       .filter(n => n.type !== 'swf-root')
       .map(n => {
