@@ -12,7 +12,37 @@ const INNER_V_GAP = 10;
 
 const SKIP_TYPES = new Set(['swf-root']);
 
-interface Cell { row: number; col: number; colSpan: number }
+interface ColumnItem {
+  nodeId: string;
+  split?: ColumnGroup;
+}
+
+interface Column {
+  items: ColumnItem[];
+}
+
+interface ColumnGroup {
+  columns: Column[];
+}
+
+interface SizedItem {
+  nodeId: string;
+  nodeWidth: number;
+  nodeHeight: number;
+  split?: SizedGroup;
+}
+
+interface SizedColumn {
+  items: SizedItem[];
+  width: number;
+  height: number;
+}
+
+interface SizedGroup {
+  columns: SizedColumn[];
+  width: number;
+  height: number;
+}
 
 export function computeSwfStackLayout(model: GraphModel): ElkLayoutResult {
   const outgoing = new Map<string, string[]>();
@@ -26,52 +56,34 @@ export function computeSwfStackLayout(model: GraphModel): ElkLayoutResult {
     incoming.set(e.target, inc);
   }
 
-  const nodeById = new Map(model.nodes.map(n => [n.id, n]));
   const topLevelIds = new Set<string>();
   for (const n of model.nodes) {
     if (SKIP_TYPES.has(n.type)) continue;
     if (!n.parentId || n.parentId === 'root') topLevelIds.add(n.id);
   }
 
-  const grid = new Map<string, Cell>();
   const placed = new Set<string>();
 
-  function walkSequence(startId: string, row: number, col: number, colSpan: number): number {
-    let id = startId;
-    let r = row;
-    while (id) {
-      if (placed.has(id) || !topLevelIds.has(id)) break;
-      const targets = (outgoing.get(id) ?? []).filter(t => topLevelIds.has(t));
+  // Phase 1: build column tree from graph topology
+
+  function buildColumn(startId: string): Column {
+    const items: ColumnItem[] = [];
+    let id: string | undefined = startId;
+
+    while (id && topLevelIds.has(id) && !placed.has(id)) {
+      const targets: string[] = (outgoing.get(id) ?? []).filter((t: string) => topLevelIds.has(t));
 
       if (targets.length <= 1) {
-        grid.set(id, { row: r, col, colSpan });
+        items.push({ nodeId: id });
         placed.add(id);
-        r++;
         if (targets.length === 0) break;
-        const nextIncoming = (incoming.get(targets[0]!) ?? []).filter(t => topLevelIds.has(t));
+        const nextIncoming = (incoming.get(targets[0]!) ?? []).filter((t: string) => topLevelIds.has(t));
         if (nextIncoming.length > 1) break;
         id = targets[0]!;
       } else {
-        grid.set(id, { row: r, col, colSpan });
         placed.add(id);
-        r++;
-
-        const branchEnds: number[] = [];
-        const colWidth = colSpan / targets.length;
-        for (let i = 0; i < targets.length; i++) {
-          const branchCol = col + i * colWidth;
-          const endRow = walkSequence(targets[i]!, r, branchCol, colWidth);
-          branchEnds.push(endRow);
-        }
-
-        const maxEnd = Math.max(...branchEnds);
-        for (let i = 0; i < targets.length; i++) {
-          const branchDepth = branchEnds[i]! - r;
-          const shift = maxEnd - branchEnds[i]!;
-          if (shift > 0) shiftBranch(targets[i]!, shift);
-        }
-
-        r = maxEnd;
+        const columns = targets.map(t => buildColumn(t));
+        items.push({ nodeId: id, split: { columns } });
         const convergence = findConvergence(targets);
         if (convergence) {
           id = convergence;
@@ -80,22 +92,8 @@ export function computeSwfStackLayout(model: GraphModel): ElkLayoutResult {
         }
       }
     }
-    return r;
-  }
 
-  function shiftBranch(startId: string, shift: number): void {
-    let id: string | undefined = startId;
-    while (id && placed.has(id)) {
-      const cell = grid.get(id);
-      if (cell) grid.set(id, { ...cell, row: cell.row + shift });
-      const targets = (outgoing.get(id) ?? []).filter(t => topLevelIds.has(t) && placed.has(t));
-      const incs = targets.length === 1 ? (incoming.get(targets[0]!) ?? []).filter(t => topLevelIds.has(t)) : [];
-      if (targets.length === 1 && incs.length === 1) {
-        id = targets[0];
-      } else {
-        break;
-      }
-    }
+    return { items };
   }
 
   function findConvergence(branchStarts: string[]): string | undefined {
@@ -121,28 +119,7 @@ export function computeSwfStackLayout(model: GraphModel): ElkLayoutResult {
     return undefined;
   }
 
-  const startNodes = [...topLevelIds].filter(id => (incoming.get(id) ?? []).length === 0);
-  const totalCols = 1;
-  for (const s of startNodes) {
-    if (!placed.has(s)) walkSequence(s, placed.size > 0 ? Math.max(...[...grid.values()].map(c => c.row)) + 1 : 0, 0, totalCols);
-  }
-  for (const id of topLevelIds) {
-    if (!placed.has(id)) {
-      grid.set(id, { row: grid.size, col: 0, colSpan: totalCols });
-      placed.add(id);
-    }
-  }
-
-  const maxRow = Math.max(...[...grid.values()].map(c => c.row), 0);
-  const rowNodes = new Map<number, string[]>();
-  for (const [id, cell] of grid) {
-    const list = rowNodes.get(cell.row) ?? [];
-    list.push(id);
-    rowNodes.set(cell.row, list);
-  }
-
-  let maxColsInAnyRow = 1;
-  for (const ids of rowNodes.values()) maxColsInAnyRow = Math.max(maxColsInAnyRow, ids.length);
+  // Phase 2: compute node sizes (containers grow to fit children)
 
   function computeContainerSize(parentId: string): { w: number; h: number } {
     const children = model.nodes.filter(n => n.parentId === parentId);
@@ -163,7 +140,83 @@ export function computeSwfStackLayout(model: GraphModel): ElkLayoutResult {
     return { w: maxChildW + 2 * CONTAINER_PAD_X, h: y - INNER_V_GAP + CONTAINER_PAD_BOTTOM };
   }
 
-  function layoutChildren(parentId: string, nodeLayouts: Map<string, NodeLayout>): void {
+  function getNodeSize(nodeId: string): { w: number; h: number } {
+    const children = model.nodes.filter(n => n.parentId === nodeId);
+    if (children.length > 0) return computeContainerSize(nodeId);
+    return { w: NODE_W, h: NODE_H };
+  }
+
+  // Phase 3: size columns bottom-up
+
+  function sizeColumn(col: Column): SizedColumn {
+    const items: SizedItem[] = [];
+    let width = 0;
+    let height = 0;
+
+    for (let i = 0; i < col.items.length; i++) {
+      const item = col.items[i]!;
+      const ns = getNodeSize(item.nodeId);
+      let sizedSplit: SizedGroup | undefined;
+
+      if (item.split) {
+        sizedSplit = sizeGroup(item.split);
+        width = Math.max(width, ns.w, sizedSplit.width);
+        height += ns.h + V_GAP + sizedSplit.height;
+      } else {
+        width = Math.max(width, ns.w);
+        height += ns.h;
+      }
+
+      if (i < col.items.length - 1) height += V_GAP;
+
+      items.push({ nodeId: item.nodeId, nodeWidth: ns.w, nodeHeight: ns.h, ...(sizedSplit ? { split: sizedSplit } : {}) });
+    }
+
+    return { items, width, height };
+  }
+
+  function sizeGroup(group: ColumnGroup): SizedGroup {
+    const columns = group.columns.map(sizeColumn);
+    const width = columns.reduce((sum, c) => sum + c.width, 0) + (columns.length - 1) * H_GAP;
+    const height = Math.max(...columns.map(c => c.height));
+    return { columns, width, height };
+  }
+
+  // Phase 4: position top-down with bottom-alignment in split groups
+
+  const nodeLayouts = new Map<string, NodeLayout>();
+
+  function positionColumn(col: SizedColumn, x: number, y: number): void {
+    let currentY = y;
+    for (const item of col.items) {
+      const nodeX = x + (col.width - item.nodeWidth) / 2;
+      nodeLayouts.set(item.nodeId, { x: nodeX, y: currentY, width: item.nodeWidth, height: item.nodeHeight });
+
+      if (model.nodes.some(n => n.parentId === item.nodeId)) {
+        layoutChildren(item.nodeId);
+      }
+
+      currentY += item.nodeHeight + V_GAP;
+
+      if (item.split) {
+        positionGroup(item.split, x, currentY, col.width);
+        currentY += item.split.height + V_GAP;
+      }
+    }
+  }
+
+  function positionGroup(group: SizedGroup, x: number, y: number, parentWidth: number): void {
+    const groupWidth = group.columns.reduce((sum, c) => sum + c.width, 0) + (group.columns.length - 1) * H_GAP;
+    let startX = x + (parentWidth - groupWidth) / 2;
+
+    for (const col of group.columns) {
+      const shift = group.height - col.height;
+      positionColumn(col, startX, y + shift);
+      startX += col.width + H_GAP;
+    }
+  }
+
+  function layoutChildren(parentId: string): void {
     const children = model.nodes.filter(n => n.parentId === parentId);
     let y = CONTAINER_PAD_TOP;
     const parentSize = computeContainerSize(parentId);
@@ -173,7 +226,7 @@ export function computeSwfStackLayout(model: GraphModel): ElkLayoutResult {
       if (gc.length > 0) {
         const sub = computeContainerSize(c.id);
         nodeLayouts.set(c.id, { x: CONTAINER_PAD_X, y, width: sub.w, height: sub.h });
-        layoutChildren(c.id, nodeLayouts);
+        layoutChildren(c.id);
         y += sub.h + INNER_V_GAP;
       } else {
         nodeLayouts.set(c.id, { x: CONTAINER_PAD_X, y, width: innerW, height: NODE_H });
@@ -182,43 +235,28 @@ export function computeSwfStackLayout(model: GraphModel): ElkLayoutResult {
     }
   }
 
-  const nodeLayouts = new Map<string, NodeLayout>();
-  const totalW = maxColsInAnyRow * NODE_W + (maxColsInAnyRow - 1) * H_GAP;
+  // --- main ---
 
-  for (let r = 0; r <= maxRow; r++) {
-    const ids = rowNodes.get(r) ?? [];
-    if (ids.length === 0) continue;
-    const count = ids.length;
-    const y = r * (NODE_H + V_GAP);
+  const startNodes = [...topLevelIds].filter(id => (incoming.get(id) ?? []).length === 0);
+  const rootColumn: Column = { items: [] };
 
-    const sorted = ids.sort((a, b) => (grid.get(a)?.col ?? 0) - (grid.get(b)?.col ?? 0));
-    if (count === 1) {
-      const id = sorted[0]!;
-      const children = model.nodes.filter(n => n.parentId === id);
-      if (children.length > 0) {
-        const s = computeContainerSize(id);
-        const x = (totalW - s.w) / 2;
-        nodeLayouts.set(id, { x, y, width: s.w, height: s.h });
-        layoutChildren(id, nodeLayouts);
-      } else {
-        const x = (totalW - NODE_W) / 2;
-        nodeLayouts.set(id, { x, y, width: NODE_W, height: NODE_H });
-      }
-    } else {
-      const rowW = count * NODE_W + (count - 1) * H_GAP;
-      const startX = (totalW - rowW) / 2;
-      for (let i = 0; i < sorted.length; i++) {
-        const id = sorted[i]!;
-        const children = model.nodes.filter(n => n.parentId === id);
-        if (children.length > 0) {
-          const s = computeContainerSize(id);
-          nodeLayouts.set(id, { x: startX + i * (NODE_W + H_GAP), y, width: s.w, height: s.h });
-          layoutChildren(id, nodeLayouts);
-        } else {
-          nodeLayouts.set(id, { x: startX + i * (NODE_W + H_GAP), y, width: NODE_W, height: NODE_H });
-        }
-      }
+  for (const s of startNodes) {
+    if (!placed.has(s)) {
+      const col = buildColumn(s);
+      rootColumn.items.push(...col.items);
     }
+  }
+
+  for (const id of topLevelIds) {
+    if (!placed.has(id)) {
+      rootColumn.items.push({ nodeId: id });
+      placed.add(id);
+    }
+  }
+
+  if (rootColumn.items.length > 0) {
+    const sized = sizeColumn(rootColumn);
+    positionColumn(sized, 0, 0);
   }
 
   return { nodeLayouts };

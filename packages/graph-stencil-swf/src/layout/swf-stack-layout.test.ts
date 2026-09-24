@@ -3,7 +3,7 @@ import type { GraphModel, GraphNode, GraphEdge } from '@casehubio/graph-core';
 import { computeSwfStackLayout } from './swf-stack-layout.js';
 
 function node(id: string, type: string, parentId?: string): GraphNode {
-  return { id, type, properties: { label: id.split('/').pop() ?? id }, parentId };
+  return { id, type, properties: { label: id.split('/').pop() ?? id }, ...(parentId ? { parentId } : {}) };
 }
 
 function edge(source: string, target: string, type = 'default'): GraphEdge {
@@ -213,6 +213,132 @@ describe('computeSwfStackLayout', () => {
       const gap = a1.y - (route.y + route.height);
       expect(gap).toBeGreaterThanOrEqual(30);
       expect(gap).toBeLessThan(200);
+    });
+  });
+
+  describe('nested split', () => {
+    function nestedSplit(): GraphModel {
+      return {
+        nodes: [
+          node('root', 'swf-root'),
+          node('root-entry-node', 'swf-start', 'root'),
+          node('/do/0/switch1', 'swf-switch', 'root'),
+          node('/do/1/A', 'swf-call', 'root'),
+          node('/do/2/switch2', 'swf-switch', 'root'),
+          node('/do/3/C', 'swf-call', 'root'),
+          node('/do/4/D', 'swf-call', 'root'),
+          node('/do/5/mergeInner', 'swf-call', 'root'),
+          node('/do/6/B', 'swf-call', 'root'),
+          node('/do/7/mergeOuter', 'swf-call', 'root'),
+          node('root-exit-node', 'swf-end', 'root'),
+        ],
+        edges: [
+          edge('root-entry-node', '/do/0/switch1'),
+          edge('/do/0/switch1', '/do/1/A'),
+          edge('/do/0/switch1', '/do/6/B'),
+          edge('/do/1/A', '/do/2/switch2'),
+          edge('/do/2/switch2', '/do/3/C'),
+          edge('/do/2/switch2', '/do/4/D'),
+          edge('/do/3/C', '/do/5/mergeInner'),
+          edge('/do/4/D', '/do/5/mergeInner'),
+          edge('/do/5/mergeInner', '/do/7/mergeOuter'),
+          edge('/do/6/B', '/do/7/mergeOuter'),
+          edge('/do/7/mergeOuter', 'root-exit-node'),
+        ],
+      };
+    }
+
+    it('places inner split branches C and D side by side', () => {
+      const layout = computeSwfStackLayout(nestedSplit());
+      const C = layout.nodeLayouts.get('/do/3/C')!;
+      const D = layout.nodeLayouts.get('/do/4/D')!;
+
+      expect(C.x).not.toBe(D.x);
+      expect(C.y).toBe(D.y);
+    });
+
+    it('gives branch A a wider column than branch B (nested split widens it)', () => {
+      const layout = computeSwfStackLayout(nestedSplit());
+      const A = layout.nodeLayouts.get('/do/1/A')!;
+      const B = layout.nodeLayouts.get('/do/6/B')!;
+      const C = layout.nodeLayouts.get('/do/3/C')!;
+      const D = layout.nodeLayouts.get('/do/4/D')!;
+
+      const leftExtent = Math.min(A.x, C.x, D.x);
+      const rightExtent = Math.max(A.x + A.width, C.x + C.width, D.x + D.width);
+      const branchAWidth = rightExtent - leftExtent;
+
+      expect(branchAWidth).toBeGreaterThan(B.width);
+    });
+
+    it('bottom-aligns shorter branch B with the last node of branch A', () => {
+      const layout = computeSwfStackLayout(nestedSplit());
+      const mergeInner = layout.nodeLayouts.get('/do/5/mergeInner')!;
+      const B = layout.nodeLayouts.get('/do/6/B')!;
+
+      expect(B.y).toBe(mergeInner.y);
+    });
+
+    it('centers switch1 above both branch columns', () => {
+      const layout = computeSwfStackLayout(nestedSplit());
+      const switch1 = layout.nodeLayouts.get('/do/0/switch1')!;
+      const A = layout.nodeLayouts.get('/do/1/A')!;
+      const B = layout.nodeLayouts.get('/do/6/B')!;
+
+      expect(switch1.y + switch1.height).toBeLessThanOrEqual(Math.min(A.y, B.y));
+    });
+  });
+
+  describe('three-way unequal branches (3/2/1 fill from bottom)', () => {
+    function threeWayUnequal(): GraphModel {
+      return {
+        nodes: [
+          node('root', 'swf-root'),
+          node('root-entry-node', 'swf-start', 'root'),
+          node('/do/0/split', 'swf-switch', 'root'),
+          node('/do/1/a1', 'swf-call', 'root'),
+          node('/do/2/a2', 'swf-call', 'root'),
+          node('/do/3/a3', 'swf-call', 'root'),
+          node('/do/4/b1', 'swf-call', 'root'),
+          node('/do/5/b2', 'swf-call', 'root'),
+          node('/do/6/c1', 'swf-call', 'root'),
+          node('/do/7/merge', 'swf-call', 'root'),
+          node('root-exit-node', 'swf-end', 'root'),
+        ],
+        edges: [
+          edge('root-entry-node', '/do/0/split'),
+          edge('/do/0/split', '/do/1/a1'),
+          edge('/do/0/split', '/do/4/b1'),
+          edge('/do/0/split', '/do/6/c1'),
+          edge('/do/1/a1', '/do/2/a2'),
+          edge('/do/2/a2', '/do/3/a3'),
+          edge('/do/3/a3', '/do/7/merge'),
+          edge('/do/4/b1', '/do/5/b2'),
+          edge('/do/5/b2', '/do/7/merge'),
+          edge('/do/6/c1', '/do/7/merge'),
+          edge('/do/7/merge', 'root-exit-node'),
+        ],
+      };
+    }
+
+    it('bottom-aligns all branch endpoints to the same row', () => {
+      const layout = computeSwfStackLayout(threeWayUnequal());
+      const a3 = layout.nodeLayouts.get('/do/3/a3')!;
+      const b2 = layout.nodeLayouts.get('/do/5/b2')!;
+      const c1 = layout.nodeLayouts.get('/do/6/c1')!;
+
+      expect(a3.y).toBe(b2.y);
+      expect(b2.y).toBe(c1.y);
+    });
+
+    it('shorter branches start lower (filled from bottom)', () => {
+      const layout = computeSwfStackLayout(threeWayUnequal());
+      const a1 = layout.nodeLayouts.get('/do/1/a1')!;
+      const b1 = layout.nodeLayouts.get('/do/4/b1')!;
+      const c1 = layout.nodeLayouts.get('/do/6/c1')!;
+
+      expect(a1.y).toBeLessThan(b1.y);
+      expect(b1.y).toBeLessThan(c1.y);
     });
   });
 
