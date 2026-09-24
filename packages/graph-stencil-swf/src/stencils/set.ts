@@ -5,8 +5,8 @@ import type { StencilTemplate } from '@casehubio/graph-renderer';
 export const setGrammar: StencilGrammar = {
   type: 'swf-set',
   connections: {
-    inbound: { min: 0, max: Infinity, allowedFrom: ['swf-call', 'swf-set', 'swf-switch', 'swf-entry', 'swf-start'] },
-    outbound: { min: 0, max: 1, allowedTo: ['swf-call', 'swf-set', 'swf-switch', 'swf-raise', 'swf-exit', 'swf-end'] },
+    inbound: { min: 0, max: Infinity, allowedFrom: ['swf-call', 'swf-set', 'swf-switch', 'swf-for', 'swf-entry', 'swf-start'] },
+    outbound: { min: 0, max: 1, allowedTo: ['swf-call', 'swf-set', 'swf-switch', 'swf-for', 'swf-raise', 'swf-exit', 'swf-end'] },
   },
 };
 

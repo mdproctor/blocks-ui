@@ -8,6 +8,7 @@ import { switchGrammar, renderSwitch } from './switch.js';
 import { raiseGrammar, renderRaise } from './raise.js';
 import { tryGrammar, renderTry } from './try.js';
 import { tryCatchGrammar, renderTryCatch, renderCatch } from './try-catch.js';
+import { forGrammar, renderFor } from './for.js';
 import { startGrammar, endGrammar, entryGrammar, exitGrammar, renderStart, renderEnd, renderEntry, renderExit } from './boundary.js';
 import { genericGrammar, renderGeneric } from './generic.js';
 
@@ -28,6 +29,7 @@ export function registerSwfStencils(): void {
   registerStencil({ type: 'swf-set', label: 'Set', icon: 'edit', grammar: setGrammar, render: renderSet });
   registerStencil({ type: 'swf-switch', label: 'Switch', icon: 'git-branch', grammar: switchGrammar, render: renderSwitch });
   registerStencil({ type: 'swf-raise', label: 'Raise', icon: 'alert-triangle', grammar: raiseGrammar, render: renderRaise });
+  registerStencil({ type: 'swf-for', label: 'For', icon: 'repeat', grammar: forGrammar, render: renderFor });
   registerStencil({ type: 'swf-try', label: 'Try', icon: 'shield', grammar: tryGrammar, render: renderTry });
   registerStencil({ type: 'swf-try-catch', label: 'Try/Catch', icon: 'shield', grammar: tryCatchGrammar, render: renderTryCatch });
   registerStencil({ type: 'swf-catch', label: 'Catch', icon: 'shield-off', grammar: tryCatchGrammar, render: renderCatch });

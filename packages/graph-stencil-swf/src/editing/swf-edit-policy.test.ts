@@ -40,10 +40,10 @@ describe('SwfEditPolicy', () => {
   });
 
   describe('getCreatableTypes', () => {
-    it('returns call, set, switch, raise, try', () => {
+    it('returns call, set, switch, for, raise, try', () => {
       const types = policy.getCreatableTypes(null, model([]));
       const typeNames = types.map(t => t.type);
-      expect(typeNames).toEqual(['swf-call', 'swf-set', 'swf-switch', 'swf-raise', 'swf-try']);
+      expect(typeNames).toEqual(['swf-call', 'swf-set', 'swf-switch', 'swf-for', 'swf-raise', 'swf-try']);
     });
 
     it('does not include boundary or synthetic types', () => {

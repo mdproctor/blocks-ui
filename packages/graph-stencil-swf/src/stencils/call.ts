@@ -14,8 +14,8 @@ const CALL_ICONS: Record<string, string> = {
 export const callGrammar: StencilGrammar = {
   type: 'swf-call',
   connections: {
-    inbound: { min: 0, max: Infinity, allowedFrom: ['swf-call', 'swf-set', 'swf-switch', 'swf-entry', 'swf-start'] },
-    outbound: { min: 0, max: 1, allowedTo: ['swf-call', 'swf-set', 'swf-switch', 'swf-raise', 'swf-exit', 'swf-end'] },
+    inbound: { min: 0, max: Infinity, allowedFrom: ['swf-call', 'swf-set', 'swf-switch', 'swf-for', 'swf-entry', 'swf-start'] },
+    outbound: { min: 0, max: 1, allowedTo: ['swf-call', 'swf-set', 'swf-switch', 'swf-for', 'swf-raise', 'swf-exit', 'swf-end'] },
   },
 };
 

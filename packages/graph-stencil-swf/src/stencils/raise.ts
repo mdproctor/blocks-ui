@@ -5,7 +5,7 @@ import type { StencilTemplate } from '@casehubio/graph-renderer';
 export const raiseGrammar: StencilGrammar = {
   type: 'swf-raise',
   connections: {
-    inbound: { min: 0, max: Infinity, allowedFrom: ['swf-call', 'swf-set', 'swf-switch', 'swf-entry', 'swf-start'] },
+    inbound: { min: 0, max: Infinity, allowedFrom: ['swf-call', 'swf-set', 'swf-switch', 'swf-for', 'swf-entry', 'swf-start'] },
     outbound: { min: 0, max: 0, allowedTo: [] },
   },
 };

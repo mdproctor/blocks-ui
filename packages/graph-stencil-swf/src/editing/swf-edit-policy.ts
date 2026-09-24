@@ -6,6 +6,7 @@ const CREATABLE_TYPES: readonly StencilTypeInfo[] = [
   { type: 'swf-call', label: 'Call', icon: 'phone' },
   { type: 'swf-set', label: 'Set', icon: 'edit' },
   { type: 'swf-switch', label: 'Switch', icon: 'git-branch' },
+  { type: 'swf-for', label: 'For', icon: 'repeat' },
   { type: 'swf-raise', label: 'Raise', icon: 'alert-triangle' },
   { type: 'swf-try', label: 'Try', icon: 'shield' },
 ];
