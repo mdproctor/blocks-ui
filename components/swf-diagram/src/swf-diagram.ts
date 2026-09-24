@@ -212,11 +212,14 @@ export class SwfDiagram extends DiagramBaseMixin(LitElement) {
 
   private _computeFilteredEdges() {
     const nodeParents = new Map(this._nodes.map(n => [n.id, n.parentId]));
+    const nodeTypes = new Map(this._nodes.map(n => [n.id, n.type]));
     return this._edges.filter(e => {
       const sp = nodeParents.get(e.source);
       const tp = nodeParents.get(e.target);
       if (!sp || !tp || sp !== tp) return true;
-      return sp === 'root';
+      if (sp === 'root') return true;
+      const parentType = nodeTypes.get(sp);
+      return parentType !== 'swf-try';
     });
   }
 
