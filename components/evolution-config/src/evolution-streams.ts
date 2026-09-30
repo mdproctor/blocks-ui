@@ -9,6 +9,9 @@ import type { CellValue, ColumnId, TypedRow } from '@casehubio/pages-data/dist/d
 import type { ImprovementStreamView } from './types.js';
 import { EvolutionApi } from './api.js';
 import { emitEvolutionEvent, EvolutionEventTopics } from './events.js';
+import { emitPagesEvent } from '@casehubio/pages-data';
+
+const AGENT_SELECTED_TOPIC = 'evolution:agent-selected';
 
 const ID_COL = columnId('improvementCaseId');
 const CATEGORY_COL = columnId('category');
@@ -184,6 +187,13 @@ export class EvolutionStreams extends LitElement {
     }
   }
 
+  private _handleRowActivated(e: CustomEvent): void {
+    const row = e.detail?.row as TypedRow | undefined;
+    if (!row) return;
+    const improvementCaseId = row.text(ID_COL);
+    emitPagesEvent(this, AGENT_SELECTED_TOPIC, { improvementCaseId });
+  }
+
   override render() {
     this.setAttribute('aria-busy', String(this._loading));
     if (this._loading) return html`<div class="loading">Loading streams...</div>`;
@@ -198,7 +208,8 @@ export class EvolutionStreams extends LitElement {
         .columnRenderers=${this._columnRenderers}
         .getRowKey=${(row: TypedRow) => row.text(ID_COL)}
         mode="scroll"
-        selection="none"
+        selection="single"
+        @row-activated=${(e: CustomEvent) => this._handleRowActivated(e)}
       ></pages-table>
 
       <pages-confirm-dialog

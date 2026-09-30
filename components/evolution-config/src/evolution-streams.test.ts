@@ -155,4 +155,24 @@ describe('blocks-evolution-streams', () => {
       expect((el as any)._error).toBe('Network error');
     });
   });
+
+  describe('row selection', () => {
+    it('uses single selection mode', async () => {
+      const el = createElement(SAMPLE_STREAMS);
+      await el.updateComplete;
+      const table = el.shadowRoot!.querySelector('pages-table');
+      expect(table?.getAttribute('selection')).toBe('single');
+    });
+
+    it('_handleRowActivated emits evolution:agent-selected', async () => {
+      const el = createElement(SAMPLE_STREAMS);
+      await el.updateComplete;
+      const handler = vi.fn();
+      el.addEventListener('pages-event', handler);
+      (el as any)._handleRowActivated({ detail: { row: { text: (col: any) => '660e8400-0001-0000-0000-000000000001' } } });
+      expect(handler).toHaveBeenCalled();
+      expect(handler.mock.calls[0]![0].detail.topic).toBe('evolution:agent-selected');
+      expect(handler.mock.calls[0]![0].detail.payload.improvementCaseId).toBe('660e8400-0001-0000-0000-000000000001');
+    });
+  });
 });

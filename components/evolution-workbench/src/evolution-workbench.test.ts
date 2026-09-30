@@ -166,4 +166,46 @@ describe('blocks-evolution-workbench', () => {
     expect(error).not.toBeNull();
     expect(error!.textContent).toContain('Network error');
   });
+
+  describe('agent drill-down', () => {
+    async function waitForRender(el: EvolutionWorkbench): Promise<void> {
+      await el.updateComplete;
+      const detailPane = el.shadowRoot!.querySelector('blocks-detail-pane') as any;
+      if (detailPane) await detailPane.updateComplete;
+    }
+
+    it('stores selected agent on _selectedAgent state', async () => {
+      const el = createElement();
+      el.state = SAMPLE_STATE;
+      await waitForRender(el);
+      expect((el as any)._selectedAgent).toBeNull();
+      (el as any)._selectedAgent = { improvementCaseId: 'imp-1' };
+      expect((el as any)._selectedAgent).toEqual({ improvementCaseId: 'imp-1' });
+    });
+
+    it('clears selected agent', async () => {
+      const el = createElement();
+      el.state = SAMPLE_STATE;
+      (el as any)._selectedAgent = { improvementCaseId: 'imp-1' };
+      await waitForRender(el);
+      (el as any)._selectedAgent = null;
+      expect((el as any)._selectedAgent).toBeNull();
+    });
+
+    it('listens for evolution:agent-selected and agent-deselected events', async () => {
+      const el = createElement();
+      el.state = SAMPLE_STATE;
+      await waitForRender(el);
+      el.dispatchEvent(new CustomEvent('pages-event', {
+        bubbles: true, composed: true,
+        detail: { topic: 'evolution:agent-selected', payload: { improvementCaseId: 'imp-1' } },
+      }));
+      expect((el as any)._selectedAgent).toEqual({ improvementCaseId: 'imp-1' });
+      el.dispatchEvent(new CustomEvent('pages-event', {
+        bubbles: true, composed: true,
+        detail: { topic: 'evolution:agent-deselected', payload: {} },
+      }));
+      expect((el as any)._selectedAgent).toBeNull();
+    });
+  });
 });

@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@casehubio/blocks-ui-agent-detail": "workspace:*",
     "@casehubio/blocks-ui-audit-trail-viewer": "workspace:*",
     "@casehubio/blocks-ui-compliance-summary": "workspace:*",
     "@casehubio/blocks-ui-core": "workspace:*",

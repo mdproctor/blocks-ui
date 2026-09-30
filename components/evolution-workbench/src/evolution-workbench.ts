@@ -13,6 +13,7 @@ import type {
   GatePolicy,
 } from '@casehubio/blocks-ui-evolution-config';
 import { EvolutionApi, EvolutionEventTopics } from '@casehubio/blocks-ui-evolution-config';
+import '@casehubio/blocks-ui-agent-detail';
 
 export interface EvolutionWorkbenchProps {
   endpoint?: string;
@@ -52,6 +53,7 @@ export class EvolutionWorkbench extends LitElement {
   @state() private _loading = false;
   @state() private _error: string | null = null;
   @state() private _fetchedState: EvolutionStateSnapshot | null = null;
+  @state() private _selectedAgent: { improvementCaseId: string } | null = null;
 
   private _api?: EvolutionApi;
   private _unsubs: Array<() => void> = [];
@@ -146,6 +148,8 @@ export class EvolutionWorkbench extends LitElement {
       onPagesEvent(this, EvolutionEventTopics.GATE_POLICY_CHANGED, () => this._refreshState()),
       onPagesEvent(this, EvolutionEventTopics.GATE_RESOLVED, () => this._refreshState()),
       onPagesEvent(this, EvolutionEventTopics.STREAM_CHANGED, () => this._refreshState()),
+      onPagesEvent<{ improvementCaseId: string }>(this, 'evolution:agent-selected', (p) => { this._selectedAgent = { improvementCaseId: p.improvementCaseId }; }),
+      onPagesEvent(this, 'evolution:agent-deselected', () => { this._selectedAgent = null; }),
     );
   }
 
@@ -236,6 +240,14 @@ export class EvolutionWorkbench extends LitElement {
           .tenancyId=${this.tenancyId}
           .streams=${this.streams}
         ></blocks-evolution-streams>
+        ${this._selectedAgent ? html`
+          <blocks-agent-detail
+            .endpoint=${this.endpoint}
+            .caseId=${this.caseId}
+            .tenancyId=${this.tenancyId}
+            .improvementCaseId=${this._selectedAgent.improvementCaseId}
+          ></blocks-agent-detail>
+        ` : nothing}
       </div>
     `;
   }
