@@ -27,6 +27,7 @@ export interface SessionDetailProps {
 export class SessionDetail extends PushMixin(LitElement) {
   @property({ type: String }) endpoint = '';
   @property({ type: String }) sessionId: string | undefined;
+  @property({ type: Boolean, reflect: true }) composed = false;
 
   @state() _activeTab: TabId = 'terminal';
   @state() _terminalOutput = '';
@@ -44,14 +45,16 @@ export class SessionDetail extends PushMixin(LitElement) {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this._unsubs.push(
-      onPagesEvent<{ id: string }>(document, SessionEventTopics.SELECTED, (p: { id: string }) => {
-        this.sessionId = p.id;
-      }),
-      onPagesEvent(document, SessionEventTopics.DESELECTED, () => {
-        this.sessionId = undefined;
-      }),
-    );
+    if (!this.composed) {
+      this._unsubs.push(
+        onPagesEvent<{ id: string }>(document, SessionEventTopics.SELECTED, (p: { id: string }) => {
+          this.sessionId = p.id;
+        }),
+        onPagesEvent(document, SessionEventTopics.DESELECTED, () => {
+          this.sessionId = undefined;
+        }),
+      );
+    }
   }
 
   override disconnectedCallback(): void {
