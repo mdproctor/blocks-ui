@@ -61,6 +61,7 @@ const NAV: NavCategory[] = [
       { id: 'dag-viewer', label: 'DAG Viewer', hash: '#orchestration/dag-viewer' },
       { id: 'execution-monitor', label: 'Execution Monitor', hash: '#orchestration/execution-monitor' },
       { id: 'orchestration-workbench', label: 'Orchestration Workbench', hash: '#orchestration/orchestration-workbench' },
+      { id: 'methodology-timeline', label: 'Methodology Timeline', hash: '#orchestration/methodology-timeline' },
     ],
   },
   {
@@ -82,6 +83,8 @@ const NAV: NavCategory[] = [
       { id: 'worker-task-pane', label: 'Worker Task Pane', hash: '#composed/worker-task-pane' },
       { id: 'rendering-primitives', label: 'Rendering Primitives', hash: '#composed/rendering-primitives' },
       { id: 'push-updates', label: 'Push Updates', hash: '#composed/push-updates' },
+      { id: 'evolution-workbench', label: 'Evolution Workbench', hash: '#composed/evolution-workbench' },
+      { id: 'agent-detail', label: 'Agent Detail', hash: '#composed/agent-detail' },
     ],
   },
   {
@@ -301,6 +304,9 @@ export class ExampleShell extends LitElement {
       case '#orchestration/dag-viewer': return html`<blocks-example-dag-viewer></blocks-example-dag-viewer>`;
       case '#orchestration/execution-monitor': return html`<blocks-example-execution-monitor></blocks-example-execution-monitor>`;
       case '#orchestration/orchestration-workbench': return html`<blocks-example-orchestration-workbench></blocks-example-orchestration-workbench>`;
+      case '#orchestration/methodology-timeline': return html`<blocks-example-methodology-timeline></blocks-example-methodology-timeline>`;
+      case '#composed/evolution-workbench': return html`<blocks-example-evolution-workbench></blocks-example-evolution-workbench>`;
+      case '#composed/agent-detail': return html`<blocks-example-agent-detail></blocks-example-agent-detail>`;
       case '#diagrams/casehub-diagram': return html`<blocks-example-casehub-diagram></blocks-example-casehub-diagram>`;
       case '#diagrams/swf-diagram': return html`<blocks-example-swf-diagram></blocks-example-swf-diagram>`;
       case '#diagrams/diagram-workbench': return html`<blocks-example-diagram-workbench></blocks-example-diagram-workbench>`;

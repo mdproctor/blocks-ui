@@ -57,6 +57,9 @@ const PAGE_MODULES = [
   './pages/worker-task-pane-page.js',
   './pages/rendering-primitives-page.js',
   './pages/push-updates-page.js',
+  './pages/evolution-workbench-page.js',
+  './pages/agent-detail-page.js',
+  './pages/methodology-timeline-page.js',
 ];
 
 async function bootstrap() {
