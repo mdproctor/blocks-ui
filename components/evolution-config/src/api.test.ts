@@ -110,4 +110,96 @@ describe('EvolutionApi', () => {
       expect.any(Object),
     );
   });
+
+  describe('methodology API', () => {
+    it('getMethodologyMetadata sends GET with improvementCaseId', async () => {
+      const meta = { activeSkill: 'brainstorming', currentArtifact: 'spec', startedAt: '2026-09-30T00:00:00Z', updatedAt: '2026-09-30T00:05:00Z' };
+      const fn = mockFetch(meta);
+      const api = new EvolutionApi('/api/evolution', fn);
+      const result = await api.getMethodologyMetadata('c1', 't1', 'imp1');
+      expect(fn).toHaveBeenCalledWith(
+        expect.stringContaining('/getMethodologyMetadata?caseId=c1&tenancyId=t1&improvementCaseId=imp1'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+      expect(result).toEqual(meta);
+    });
+
+    it('getMethodologyBatch sends GET without improvementCaseId', async () => {
+      const batch = { 'imp-1': { activeSkill: 'tdd', currentArtifact: 'test', startedAt: '2026-09-30T00:00:00Z', updatedAt: '2026-09-30T00:05:00Z' } };
+      const fn = mockFetch(batch);
+      const api = new EvolutionApi('/api/evolution', fn);
+      const result = await api.getMethodologyBatch('c1', 't1');
+      expect(fn).toHaveBeenCalledWith(
+        expect.stringContaining('/getMethodologyBatch?caseId=c1&tenancyId=t1'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+      expect(result).toEqual(batch);
+    });
+
+    it('getMethodologyEvents sends GET with optional params', async () => {
+      const fn = mockFetch([]);
+      const api = new EvolutionApi('/api/evolution', fn);
+      await api.getMethodologyEvents('c1', 't1', 'imp1', { since: '2026-09-30T00:00:00Z', limit: 50 });
+      expect(fn).toHaveBeenCalledWith(
+        expect.stringContaining('&since=2026-09-30T00%3A00%3A00Z&limit=50'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    it('pauseAgent sends POST with reason', async () => {
+      const fn = mockFetch(undefined);
+      const api = new EvolutionApi('/api/evolution', fn);
+      await api.pauseAgent('c1', 't1', 'imp1', 'testing');
+      expect(fn).toHaveBeenCalledWith(
+        expect.stringContaining('/pauseAgent'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ caseId: 'c1', tenancyId: 't1', improvementCaseId: 'imp1', reason: 'testing' }),
+        }),
+      );
+    });
+
+    it('resumeAgent sends POST', async () => {
+      const fn = mockFetch(undefined);
+      const api = new EvolutionApi('/api/evolution', fn);
+      await api.resumeAgent('c1', 't1', 'imp1');
+      expect(fn).toHaveBeenCalledWith(
+        expect.stringContaining('/resumeAgent'),
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+
+    it('sendInstruction sends POST with instruction', async () => {
+      const fn = mockFetch(undefined);
+      const api = new EvolutionApi('/api/evolution', fn);
+      await api.sendInstruction('c1', 't1', 'imp1', 'work start #42');
+      const body = JSON.parse((fn as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      expect(body.instruction).toBe('work start #42');
+    });
+
+    it('forceTransition sends POST with gate override reason', async () => {
+      const fn = mockFetch(undefined);
+      const api = new EvolutionApi('/api/evolution', fn);
+      await api.forceTransition('c1', 't1', 'imp1', 'pr-review', 'emergency fix');
+      const body = JSON.parse((fn as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      expect(body.targetStage).toBe('pr-review');
+      expect(body.gateOverrideReason).toBe('emergency fix');
+    });
+
+    it('reassignAgent sends POST with target', async () => {
+      const fn = mockFetch(undefined);
+      const api = new EvolutionApi('/api/evolution', fn);
+      await api.reassignAgent('c1', 't1', 'imp1', 'imp2');
+      const body = JSON.parse((fn as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      expect(body.targetImprovementCaseId).toBe('imp2');
+    });
+
+    it('terminateAgent sends POST with reason', async () => {
+      const fn = mockFetch(undefined);
+      const api = new EvolutionApi('/api/evolution', fn);
+      await api.terminateAgent('c1', 't1', 'imp1', 'no longer needed');
+      const body = JSON.parse((fn as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      expect(body.reason).toBe('no longer needed');
+    });
+  });
 });

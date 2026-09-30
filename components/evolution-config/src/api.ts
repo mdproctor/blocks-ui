@@ -2,6 +2,7 @@ import type {
   DenyPatternView, WatchPattern, WatchPatternInput, GatePolicy,
   GateOutcome, StageDescriptor, CategoryDescriptor,
   EvolutionStateSnapshot, ImprovementStreamView, ConductorInboxEntry,
+  MethodologyMetadata, MethodologyEvent,
 } from './types.js';
 
 function enc(s: string): string { return encodeURIComponent(s); }
@@ -98,6 +99,45 @@ export class EvolutionApi {
 
   async resetCircuitBreaker(caseId: string): Promise<void> {
     await this._post(`${this.baseUrl}/resetCircuitBreaker`, { caseId });
+  }
+
+  async getMethodologyMetadata(caseId: string, tenancyId: string, improvementCaseId: string): Promise<MethodologyMetadata | null> {
+    return this._get<MethodologyMetadata | null>(`${this.baseUrl}/getMethodologyMetadata?caseId=${enc(caseId)}&tenancyId=${enc(tenancyId)}&improvementCaseId=${enc(improvementCaseId)}`);
+  }
+
+  async getMethodologyBatch(caseId: string, tenancyId: string): Promise<Record<string, MethodologyMetadata | null>> {
+    return this._get<Record<string, MethodologyMetadata | null>>(`${this.baseUrl}/getMethodologyBatch?caseId=${enc(caseId)}&tenancyId=${enc(tenancyId)}`);
+  }
+
+  async getMethodologyEvents(caseId: string, tenancyId: string, improvementCaseId: string, params?: { since?: string; limit?: number }): Promise<MethodologyEvent[]> {
+    let url = `${this.baseUrl}/getMethodologyEvents?caseId=${enc(caseId)}&tenancyId=${enc(tenancyId)}&improvementCaseId=${enc(improvementCaseId)}`;
+    if (params?.since) url += `&since=${enc(params.since)}`;
+    if (params?.limit != null) url += `&limit=${params.limit}`;
+    return this._get<MethodologyEvent[]>(url);
+  }
+
+  async pauseAgent(caseId: string, tenancyId: string, improvementCaseId: string, reason?: string): Promise<void> {
+    await this._post(`${this.baseUrl}/pauseAgent`, { caseId, tenancyId, improvementCaseId, reason });
+  }
+
+  async resumeAgent(caseId: string, tenancyId: string, improvementCaseId: string): Promise<void> {
+    await this._post(`${this.baseUrl}/resumeAgent`, { caseId, tenancyId, improvementCaseId });
+  }
+
+  async sendInstruction(caseId: string, tenancyId: string, improvementCaseId: string, instruction: string): Promise<void> {
+    await this._post(`${this.baseUrl}/sendInstruction`, { caseId, tenancyId, improvementCaseId, instruction });
+  }
+
+  async forceTransition(caseId: string, tenancyId: string, improvementCaseId: string, targetStage: string, gateOverrideReason?: string): Promise<void> {
+    await this._post(`${this.baseUrl}/forceTransition`, { caseId, tenancyId, improvementCaseId, targetStage, gateOverrideReason });
+  }
+
+  async reassignAgent(caseId: string, tenancyId: string, improvementCaseId: string, targetImprovementCaseId: string): Promise<void> {
+    await this._post(`${this.baseUrl}/reassignAgent`, { caseId, tenancyId, improvementCaseId, targetImprovementCaseId });
+  }
+
+  async terminateAgent(caseId: string, tenancyId: string, improvementCaseId: string, reason?: string): Promise<void> {
+    await this._post(`${this.baseUrl}/terminateAgent`, { caseId, tenancyId, improvementCaseId, reason });
   }
 
   private async _get<T>(url: string): Promise<T> {

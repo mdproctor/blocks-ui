@@ -105,6 +105,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@casehubio/blocks-ui-agent-detail@workspace:*, @casehubio/blocks-ui-agent-detail@workspace:components/agent-detail":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/blocks-ui-agent-detail@workspace:components/agent-detail"
+  dependencies:
+    "@casehubio/blocks-ui-core": "workspace:*"
+    "@casehubio/blocks-ui-detail-pane": "workspace:*"
+    "@casehubio/blocks-ui-evolution-config": "workspace:*"
+    "@casehubio/blocks-ui-session-detail": "workspace:*"
+    "@casehubio/pages-component": "npm:*"
+    "@casehubio/pages-data": "npm:*"
+    "@casehubio/pages-ui-components": "npm:*"
+    "@casehubio/pages-viz": "npm:*"
+    "@vitest/browser": "npm:^2.1.8"
+    jsdom: "npm:^26.0.0"
+    lit: "npm:^3.2.1"
+    typescript: "npm:~5.7.2"
+    vite: "npm:^6.0.3"
+    vitest: "npm:^2.1.8"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/blocks-ui-approval-gate@workspace:*, @casehubio/blocks-ui-approval-gate@workspace:components/approval-gate":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-approval-gate@workspace:components/approval-gate"
@@ -497,6 +518,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-evolution-workbench@workspace:components/evolution-workbench"
   dependencies:
+    "@casehubio/blocks-ui-agent-detail": "workspace:*"
     "@casehubio/blocks-ui-audit-trail-viewer": "workspace:*"
     "@casehubio/blocks-ui-compliance-summary": "workspace:*"
     "@casehubio/blocks-ui-core": "workspace:*"

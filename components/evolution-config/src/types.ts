@@ -116,3 +116,66 @@ export interface WatchPatternInput {
   readonly targetPattern?: string;
   readonly minEstimatedSize?: number;
 }
+
+export interface MethodologyMetadata {
+  readonly activeSkill: string | null;
+  readonly currentArtifact: string | null;
+  readonly startedAt: string;
+  readonly updatedAt: string;
+}
+
+export type MethodologyEventType =
+  | 'SKILL_STARTED' | 'SKILL_COMPLETED' | 'SKILL_FAILED'
+  | 'ARTIFACT_CREATED' | 'ARTIFACT_UPDATED'
+  | 'FORAGE_CAPTURED' | 'GARDEN_ENTRY_CREATED'
+  | 'TEST_PASSED' | 'TEST_FAILED'
+  | 'COMMIT_CREATED' | 'PR_SUBMITTED';
+
+export interface MethodologyEvent {
+  readonly id: string;
+  readonly type: MethodologyEventType;
+  readonly improvementCaseId: string;
+  readonly sessionId: string;
+  readonly timestamp: string;
+  readonly evolutionStage: string;
+  readonly payload: MethodologyEventPayload;
+}
+
+export interface SkillEventPayload {
+  readonly type: 'SKILL_STARTED' | 'SKILL_COMPLETED' | 'SKILL_FAILED';
+  readonly skillName: string;
+  readonly duration?: number;
+  readonly error?: string;
+}
+
+export interface ArtifactEventPayload {
+  readonly type: 'ARTIFACT_CREATED' | 'ARTIFACT_UPDATED';
+  readonly artifactType: string;
+  readonly path?: string;
+}
+
+export interface KnowledgeEventPayload {
+  readonly type: 'FORAGE_CAPTURED' | 'GARDEN_ENTRY_CREATED';
+  readonly entryId: string;
+  readonly title: string;
+}
+
+export interface TestEventPayload {
+  readonly type: 'TEST_PASSED' | 'TEST_FAILED';
+  readonly testCount: number;
+  readonly failedCount?: number;
+  readonly duration?: number;
+}
+
+export interface CommitEventPayload {
+  readonly type: 'COMMIT_CREATED' | 'PR_SUBMITTED';
+  readonly ref: string;
+  readonly message?: string;
+}
+
+export type MethodologyEventPayload =
+  | SkillEventPayload
+  | ArtifactEventPayload
+  | KnowledgeEventPayload
+  | TestEventPayload
+  | CommitEventPayload;
