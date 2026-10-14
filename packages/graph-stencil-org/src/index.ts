@@ -22,6 +22,8 @@ export { applyCollapsedUnits } from './adapter/collapse.js';
 export { applyOrgEdgeLabels } from './adapter/edge-labels.js';
 export { applySelectionHighlight } from './adapter/selection-highlight.js';
 export { extractEgoSubgraph } from './adapter/ego-subgraph.js';
+export { toOrgYaml } from './adapter/to-org-yaml.js';
+export type { RosterEntry } from './adapter/to-org-yaml.js';
 
 // ─── Layout Rule Engine ─────────────────────────────────────────────
 export { OrgLayoutEngine } from './layout/engine.js';
