@@ -1,11 +1,13 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { AgentRelationship, RelationshipKind } from '@casehubio/graph-stencil-org';
+import type { AgentRelationship, RelationshipKind, AgentDescriptor } from '@casehubio/graph-stencil-org';
+import { toOrgYaml } from '@casehubio/graph-stencil-org';
 import { lookupRelationshipType } from '@casehubio/blocks-ui-core';
 import type { RelationshipChangeset, AgentRosterEntry } from './types.js';
 import './arc-view.js';
+import '@casehubio/agent-avatar-2d';
 
-type ViewTab = 'table' | 'arc';
+type ViewTab = 'table' | 'arc' | 'diagram';
 
 const RELATIONSHIP_KINDS: RelationshipKind[] = [
   'SUPERVISES', 'DELEGATES_TO', 'ESCALATES_TO', 'REPORTS_TO', 'BACKS_UP', 'EXTENDED',
@@ -59,9 +61,18 @@ export class AgentRelationshipEditor extends LitElement {
       font-size: 16px;
       color: var(--pages-neutral-9, #737373);
     }
-    .agent-name {
+    .agent-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       flex: 1;
+    }
+    .agent-name {
       font-weight: 500;
+    }
+    .agent-profession {
+      color: var(--pages-text-secondary, #6b7280);
+      font-size: 0.85em;
     }
     .scope-badge {
       font-size: 11px;
@@ -204,6 +215,8 @@ export class AgentRelationshipEditor extends LitElement {
   @property({ type: String, attribute: 'agent-id' }) agentId = '';
   @property({ attribute: false }) relationships: AgentRelationship[] = [];
   @property({ attribute: false }) roster: AgentRosterEntry[] = [];
+  @property({ attribute: false }) agents: Record<string, AgentDescriptor> = {};
+  @property({ type: String, attribute: 'tenancy-id' }) tenancyId = 'default';
 
   @state() private _pendingAdditions: AgentRelationship[] = [];
   @state() private _pendingRemovals: Set<number> = new Set();
@@ -217,10 +230,36 @@ export class AgentRelationshipEditor extends LitElement {
     super.connectedCallback();
     this.setAttribute('role', 'region');
     this._updateAriaLabel();
+    this.addEventListener('pages-event', this._handleDiagramSelection as EventListener);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeEventListener('pages-event', this._handleDiagramSelection as EventListener);
   }
 
   override updated() {
     this._updateAriaLabel();
+  }
+
+  private _handleDiagramSelection = (e: CustomEvent): void => {
+    if (e.detail?.topic !== 'relationship-editor:diagram:agent-selected') return;
+    const nodeId: string = e.detail?.payload?.nodeId ?? '';
+    if (!nodeId.startsWith('agent:')) return;
+    const parts = nodeId.split(':');
+    const agentId = parts[parts.length - 1];
+    if (agentId && this.roster.some(r => r.agentId === agentId)) {
+      this.agentId = agentId;
+    }
+  };
+
+  private get _effectiveRelationships(): AgentRelationship[] {
+    const confirmed = this.relationships.filter((_, i) => !this._pendingRemovals.has(i));
+    return [...confirmed, ...this._pendingAdditions];
+  }
+
+  private get _effectiveYaml(): string {
+    return toOrgYaml(this.roster, this._effectiveRelationships, this.tenancyId);
   }
 
   private _updateAriaLabel() {
@@ -249,6 +288,22 @@ export class AgentRelationshipEditor extends LitElement {
   private _getAgentName(agentId: string): string {
     const entry = this.roster.find(r => r.agentId === agentId);
     return entry?.name ?? agentId;
+  }
+
+  private _renderAgentCell(agentId: string) {
+    const name = this._getAgentName(agentId);
+    const descriptor = this.agents?.[agentId];
+    return html`
+      <span class="agent-cell">
+        ${descriptor?.avatar
+          ? html`<agent-avatar .code=${descriptor.avatar} size="xs" aria-hidden="true"></agent-avatar>`
+          : nothing}
+        <span class="agent-name">${name}</span>
+        ${descriptor?.profession
+          ? html`<span class="agent-profession">${descriptor.profession}${descriptor.role ? ` · ${descriptor.role}` : ''}</span>`
+          : nothing}
+      </span>
+    `;
   }
 
   private _markForRemoval(index: number) {
@@ -315,14 +370,22 @@ export class AgentRelationshipEditor extends LitElement {
     }
 
     return html`
-      <div class="view-tabs">
-        <button class="view-tab ${this._viewTab === 'table' ? 'active' : ''}" @click=${() => { this._viewTab = 'table'; }}>Table</button>
-        <button class="view-tab ${this._viewTab === 'arc' ? 'active' : ''}" @click=${() => { this._viewTab = 'arc'; }}>Arc</button>
+      <div class="view-tabs" role="tablist" aria-label="Relationship views">
+        <button role="tab" id="tab-table" aria-selected=${this._viewTab === 'table'} aria-controls="panel-table" class="view-tab ${this._viewTab === 'table' ? 'active' : ''}" @click=${() => { this._viewTab = 'table'; }}>Table</button>
+        <button role="tab" id="tab-arc" aria-selected=${this._viewTab === 'arc'} aria-controls="panel-arc" class="view-tab ${this._viewTab === 'arc' ? 'active' : ''}" @click=${() => { this._viewTab = 'arc'; }}>Arc</button>
+        <button role="tab" id="tab-diagram" aria-selected=${this._viewTab === 'diagram'} aria-controls="panel-diagram" class="view-tab ${this._viewTab === 'diagram' ? 'active' : ''}" @click=${() => { this._viewTab = 'diagram'; }}>Diagram</button>
       </div>
 
       ${this._viewTab === 'arc' ? html`
-        <arc-view agent-id=${this.agentId} .relationships=${this.relationships} .roster=${this.roster}></arc-view>
+        <div role="tabpanel" id="panel-arc" aria-labelledby="tab-arc">
+          <arc-view agent-id=${this.agentId} .relationships=${this.relationships} .roster=${this.roster}></arc-view>
+        </div>
+      ` : this._viewTab === 'diagram' ? html`
+        <div role="tabpanel" id="panel-diagram" aria-labelledby="tab-diagram">
+          <blocks-org-diagram readonly .yaml=${this._effectiveYaml} .agents=${this.agents} .selectionTopic=${'relationship-editor:diagram:agent-selected'}></blocks-org-diagram>
+        </div>
       ` : html`
+        <div role="tabpanel" id="panel-table" aria-labelledby="tab-table">
       <button class="add-relationship" @click=${() => { this._showAddForm = true; }}>+ Add Relationship</button>
 
       ${this._showAddForm ? this._renderAddForm() : nothing}
@@ -344,7 +407,7 @@ export class AgentRelationshipEditor extends LitElement {
               return html`
                 <div class="relationship-row ${isRemoval ? 'pending-removal' : ''} ${isAddition ? 'pending-addition' : ''}">
                   <span class="direction-arrow">${outgoing ? '→' : '←'}</span>
-                  <span class="agent-name">${this._getAgentName(other)}</span>
+                  ${this._renderAgentCell(other)}
                   ${rel.scope?.domain ? html`<span class="scope-badge">${rel.scope.domain}</span>` : nothing}
                   ${!isRemoval && !isAddition ? html`
                     <button class="btn-delete" @click=${() => this._markForRemoval(index)}>Remove</button>
@@ -362,7 +425,7 @@ export class AgentRelationshipEditor extends LitElement {
           <button class="btn-confirm" @click=${() => this._confirm()}>Confirm Changes</button>
         </div>
       ` : nothing}
-      `}
+      </div>`}
     `;
   }
 

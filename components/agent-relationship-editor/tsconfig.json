@@ -8,7 +8,9 @@
   },
   "include": ["src"],
   "references": [
+    { "path": "../../packages/agent-avatar-2d" },
     { "path": "../../packages/blocks-ui-core" },
-    { "path": "../../packages/graph-stencil-org" }
+    { "path": "../../packages/graph-stencil-org" },
+    { "path": "../../components/org-diagram" }
   ]
 }

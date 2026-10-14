@@ -21,6 +21,8 @@ type EditorEl = HTMLElement & {
   agentId?: string;
   relationships?: AgentRelationship[];
   roster?: AgentRosterEntry[];
+  agents?: Record<string, any>;
+  tenancyId?: string;
   updateComplete: Promise<boolean>;
 };
 
@@ -138,5 +140,148 @@ describe('agent-relationship-editor', () => {
     const emptyState = empty.shadowRoot!.querySelector('.empty-state');
     expect(emptyState).toBeTruthy();
     empty.remove();
+  });
+
+  describe('tab ARIA', () => {
+    it('renders tablist with three tabs', async () => {
+      await el.updateComplete;
+      const tablist = el.shadowRoot!.querySelector('[role="tablist"]');
+      expect(tablist).toBeTruthy();
+      const tabs = el.shadowRoot!.querySelectorAll('[role="tab"]');
+      expect(tabs).toHaveLength(3);
+    });
+
+    it('marks active tab with aria-selected', async () => {
+      await el.updateComplete;
+      const tabs = el.shadowRoot!.querySelectorAll('[role="tab"]');
+      const activeTab = Array.from(tabs).find(t => t.getAttribute('aria-selected') === 'true');
+      expect(activeTab).toBeTruthy();
+      expect(activeTab!.textContent!.trim()).toBe('Table');
+    });
+
+    it('each tab has aria-controls pointing to a tabpanel id', async () => {
+      await el.updateComplete;
+      const tabs = el.shadowRoot!.querySelectorAll('[role="tab"]');
+      for (const tab of Array.from(tabs)) {
+        expect(tab.getAttribute('aria-controls')).toBeTruthy();
+      }
+    });
+  });
+
+  describe('diagram tab', () => {
+    it('renders blocks-org-diagram with readonly when diagram tab is active', async () => {
+      await el.updateComplete;
+      const diagramTab = Array.from(el.shadowRoot!.querySelectorAll('[role="tab"]'))
+        .find(t => t.textContent!.trim() === 'Diagram') as HTMLElement;
+      diagramTab.click();
+      await el.updateComplete;
+
+      const diagram = el.shadowRoot!.querySelector('blocks-org-diagram');
+      expect(diagram).toBeTruthy();
+      expect(diagram!.hasAttribute('readonly')).toBe(true);
+    });
+
+    it('diagram tabpanel has aria-labelledby', async () => {
+      await el.updateComplete;
+      const diagramTab = Array.from(el.shadowRoot!.querySelectorAll('[role="tab"]'))
+        .find(t => t.textContent!.trim() === 'Diagram') as HTMLElement;
+      diagramTab.click();
+      await el.updateComplete;
+
+      const tabpanel = el.shadowRoot!.querySelector('[role="tabpanel"]');
+      expect(tabpanel).toBeTruthy();
+      expect(tabpanel!.getAttribute('aria-labelledby')).toBe('tab-diagram');
+    });
+
+    it('diagram receives yaml from roster and relationships', async () => {
+      await el.updateComplete;
+      const diagramTab = Array.from(el.shadowRoot!.querySelectorAll('[role="tab"]'))
+        .find(t => t.textContent!.trim() === 'Diagram') as HTMLElement;
+      diagramTab.click();
+      await el.updateComplete;
+
+      const diagram = el.shadowRoot!.querySelector('blocks-org-diagram') as any;
+      expect(diagram).toBeTruthy();
+      expect(diagram.yaml).toBeTruthy();
+      expect(diagram.yaml).toContain('alice');
+    });
+
+    it('passes agents property through to diagram', async () => {
+      el.agents = { alice: { profession: 'Engineer' } };
+      await el.updateComplete;
+      const diagramTab = Array.from(el.shadowRoot!.querySelectorAll('[role="tab"]'))
+        .find(t => t.textContent!.trim() === 'Diagram') as HTMLElement;
+      diagramTab.click();
+      await el.updateComplete;
+
+      const diagram = el.shadowRoot!.querySelector('blocks-org-diagram') as any;
+      expect(diagram.agents).toEqual({ alice: { profession: 'Engineer' } });
+    });
+  });
+
+  describe('bidirectional interaction', () => {
+    it('updates agentId when diagram agent node is clicked', async () => {
+      await el.updateComplete;
+      const diagramTab = Array.from(el.shadowRoot!.querySelectorAll('[role="tab"]'))
+        .find(t => t.textContent!.trim() === 'Diagram') as HTMLElement;
+      diagramTab.click();
+      await el.updateComplete;
+
+      el.dispatchEvent(new CustomEvent('pages-event', {
+        detail: {
+          topic: 'relationship-editor:diagram:agent-selected',
+          payload: { nodeId: 'agent:u1:bob' },
+        },
+        bubbles: true,
+        composed: true,
+      }));
+      await el.updateComplete;
+
+      expect(el.agentId).toBe('bob');
+    });
+
+    it('ignores unit node clicks', async () => {
+      await el.updateComplete;
+
+      el.dispatchEvent(new CustomEvent('pages-event', {
+        detail: {
+          topic: 'relationship-editor:diagram:agent-selected',
+          payload: { nodeId: 'unit:u1' },
+        },
+        bubbles: true,
+        composed: true,
+      }));
+      await el.updateComplete;
+
+      expect(el.agentId).toBe('alice');
+    });
+  });
+
+  describe('richer table rows', () => {
+    it('renders avatar when agents property has avatar code', async () => {
+      el.agents = { bob: { avatar: 'mythic:P15', profession: 'Engineer' } };
+      await el.updateComplete;
+
+      const avatar = el.shadowRoot!.querySelector('agent-avatar');
+      expect(avatar).toBeTruthy();
+    });
+
+    it('renders profession badge when agents property has profession', async () => {
+      el.agents = { bob: { profession: 'Engineer', role: 'Senior' } };
+      await el.updateComplete;
+
+      const profession = el.shadowRoot!.querySelector('.agent-profession');
+      expect(profession).toBeTruthy();
+      expect(profession!.textContent).toContain('Engineer');
+    });
+
+    it('falls back to name only when no agents property', async () => {
+      await el.updateComplete;
+
+      const avatar = el.shadowRoot!.querySelector('agent-avatar');
+      expect(avatar).toBeFalsy();
+      const name = el.shadowRoot!.querySelector('.agent-name');
+      expect(name).toBeTruthy();
+    });
   });
 });

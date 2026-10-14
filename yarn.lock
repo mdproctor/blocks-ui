@@ -193,7 +193,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-agent-relationship-editor@workspace:components/agent-relationship-editor"
   dependencies:
+    "@casehubio/agent-avatar-2d": "workspace:*"
     "@casehubio/blocks-ui-core": "workspace:*"
+    "@casehubio/blocks-ui-org-diagram": "workspace:*"
     "@casehubio/graph-stencil-org": "workspace:*"
     lit: "npm:^3.2.1"
     rimraf: "npm:^6.1.0"
@@ -755,7 +757,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/blocks-ui-org-diagram@workspace:components/org-diagram":
+"@casehubio/blocks-ui-org-diagram@workspace:*, @casehubio/blocks-ui-org-diagram@workspace:components/org-diagram":
   version: 0.0.0-use.local
   resolution: "@casehubio/blocks-ui-org-diagram@workspace:components/org-diagram"
   dependencies:

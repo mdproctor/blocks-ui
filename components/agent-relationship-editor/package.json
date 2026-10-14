@@ -19,7 +19,9 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@casehubio/agent-avatar-2d": "workspace:*",
     "@casehubio/blocks-ui-core": "workspace:*",
+    "@casehubio/blocks-ui-org-diagram": "workspace:*",
     "@casehubio/graph-stencil-org": "workspace:*",
     "lit": "^3.2.1"
   },
